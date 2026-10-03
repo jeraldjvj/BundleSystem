@@ -1,14 +1,16 @@
 import { z } from 'zod';
 
 export const bundleIdSchema = z.object({
-  id: z.string().uuid(),
+  bundle_id: z.coerce.number().int().positive(),
 });
 
 export const createBundleSchema = z.object({
-  name: z.string().min(1).max(100),
-  description: z.string().max(500).optional(),
-  price: z.number().nonnegative(),
-  items: z.array(z.string().min(1)).default([]),
+  project_id: z.coerce.number().int().positive(),
+  user_id: z.coerce.number().int().positive(),
+  serial_number: z.string().min(1).max(50),
+  bundle_model_id: z.coerce.number().int().positive(),
+  bundle_color_id: z.coerce.number().int().positive(),
+  create_time: z.coerce.date().optional(),
 });
 
 export const updateBundleSchema = createBundleSchema.partial();

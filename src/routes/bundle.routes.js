@@ -11,14 +11,14 @@ import {
 const router = Router();
 
 router.get('/', asyncHandler(bundleController.getAll));
-router.get('/:id', validate(bundleIdSchema, 'params'), asyncHandler(bundleController.getById));
+router.get('/:bundle_id', validate(bundleIdSchema, 'params'), asyncHandler(bundleController.getById));
 router.post('/', validate(createBundleSchema), asyncHandler(bundleController.create));
 router.patch(
-  '/:id',
+  '/:bundle_id',
   validate(bundleIdSchema, 'params'),
   validate(updateBundleSchema),
   asyncHandler(bundleController.update),
 );
-router.delete('/:id', validate(bundleIdSchema, 'params'), asyncHandler(bundleController.remove));
+router.delete('/:bundle_id', validate(bundleIdSchema, 'params'), asyncHandler(bundleController.remove));
 
 export default router;
