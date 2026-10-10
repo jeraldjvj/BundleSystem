@@ -9,6 +9,7 @@ export const createStoreSchema = z.object({
   user_id: z.coerce.number().int().positive(),
   rms_store_code: z.string().min(1).max(45),
   store_name: z.string().min(1).max(45),
+  city: z.string().min(1).max(50),
 });
 
 export const updateStoreSchema = createStoreSchema.partial();

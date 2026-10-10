@@ -1,44 +1,112 @@
-# BundleSystem API
+# BundleSystem
 
-API REST con Node.js + Express, validación con Zod y base de datos MySQL.
+Aplicación full-stack para gestión de bundles, con backend en Node.js/Express y frontend en React.
 
-## Estructura
+## Estructura del Proyecto
 
 ```
-src/
-├── config/         # Variables de entorno y pool de conexiones MySQL (database.js)
-├── routes/         # Definición de endpoints (index.js agrupa todos los routers)
-├── controllers/    # Manejo de req/res, orquesta la lógica
-├── repositories/   # Acceso a datos (consultas SQL)
-├── middlewares/    # validate, notFound, errorHandler
-├── schemas/        # Esquemas Zod de validación
-├── utils/          # HttpError, asyncHandler
-├── app.js          # Configuración de Express
-└── server.js       # Punto de entrada
-database/
-└── schema.sql      # Crea la base de datos y las tablas
+bundle-system/
+├── backend/               # API REST (Node.js + Express)
+│   ├── src/
+│   │   ├── config/        # Configuración de base de datos
+│   │   ├── routes/        # Definición de endpoints
+│   │   ├── controllers/   # Lógica de negocio
+│   │   ├── repositories/  # Acceso a datos (SQL)
+│   │   ├── middlewares/   # Middleware de validación
+│   │   ├── schemas/       # Esquemas Zod
+│   │   ├── utils/         # Utilidades
+│   │   ├── app.js         # Configuración de Express
+│   │   └── server.js      # Punto de entrada
+│   ├── database/
+│   │   └── schema.sql     # Esquema de base de datos
+│   ├── .env              # Variables de entorno (no versionado)
+│   └── package.json
+├── frontend/              # Aplicación React (Vite)
+│   ├── src/
+│   │   ├── components/    # Componentes React
+│   │   ├── pages/         # Páginas de la aplicación
+│   │   ├── services/      # Servicios API
+│   │   └── App.jsx        # Componente principal
+│   └── package.json
+└── package.json           # Scripts raíz
 ```
 
-## Base de datos (MySQL)
+## Requisitos Previos
 
-1. Crea la base de datos y las tablas (te pedirá la contraseña de MySQL):
-   ```bash
-   mysql -u root -p < database/schema.sql
-   ```
-   También puedes abrir `database/schema.sql` en MySQL Workbench y ejecutarlo.
-2. Copia `.env.example` a `.env` y completa `DB_USER`, `DB_PASSWORD` y, si cambian, `DB_HOST`, `DB_PORT` y `DB_NAME`.
+- Node.js >= 20
+- MySQL
+- npm
 
-Al arrancar, el servidor comprueba la conexión; si falla, muestra el error y se detiene.
+## Configuración
+
+### 1. Base de Datos
+
+Ejecuta el script SQL para crear la base de datos y las tablas:
+
+```bash
+mysql -u root -p < backend/database/schema.sql
+```
+
+O abre `backend/database/schema.sql` en MySQL Workbench y ejecútalo.
+
+### 2. Variables de Entorno
+
+Copia el archivo de ejemplo y completa las credenciales de MySQL:
+
+```bash
+cp backend/.env.example backend/.env
+```
+
+Edita `backend/.env` con tus credenciales:
+```
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=tu_contraseña
+DB_NAME=bundle_system
+```
+
+### 3. Instalación de Dependencias
+
+Instala todas las dependencias (raíz, backend y frontend):
+
+```bash
+npm run install:all
+```
 
 ## Uso
 
+### Desarrollo
+
+Ejecuta backend y frontend simultáneamente:
+
 ```bash
-cp .env.example .env
-npm install
 npm run dev
 ```
 
-## Endpoints (prefijo `/api/v1`)
+- Backend: http://localhost:3000/api/v1
+- Frontend: http://localhost:5173
+
+### Ejecutar por separado
+
+Solo backend:
+```bash
+npm run dev:backend
+```
+
+Solo frontend:
+```bash
+npm run dev:frontend
+```
+
+### Producción
+
+```bash
+npm run start:backend
+npm run start:frontend
+```
+
+## API Endpoints (prefijo `/api/v1`)
 
 ### Health Check
 | Método | Ruta    | Descripción  |
@@ -144,4 +212,26 @@ npm run dev
 | PATCH  | /user-profiles/:id      | Actualizar perfil        |
 | DELETE | /user-profiles/:id      | Eliminar perfil          |
 
-Para añadir un recurso nuevo: crea su tabla en `database/schema.sql`, `schemas/x.schema.js`, `repositories/x.repository.js`, `controllers/x.controller.js`, `routes/x.routes.js` y regístralo en `routes/index.js`.
+## Tecnologías
+
+### Backend
+- Node.js
+- Express
+- MySQL
+- Zod (validación)
+- CORS
+
+### Frontend
+- React
+- Vite
+- Axios
+
+## Añadir Nuevos Recursos
+
+Para añadir un nuevo recurso al backend:
+1. Crea la tabla en `backend/database/schema.sql`
+2. Crea el schema en `backend/src/schemas/x.schema.js`
+3. Crea el repository en `backend/src/repositories/x.repository.js`
+4. Crea el controller en `backend/src/controllers/x.controller.js`
+5. Crea las rutas en `backend/src/routes/x.routes.js`
+6. Regístralo en `backend/src/routes/index.js`

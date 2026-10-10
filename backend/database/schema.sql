@@ -204,6 +204,7 @@ CREATE TABLE IF NOT EXISTS `bundle_system`.`stores` (
   `user_id` BIGINT NOT NULL,
   `rms_store_code` VARCHAR(45) NOT NULL,
   `store_name` VARCHAR(45) NOT NULL,
+  `city` VARCHAR(50) NOT NULL,
   PRIMARY KEY (`store_code`, `user_id`),
   UNIQUE INDEX `store_code_UNIQUE` (`store_code` ASC) VISIBLE,
   INDEX `fk_stores_user1_idx` (`user_id` ASC) VISIBLE,

@@ -10,6 +10,11 @@ export const createUserSchema = z.object({
   password_hash: z.string().min(1).max(255),
   status: z.string().max(50).default('active'),
   level_user: z.string().max(45).default('field force'),
+  first_name: z.string().min(1).max(50),
+  last_name: z.string().min(1).max(60),
+  role_title: z.string().min(1).max(45),
+  date_of_birth: z.coerce.date(),
+  profile_picture: z.string().max(255).optional(),
 });
 
 export const updateUserSchema = createUserSchema.partial();
