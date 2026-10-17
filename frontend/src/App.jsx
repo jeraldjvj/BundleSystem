@@ -8,6 +8,12 @@ import StoreForm from './components/StoreForm';
 import StoreImport from './components/StoreImport';
 import ProjectForm from './components/ProjectForm';
 import ProjectList from './components/ProjectList';
+import BundleModelForm from './components/BundleModelForm';
+import BundleModelList from './components/BundleModelList';
+import SmartphoneModelForm from './components/SmartphoneModelForm';
+import SmartphoneModelList from './components/SmartphoneModelList';
+import DistributorForm from './components/DistributorForm';
+import DistributorList from './components/DistributorList';
 import Navbar from './components/Navbar';
 import './App.css';
 
@@ -23,6 +29,15 @@ function AppContent() {
   const [editingProject, setEditingProject] = useState(null);
   const [showProjectForm, setShowProjectForm] = useState(false);
   const [projectListRefresh, setProjectListRefresh] = useState(0);
+  const [editingBundleModel, setEditingBundleModel] = useState(null);
+  const [showBundleModelForm, setShowBundleModelForm] = useState(false);
+  const [bundleModelListRefresh, setBundleModelListRefresh] = useState(0);
+  const [editingSmartphoneModel, setEditingSmartphoneModel] = useState(null);
+  const [showSmartphoneModelForm, setShowSmartphoneModelForm] = useState(false);
+  const [smartphoneModelListRefresh, setSmartphoneModelListRefresh] = useState(0);
+  const [editingDistributor, setEditingDistributor] = useState(null);
+  const [showDistributorForm, setShowDistributorForm] = useState(false);
+  const [distributorListRefresh, setDistributorListRefresh] = useState(0);
 
   const handleViewChange = (view) => {
     setCurrentView(view);
@@ -33,6 +48,12 @@ function AppContent() {
     setEditingUser(null);
     setShowProjectForm(false);
     setEditingProject(null);
+    setShowBundleModelForm(false);
+    setEditingBundleModel(null);
+    setShowSmartphoneModelForm(false);
+    setEditingSmartphoneModel(null);
+    setShowDistributorForm(false);
+    setEditingDistributor(null);
   };
 
   const handleEditUser = (user) => {
@@ -75,6 +96,69 @@ function AppContent() {
   const handleProjectCancel = () => {
     setShowProjectForm(false);
     setEditingProject(null);
+  };
+
+  const handleEditBundleModel = (bundleModel) => {
+    setEditingBundleModel(bundleModel);
+    setShowBundleModelForm(true);
+  };
+
+  const handleCreateBundleModel = () => {
+    setEditingBundleModel(null);
+    setShowBundleModelForm(true);
+  };
+
+  const handleBundleModelSave = () => {
+    setShowBundleModelForm(false);
+    setEditingBundleModel(null);
+    setBundleModelListRefresh(prev => prev + 1);
+  };
+
+  const handleBundleModelCancel = () => {
+    setShowBundleModelForm(false);
+    setEditingBundleModel(null);
+  };
+
+  const handleEditSmartphoneModel = (smartphoneModel) => {
+    setEditingSmartphoneModel(smartphoneModel);
+    setShowSmartphoneModelForm(true);
+  };
+
+  const handleCreateSmartphoneModel = () => {
+    setEditingSmartphoneModel(null);
+    setShowSmartphoneModelForm(true);
+  };
+
+  const handleSmartphoneModelSave = () => {
+    setShowSmartphoneModelForm(false);
+    setEditingSmartphoneModel(null);
+    setSmartphoneModelListRefresh(prev => prev + 1);
+  };
+
+  const handleSmartphoneModelCancel = () => {
+    setShowSmartphoneModelForm(false);
+    setEditingSmartphoneModel(null);
+  };
+
+  const handleEditDistributor = (distributor) => {
+    setEditingDistributor(distributor);
+    setShowDistributorForm(true);
+  };
+
+  const handleCreateDistributor = () => {
+    setEditingDistributor(null);
+    setShowDistributorForm(true);
+  };
+
+  const handleDistributorSave = () => {
+    setShowDistributorForm(false);
+    setEditingDistributor(null);
+    setDistributorListRefresh(prev => prev + 1);
+  };
+
+  const handleDistributorCancel = () => {
+    setShowDistributorForm(false);
+    setEditingDistributor(null);
   };
 
   const handleEditStore = (store) => {
@@ -138,29 +222,9 @@ function AppContent() {
               />
             ) : (
               <div style={{ width: '100%', maxWidth: '100%' }}>
-                <div style={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  alignItems: 'center', 
-                  marginBottom: '2rem',
-                  padding: '0 1rem',
-                  flexWrap: 'wrap',
-                  gap: '1rem'
-                }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', padding: '0 1rem', flexWrap: 'wrap', gap: '1rem' }}>
                   <h2 style={{ margin: 0, color: '#333' }}>Gestión de Usuarios</h2>
-                  <button
-                    onClick={handleCreateUser}
-                    style={{
-                      padding: '0.75rem 1.5rem',
-                      backgroundColor: '#28a745',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontSize: '1rem',
-                      fontWeight: 'bold'
-                    }}
-                  >
+                  <button onClick={handleCreateUser} style={{ padding: '0.75rem 1.5rem', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold' }}>
                     + Crear Usuario
                   </button>
                 </div>
@@ -185,29 +249,9 @@ function AppContent() {
               />
             ) : (
               <div style={{ width: '100%', maxWidth: '100%' }}>
-                <div style={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  alignItems: 'center', 
-                  marginBottom: '2rem',
-                  padding: '0 1rem',
-                  flexWrap: 'wrap',
-                  gap: '1rem'
-                }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', padding: '0 1rem', flexWrap: 'wrap', gap: '1rem' }}>
                   <h2 style={{ margin: 0, color: '#333' }}>Gestión de Proyectos</h2>
-                  <button
-                    onClick={handleCreateProject}
-                    style={{
-                      padding: '0.75rem 1.5rem',
-                      backgroundColor: '#28a745',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontSize: '1rem',
-                      fontWeight: 'bold'
-                    }}
-                  >
+                  <button onClick={handleCreateProject} style={{ padding: '0.75rem 1.5rem', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold' }}>
                     + Crear Proyecto
                   </button>
                 </div>
@@ -244,6 +288,87 @@ function AppContent() {
             )}
           </>
         ) : currentView === 'stores' && !canAccessManagement ? (
+          <div style={{ padding: '2rem', textAlign: 'center' }}>
+            <h2 style={{ color: '#333' }}>Acceso Denegado</h2>
+            <p style={{ color: '#666' }}>No tienes permisos para ver esta página. Solo usuarios con nivel Office Manager pueden acceder.</p>
+          </div>
+        ) : null}
+        
+        {currentView === 'bundleModels' && canAccessManagement ? (
+          <>
+            {showBundleModelForm ? (
+              <BundleModelForm 
+                bundleModel={editingBundleModel} 
+                onSave={handleBundleModelSave} 
+                onCancel={handleBundleModelCancel}
+              />
+            ) : (
+              <div style={{ width: '100%', maxWidth: '100%' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', padding: '0 1rem', flexWrap: 'wrap', gap: '1rem' }}>
+                  <h2 style={{ margin: 0, color: '#333' }}>Gestión de Modelos de Bundle</h2>
+                  <button onClick={handleCreateBundleModel} style={{ padding: '0.75rem 1.5rem', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold' }}>
+                    + Crear Modelo
+                  </button>
+                </div>
+                <BundleModelList onEdit={handleEditBundleModel} onRefresh={bundleModelListRefresh} />
+              </div>
+            )}
+          </>
+        ) : currentView === 'bundleModels' && !canAccessManagement ? (
+          <div style={{ padding: '2rem', textAlign: 'center' }}>
+            <h2 style={{ color: '#333' }}>Acceso Denegado</h2>
+            <p style={{ color: '#666' }}>No tienes permisos para ver esta página. Solo usuarios con nivel Office Manager pueden acceder.</p>
+          </div>
+        ) : null}
+
+        {currentView === 'smartphoneModels' && canAccessManagement ? (
+          <>
+            {showSmartphoneModelForm ? (
+              <SmartphoneModelForm 
+                smartphoneModel={editingSmartphoneModel} 
+                onSave={handleSmartphoneModelSave} 
+                onCancel={handleSmartphoneModelCancel}
+              />
+            ) : (
+              <div style={{ width: '100%', maxWidth: '100%' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', padding: '0 1rem', flexWrap: 'wrap', gap: '1rem' }}>
+                  <h2 style={{ margin: 0, color: '#333' }}>Gestión de Modelos de Smartphone</h2>
+                  <button onClick={handleCreateSmartphoneModel} style={{ padding: '0.75rem 1.5rem', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold' }}>
+                    + Crear Modelo
+                  </button>
+                </div>
+                <SmartphoneModelList onEdit={handleEditSmartphoneModel} onRefresh={smartphoneModelListRefresh} />
+              </div>
+            )}
+          </>
+        ) : currentView === 'smartphoneModels' && !canAccessManagement ? (
+          <div style={{ padding: '2rem', textAlign: 'center' }}>
+            <h2 style={{ color: '#333' }}>Acceso Denegado</h2>
+            <p style={{ color: '#666' }}>No tienes permisos para ver esta página. Solo usuarios con nivel Office Manager pueden acceder.</p>
+          </div>
+        ) : null}
+
+        {currentView === 'distributors' && canAccessManagement ? (
+          <>
+            {showDistributorForm ? (
+              <DistributorForm 
+                distributor={editingDistributor} 
+                onSave={handleDistributorSave} 
+                onCancel={handleDistributorCancel}
+              />
+            ) : (
+              <div style={{ width: '100%', maxWidth: '100%' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', padding: '0 1rem', flexWrap: 'wrap', gap: '1rem' }}>
+                  <h2 style={{ margin: 0, color: '#333' }}>Gestión de Distribuidores</h2>
+                  <button onClick={handleCreateDistributor} style={{ padding: '0.75rem 1.5rem', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold' }}>
+                    + Crear Distribuidor
+                  </button>
+                </div>
+                <DistributorList onEdit={handleEditDistributor} onRefresh={distributorListRefresh} />
+              </div>
+            )}
+          </>
+        ) : currentView === 'distributors' && !canAccessManagement ? (
           <div style={{ padding: '2rem', textAlign: 'center' }}>
             <h2 style={{ color: '#333' }}>Acceso Denegado</h2>
             <p style={{ color: '#666' }}>No tienes permisos para ver esta página. Solo usuarios con nivel Office Manager pueden acceder.</p>

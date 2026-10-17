@@ -10,6 +10,7 @@ import smartphoneRoutes from './smartphone.routes.js';
 import bundleDeliveredRoutes from './bundleDelivered.routes.js';
 import storeRoutes from './store.routes.js';
 import userProfileRoutes from './userProfile.routes.js';
+import distributorRoutes from './distributor.routes.js';
 import { pool } from '../config/database.js';
 import { HttpError } from '../utils/HttpError.js';
 import bcrypt from 'bcrypt';
@@ -109,5 +110,6 @@ router.use('/smartphones', smartphoneRoutes);
 router.use('/bundle-delivered', bundleDeliveredRoutes);
 router.use('/stores', storeRoutes);
 router.use('/user-profiles', userProfileRoutes);
+router.use('/distributors', distributorRoutes);
 
 export default router;

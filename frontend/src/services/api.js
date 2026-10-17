@@ -38,4 +38,36 @@ export const projectService = {
   deleteProject: (id) => api.delete(`/projects/${id}`),
 };
 
+export const bundleColorService = {
+  getBundleColors: () => api.get('/bundle-colors'),
+  getBundleColor: (id) => api.get(`/bundle-colors/${id}`),
+  createBundleColor: (data) => api.post('/bundle-colors', data),
+  updateBundleColor: (id, data) => api.patch(`/bundle-colors/${id}`, data),
+  deleteBundleColor: (id) => api.delete(`/bundle-colors/${id}`),
+};
+
+export const bundleModelService = {
+  getBundleModels: () => api.get('/bundle-models'),
+  getBundleModel: (id) => api.get(`/bundle-models/${id}`),
+  createBundleModel: (data) => api.post('/bundle-models', data),
+  updateBundleModel: (id, data) => api.patch(`/bundle-models/${id}`, data),
+  deleteBundleModel: (id) => api.delete(`/bundle-models/${id}`),
+};
+
+export const smartphoneModelService = {
+  getSmartphoneModels: () => api.get('/smartphone-models'),
+  getSmartphoneModel: (id) => api.get(`/smartphone-models/${id}`),
+  createSmartphoneModel: (data) => api.post('/smartphone-models', data),
+  updateSmartphoneModel: (id, data) => api.patch(`/smartphone-models/${id}`, data),
+  deleteSmartphoneModel: (id) => api.delete(`/smartphone-models/${id}`),
+};
+
+export const distributorService = {
+  getDistributors: () => api.get('/distributors'),
+  getDistributor: (id) => api.get(`/distributors/${id}`),
+  createDistributor: (data) => api.post('/distributors', data),
+  updateDistributor: (id, data) => api.patch(`/distributors/${id}`, data),
+  deleteDistributor: (id) => api.delete(`/distributors/${id}`),
+};
+
 export default api;

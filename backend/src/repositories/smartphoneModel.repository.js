@@ -1,15 +1,16 @@
 import { pool } from '../config/database.js';
 
-const COLUMNS = 'smartphone_model_id, smartphone_color_id, model_code, model_name, ram, rom';
-const UPDATABLE_FIELDS = ['smartphone_color_id', 'model_code', 'model_name', 'ram', 'rom'];
+const COLUMNS = 'smartphone_model_id, product_id, model_name, sku_name, ram, rom, color_eng';
+const UPDATABLE_FIELDS = ['product_id', 'model_name', 'sku_name', 'ram', 'rom', 'color_eng'];
 
 const toSmartphoneModel = (row) => ({
   smartphoneModelId: row.smartphone_model_id,
-  smartphoneColorId: row.smartphone_color_id,
-  modelCode: row.model_code,
+  productId: row.product_id,
   modelName: row.model_name,
+  skuName: row.sku_name,
   ram: row.ram,
   rom: row.rom,
+  colorEng: row.color_eng,
 });
 
 export const smartphoneModelRepository = {
@@ -23,10 +24,10 @@ export const smartphoneModelRepository = {
     return rows.length ? toSmartphoneModel(rows[0]) : null;
   },
 
-  async create({ smartphone_color_id, model_code, model_name, ram, rom }) {
+  async create({ product_id, model_name, sku_name, ram, rom, color_eng }) {
     const [result] = await pool.query(
-      'INSERT INTO smartphone_model (smartphone_color_id, model_code, model_name, ram, rom) VALUES (?, ?, ?, ?, ?)',
-      [smartphone_color_id, model_code, model_name, ram, rom],
+      'INSERT INTO smartphone_model (product_id, model_name, sku_name, ram, rom, color_eng) VALUES (?, ?, ?, ?, ?, ?)',
+      [product_id, model_name, sku_name, ram, rom, color_eng],
     );
     return this.findById(result.insertId);
   },

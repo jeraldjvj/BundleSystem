@@ -1,12 +1,11 @@
 import { pool } from '../config/database.js';
 
-const COLUMNS = 'bundle_model_id, bundle_name, bundle_color_id';
-const UPDATABLE_FIELDS = ['bundle_name', 'bundle_color_id'];
+const COLUMNS = 'bundle_model_id, bundle_name';
+const UPDATABLE_FIELDS = ['bundle_name'];
 
 const toBundleModel = (row) => ({
   bundleModelId: row.bundle_model_id,
   bundleName: row.bundle_name,
-  bundleColorId: row.bundle_color_id,
 });
 
 export const bundleModelRepository = {
@@ -20,10 +19,10 @@ export const bundleModelRepository = {
     return rows.length ? toBundleModel(rows[0]) : null;
   },
 
-  async create({ bundle_name, bundle_color_id }) {
+  async create({ bundle_name }) {
     const [result] = await pool.query(
-      'INSERT INTO bundle_model (bundle_name, bundle_color_id) VALUES (?, ?)',
-      [bundle_name, bundle_color_id],
+      'INSERT INTO bundle_model (bundle_name) VALUES (?)',
+      [bundle_name],
     );
     return this.findById(result.insertId);
   },
