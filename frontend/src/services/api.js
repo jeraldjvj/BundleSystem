@@ -30,4 +30,12 @@ export const storeService = {
   deleteStore: (code) => api.delete(`/stores/${code}`),
 };
 
+export const projectService = {
+  getProjects: () => api.get('/projects'),
+  getProject: (id) => api.get(`/projects/${id}`),
+  createProject: (data) => api.post('/projects', data),
+  updateProject: (id, data) => api.patch(`/projects/${id}`, data),
+  deleteProject: (id) => api.delete(`/projects/${id}`),
+};
+
 export default api;

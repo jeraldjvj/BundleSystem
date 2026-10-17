@@ -152,7 +152,6 @@ function UserForm({ user, onSave, onCancel }) {
           >
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
-            <option value="pending">Pending</option>
           </select>
         </div>
 
@@ -167,10 +166,9 @@ function UserForm({ user, onSave, onCancel }) {
             onChange={handleChange}
             style={{ width: '100%', padding: '0.5rem', border: '1px solid #ccc', borderRadius: '4px' }}
           >
-            <option value="field force">Field Force</option>
-            <option value="manager">Manager</option>
-            <option value="admin">Admin</option>
-            <option value="supervisor">Supervisor</option>
+            <option value="Field Force">Field Force</option>
+            <option value="City Manager">City Manager</option>
+            <option value="Office Manager">Office Manager</option>
           </select>
         </div>
 

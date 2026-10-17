@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 
-function Navbar({ currentView, onViewChange }) {
+function Navbar({ currentView, onViewChange, canAccessManagement }) {
   const [isOpen, setIsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const { user, logout } = useAuth();
@@ -203,42 +203,66 @@ function Navbar({ currentView, onViewChange }) {
           </h2>
 
           <nav style={{ padding: '0 1rem' }}>
-            <button
-              onClick={() => handleViewChange('users')}
-              style={{
-                width: '100%',
-                padding: '1rem',
-                backgroundColor: currentView === 'users' ? '#495057' : 'transparent',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                textAlign: 'left',
-                fontSize: '1rem',
-                marginBottom: '0.5rem',
-                transition: 'background-color 0.2s'
-              }}
-            >
-              Usuarios
-            </button>
-            <button
-              onClick={() => handleViewChange('stores')}
-              style={{
-                width: '100%',
-                padding: '1rem',
-                backgroundColor: currentView === 'stores' ? '#495057' : 'transparent',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                textAlign: 'left',
-                fontSize: '1rem',
-                marginBottom: '0.5rem',
-                transition: 'background-color 0.2s'
-              }}
-            >
-              Stores
-            </button>
+            {canAccessManagement && (
+              <button
+                onClick={() => handleViewChange('users')}
+                style={{
+                  width: '100%',
+                  padding: '1rem',
+                  backgroundColor: currentView === 'users' ? '#495057' : 'transparent',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  fontSize: '1rem',
+                  marginBottom: '0.5rem',
+                  transition: 'background-color 0.2s'
+                }}
+              >
+                Usuarios
+              </button>
+            )}
+            {canAccessManagement && (
+              <button
+                onClick={() => handleViewChange('stores')}
+                style={{
+                  width: '100%',
+                  padding: '1rem',
+                  backgroundColor: currentView === 'stores' ? '#495057' : 'transparent',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  fontSize: '1rem',
+                  marginBottom: '0.5rem',
+                  transition: 'background-color 0.2s'
+                }}
+              >
+                Stores
+              </button>
+            )}
+            {canAccessManagement && (
+              <button
+                onClick={() => handleViewChange('projects')}
+                style={{
+                  width: '100%',
+                  padding: '1rem',
+                  backgroundColor: currentView === 'projects' ? '#495057' : 'transparent',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  fontSize: '1rem',
+                  marginBottom: '0.5rem',
+                  transition: 'background-color 0.2s'
+                }}
+              >
+                Proyectos
+              </button>
+            )}
           </nav>
         </div>
       </div>

@@ -6,6 +6,8 @@ import UserList from './components/UserList';
 import StoreList from './components/StoreList';
 import StoreForm from './components/StoreForm';
 import StoreImport from './components/StoreImport';
+import ProjectForm from './components/ProjectForm';
+import ProjectList from './components/ProjectList';
 import Navbar from './components/Navbar';
 import './App.css';
 
@@ -18,6 +20,9 @@ function AppContent() {
   const [editingUser, setEditingUser] = useState(null);
   const [showUserForm, setShowUserForm] = useState(false);
   const [userListRefresh, setUserListRefresh] = useState(0);
+  const [editingProject, setEditingProject] = useState(null);
+  const [showProjectForm, setShowProjectForm] = useState(false);
+  const [projectListRefresh, setProjectListRefresh] = useState(0);
 
   const handleViewChange = (view) => {
     setCurrentView(view);
@@ -26,6 +31,8 @@ function AppContent() {
     setEditingStore(null);
     setShowUserForm(false);
     setEditingUser(null);
+    setShowProjectForm(false);
+    setEditingProject(null);
   };
 
   const handleEditUser = (user) => {
@@ -47,6 +54,27 @@ function AppContent() {
   const handleUserCancel = () => {
     setShowUserForm(false);
     setEditingUser(null);
+  };
+
+  const handleEditProject = (project) => {
+    setEditingProject(project);
+    setShowProjectForm(true);
+  };
+
+  const handleCreateProject = () => {
+    setEditingProject(null);
+    setShowProjectForm(true);
+  };
+
+  const handleProjectSave = () => {
+    setShowProjectForm(false);
+    setEditingProject(null);
+    setProjectListRefresh(prev => prev + 1);
+  };
+
+  const handleProjectCancel = () => {
+    setShowProjectForm(false);
+    setEditingProject(null);
   };
 
   const handleEditStore = (store) => {
@@ -85,9 +113,11 @@ function AppContent() {
     return <Login />;
   }
 
+  const canAccessManagement = user.levelUser === 'Office Manager' || user.levelUser === 'admin';
+
   return (
     <div style={{ margin: 0, padding: 0, width: '100%', minHeight: '100vh', overflowX: 'hidden' }}>
-      <Navbar currentView={currentView} onViewChange={handleViewChange} />
+      <Navbar currentView={currentView} onViewChange={handleViewChange} canAccessManagement={canAccessManagement} />
       
       <main style={{ 
         backgroundColor: '#f8f9fa', 
@@ -98,7 +128,7 @@ function AppContent() {
         width: '100%',
         boxSizing: 'border-box'
       }}>
-        {currentView === 'users' && (
+        {currentView === 'users' && canAccessManagement ? (
           <>
             {showUserForm ? (
               <UserForm 
@@ -138,9 +168,61 @@ function AppContent() {
               </div>
             )}
           </>
-        )}
+        ) : currentView === 'users' && !canAccessManagement ? (
+          <div style={{ padding: '2rem', textAlign: 'center' }}>
+            <h2 style={{ color: '#333' }}>Acceso Denegado</h2>
+            <p style={{ color: '#666' }}>No tienes permisos para ver esta página. Solo usuarios con nivel Office Manager pueden acceder.</p>
+          </div>
+        ) : null}
         
-        {currentView === 'stores' && (
+        {currentView === 'projects' && canAccessManagement ? (
+          <>
+            {showProjectForm ? (
+              <ProjectForm 
+                project={editingProject} 
+                onSave={handleProjectSave} 
+                onCancel={handleProjectCancel}
+              />
+            ) : (
+              <div style={{ width: '100%', maxWidth: '100%' }}>
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center', 
+                  marginBottom: '2rem',
+                  padding: '0 1rem',
+                  flexWrap: 'wrap',
+                  gap: '1rem'
+                }}>
+                  <h2 style={{ margin: 0, color: '#333' }}>Gestión de Proyectos</h2>
+                  <button
+                    onClick={handleCreateProject}
+                    style={{
+                      padding: '0.75rem 1.5rem',
+                      backgroundColor: '#28a745',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '1rem',
+                      fontWeight: 'bold'
+                    }}
+                  >
+                    + Crear Proyecto
+                  </button>
+                </div>
+                <ProjectList onEdit={handleEditProject} onRefresh={projectListRefresh} />
+              </div>
+            )}
+          </>
+        ) : currentView === 'projects' && !canAccessManagement ? (
+          <div style={{ padding: '2rem', textAlign: 'center' }}>
+            <h2 style={{ color: '#333' }}>Acceso Denegado</h2>
+            <p style={{ color: '#666' }}>No tienes permisos para ver esta página. Solo usuarios con nivel Office Manager pueden acceder.</p>
+          </div>
+        ) : null}
+        
+        {currentView === 'stores' && canAccessManagement ? (
           <>
             {showStoreImport ? (
               <StoreImport 
@@ -161,7 +243,12 @@ function AppContent() {
               />
             )}
           </>
-        )}
+        ) : currentView === 'stores' && !canAccessManagement ? (
+          <div style={{ padding: '2rem', textAlign: 'center' }}>
+            <h2 style={{ color: '#333' }}>Acceso Denegado</h2>
+            <p style={{ color: '#666' }}>No tienes permisos para ver esta página. Solo usuarios con nivel Office Manager pueden acceder.</p>
+          </div>
+        ) : null}
       </main>
     </div>
   );
