@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 
-function Navbar({ currentView, onViewChange, canAccessManagement }) {
+function Navbar({ currentView, onViewChange, canAccessManagement, canAccessBundles }) {
   const [isOpen, setIsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const { user, logout } = useAuth();
@@ -118,7 +118,7 @@ function Navbar({ currentView, onViewChange, canAccessManagement }) {
               color: '#333',
               lineHeight: '1.2'
             }}>
-              {user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.email?.split('@')[0]}
+              {user?.firstName || user?.email?.split('@')[0]}
             </div>
             <div style={{ 
               fontSize: '0.75rem', 
@@ -281,6 +281,26 @@ function Navbar({ currentView, onViewChange, canAccessManagement }) {
                 }}
               >
                 Modelos de Bundle
+              </button>
+            )}
+            {canAccessBundles && (
+              <button
+                onClick={() => handleViewChange('bundles')}
+                style={{
+                  width: '100%',
+                  padding: '1rem',
+                  backgroundColor: currentView === 'bundles' ? '#495057' : 'transparent',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  fontSize: '1rem',
+                  marginBottom: '0.5rem',
+                  transition: 'background-color 0.2s'
+                }}
+              >
+                Bundles
               </button>
             )}
             {canAccessManagement && (

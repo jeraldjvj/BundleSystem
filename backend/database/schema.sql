@@ -205,6 +205,8 @@ CREATE TABLE IF NOT EXISTS `bundle_system`.`user_profile` (
   `last_name` VARCHAR(60) NOT NULL,
   `role_title` VARCHAR(45) NOT NULL,
   `date_of_birth` DATE NOT NULL,
+  `city` VARCHAR(45) NOT NULL,
+  `head_in_charge` VARCHAR(200) NOT NULL,
   `profile_picture` VARCHAR(255) NULL DEFAULT NULL,
   PRIMARY KEY (`profile_id`, `user_id`),
   UNIQUE INDEX `profile_id_UNIQUE` (`profile_id` ASC) VISIBLE,

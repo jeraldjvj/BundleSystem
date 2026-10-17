@@ -12,11 +12,26 @@ function UserForm({ user, onSave, onCancel }) {
     last_name: '',
     role_title: '',
     date_of_birth: '',
+    city: '',
+    head_in_charge: '',
     profile_picture: '',
   });
 
+  const [managers, setManagers] = useState([]);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    const loadManagers = async () => {
+      try {
+        const response = await userService.getUsers();
+        setManagers(response.data.filter(u => u.levelUser === 'City Manager' || u.levelUser === 'Office Manager'));
+      } catch (err) {
+        console.error('Error al cargar encargados:', err);
+      }
+    };
+    loadManagers();
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -30,6 +45,8 @@ function UserForm({ user, onSave, onCancel }) {
         last_name: user.lastName || '',
         role_title: user.roleTitle || '',
         date_of_birth: user.dateOfBirth ? user.dateOfBirth.split('T')[0] : '',
+        city: user.city || '',
+        head_in_charge: user.headInCharge || '',
         profile_picture: user.profilePicture || '',
       });
     }
@@ -237,6 +254,49 @@ function UserForm({ user, onSave, onCancel }) {
             required
             style={{ width: '100%', padding: '0.5rem', border: '1px solid #ccc', borderRadius: '4px' }}
           />
+        </div>
+
+        <div style={{ marginBottom: '1rem' }}>
+          <label htmlFor="city" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+            Ciudad:
+          </label>
+          <input
+            type="text"
+            id="city"
+            name="city"
+            value={formData.city}
+            onChange={handleChange}
+            required
+            maxLength={45}
+            style={{ width: '100%', padding: '0.5rem', border: '1px solid #ccc', borderRadius: '4px' }}
+          />
+        </div>
+
+        <div style={{ marginBottom: '1rem' }}>
+          <label htmlFor="head_in_charge" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+            Encargado (Head in Charge):
+          </label>
+          <select
+            id="head_in_charge"
+            name="head_in_charge"
+            value={formData.head_in_charge}
+            onChange={handleChange}
+            required
+            style={{ width: '100%', padding: '0.5rem', border: '1px solid #ccc', borderRadius: '4px' }}
+          >
+            <option value="">Selecciona un encargado</option>
+            {managers.map(m => {
+              const fullName = `${m.firstName || ''} ${m.lastName || ''}`.trim() || m.email;
+              return (
+                <option key={m.userId} value={fullName}>
+                  {fullName} ({m.levelUser})
+                </option>
+              );
+            })}
+            {formData.head_in_charge && !managers.some(m => `${m.firstName || ''} ${m.lastName || ''}`.trim() === formData.head_in_charge) && (
+              <option value={formData.head_in_charge}>{formData.head_in_charge}</option>
+            )}
+          </select>
         </div>
 
         <div style={{ marginBottom: '1rem' }}>

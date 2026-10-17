@@ -1,9 +1,9 @@
 import { pool } from '../config/database.js';
 import bcrypt from 'bcrypt';
 
-const COLUMNS = 'u.user_id, u.mi_id, u.email, u.password_hash, u.status, u.level_user, u.create_time, u.updated_at, up.first_name, up.last_name, up.role_title, up.date_of_birth, up.profile_picture';
+const COLUMNS = 'u.user_id, u.mi_id, u.email, u.password_hash, u.status, u.level_user, u.create_time, u.updated_at, up.first_name, up.last_name, up.role_title, up.date_of_birth, up.city, up.head_in_charge, up.profile_picture';
 const UPDATABLE_FIELDS = ['mi_id', 'email', 'password_hash', 'status', 'level_user'];
-const PROFILE_FIELDS = ['first_name', 'last_name', 'role_title', 'date_of_birth', 'profile_picture'];
+const PROFILE_FIELDS = ['first_name', 'last_name', 'role_title', 'date_of_birth', 'city', 'head_in_charge', 'profile_picture'];
 
 const toUser = (row) => ({
   userId: row.user_id,
@@ -18,6 +18,8 @@ const toUser = (row) => ({
   lastName: row.last_name,
   roleTitle: row.role_title,
   dateOfBirth: row.date_of_birth,
+  city: row.city,
+  headInCharge: row.head_in_charge,
   profilePicture: row.profile_picture,
 });
 
@@ -37,7 +39,7 @@ export const userRepository = {
     return rows.length ? toUser(rows[0]) : null;
   },
 
-  async create({ mi_id, email, password_hash, status = 'active', level_user = 'field force', first_name, last_name, role_title, date_of_birth, profile_picture }) {
+  async create({ mi_id, email, password_hash, status = 'active', level_user = 'field force', first_name, last_name, role_title, date_of_birth, city, head_in_charge, profile_picture }) {
     const connection = await pool.getConnection();
     try {
       await connection.beginTransaction();
@@ -53,8 +55,8 @@ export const userRepository = {
       const userId = result.insertId;
       
       await connection.query(
-        'INSERT INTO user_profile (user_id, first_name, last_name, role_title, date_of_birth, profile_picture) VALUES (?, ?, ?, ?, ?, ?)',
-        [userId, first_name, last_name, role_title, date_of_birth, profile_picture || null],
+        'INSERT INTO user_profile (user_id, first_name, last_name, role_title, date_of_birth, city, head_in_charge, profile_picture) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        [userId, first_name, last_name, role_title, date_of_birth, city, head_in_charge, profile_picture || null],
       );
       
       await connection.commit();
@@ -102,8 +104,8 @@ export const userRepository = {
           );
         } else {
           await connection.query(
-            'INSERT INTO user_profile (user_id, first_name, last_name, role_title, date_of_birth, profile_picture) VALUES (?, ?, ?, ?, ?, ?)',
-            [userId, data.first_name, data.last_name, data.role_title, data.date_of_birth, data.profile_picture || null],
+            'INSERT INTO user_profile (user_id, first_name, last_name, role_title, date_of_birth, city, head_in_charge, profile_picture) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            [userId, data.first_name, data.last_name, data.role_title, data.date_of_birth, data.city, data.head_in_charge, data.profile_picture || null],
           );
         }
       }

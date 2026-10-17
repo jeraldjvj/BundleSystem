@@ -70,4 +70,12 @@ export const distributorService = {
   deleteDistributor: (id) => api.delete(`/distributors/${id}`),
 };
 
+export const bundleService = {
+  getBundles: () => api.get('/bundles'),
+  getBundle: (id) => api.get(`/bundles/${id}`),
+  createBundle: (data) => api.post('/bundles', data),
+  updateBundle: (id, data) => api.patch(`/bundles/${id}`, data),
+  deleteBundle: (id) => api.delete(`/bundles/${id}`),
+};
+
 export default api;

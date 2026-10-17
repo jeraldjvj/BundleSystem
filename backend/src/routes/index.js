@@ -28,7 +28,10 @@ router.post('/login', async (req, res, next) => {
     }
 
     const [users] = await pool.query(
-      'SELECT * FROM user WHERE email = ?',
+      `SELECT u.*, up.first_name, up.last_name, up.profile_picture
+       FROM user u
+       LEFT JOIN user_profile up ON u.user_id = up.user_id
+       WHERE u.email = ?`,
       [email]
     );
 
@@ -57,6 +60,9 @@ router.post('/login', async (req, res, next) => {
       email: user.email,
       status: user.status,
       levelUser: user.level_user,
+      firstName: user.first_name,
+      lastName: user.last_name,
+      profilePicture: user.profile_picture,
     });
   } catch (error) {
     next(error);

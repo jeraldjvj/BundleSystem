@@ -14,6 +14,8 @@ export const createUserSchema = z.object({
   last_name: z.string().min(1).max(60),
   role_title: z.string().min(1).max(45),
   date_of_birth: z.coerce.date(),
+  city: z.string().min(1).max(45),
+  head_in_charge: z.string().min(1).max(200),
   profile_picture: z.string().max(255).optional(),
 });
 

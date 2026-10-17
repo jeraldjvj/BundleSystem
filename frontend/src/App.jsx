@@ -14,6 +14,9 @@ import SmartphoneModelForm from './components/SmartphoneModelForm';
 import SmartphoneModelList from './components/SmartphoneModelList';
 import DistributorForm from './components/DistributorForm';
 import DistributorList from './components/DistributorList';
+import BundleForm from './components/BundleForm';
+import BundleList from './components/BundleList';
+import BundleImport from './components/BundleImport';
 import Navbar from './components/Navbar';
 import './App.css';
 
@@ -38,6 +41,10 @@ function AppContent() {
   const [editingDistributor, setEditingDistributor] = useState(null);
   const [showDistributorForm, setShowDistributorForm] = useState(false);
   const [distributorListRefresh, setDistributorListRefresh] = useState(0);
+  const [editingBundle, setEditingBundle] = useState(null);
+  const [showBundleForm, setShowBundleForm] = useState(false);
+  const [showBundleImport, setShowBundleImport] = useState(false);
+  const [bundleListRefresh, setBundleListRefresh] = useState(0);
 
   const handleViewChange = (view) => {
     setCurrentView(view);
@@ -54,6 +61,43 @@ function AppContent() {
     setEditingSmartphoneModel(null);
     setShowDistributorForm(false);
     setEditingDistributor(null);
+    setShowBundleForm(false);
+    setShowBundleImport(false);
+    setEditingBundle(null);
+  };
+
+  const handleEditBundle = (bundle) => {
+    setEditingBundle(bundle);
+    setShowBundleForm(true);
+  };
+
+  const handleCreateBundle = () => {
+    setEditingBundle(null);
+    setShowBundleForm(true);
+  };
+
+  const handleImportBundle = () => {
+    setShowBundleImport(true);
+  };
+
+  const handleBundleSave = () => {
+    setShowBundleForm(false);
+    setEditingBundle(null);
+    setBundleListRefresh(prev => prev + 1);
+  };
+
+  const handleBundleCancel = () => {
+    setShowBundleForm(false);
+    setEditingBundle(null);
+  };
+
+  const handleBundleImportComplete = () => {
+    setShowBundleImport(false);
+    setBundleListRefresh(prev => prev + 1);
+  };
+
+  const handleBundleImportCancel = () => {
+    setShowBundleImport(false);
   };
 
   const handleEditUser = (user) => {
@@ -198,10 +242,11 @@ function AppContent() {
   }
 
   const canAccessManagement = user.levelUser === 'Office Manager' || user.levelUser === 'admin';
+  const canAccessBundles = canAccessManagement || user.levelUser === 'City Manager';
 
   return (
     <div style={{ margin: 0, padding: 0, width: '100%', minHeight: '100vh', overflowX: 'hidden' }}>
-      <Navbar currentView={currentView} onViewChange={handleViewChange} canAccessManagement={canAccessManagement} />
+      <Navbar currentView={currentView} onViewChange={handleViewChange} canAccessManagement={canAccessManagement} canAccessBundles={canAccessBundles} />
       
       <main style={{ 
         backgroundColor: '#f8f9fa', 
@@ -345,6 +390,35 @@ function AppContent() {
           <div style={{ padding: '2rem', textAlign: 'center' }}>
             <h2 style={{ color: '#333' }}>Acceso Denegado</h2>
             <p style={{ color: '#666' }}>No tienes permisos para ver esta página. Solo usuarios con nivel Office Manager pueden acceder.</p>
+          </div>
+        ) : null}
+
+        {currentView === 'bundles' && canAccessBundles ? (
+          <>
+            {showBundleImport ? (
+              <BundleImport
+                onImportComplete={handleBundleImportComplete}
+                onCancel={handleBundleImportCancel}
+              />
+            ) : showBundleForm ? (
+              <BundleForm
+                bundle={editingBundle}
+                onSave={handleBundleSave}
+                onCancel={handleBundleCancel}
+              />
+            ) : (
+              <BundleList
+                onEdit={handleEditBundle}
+                onCreate={handleCreateBundle}
+                onImport={handleImportBundle}
+                onRefresh={bundleListRefresh}
+              />
+            )}
+          </>
+        ) : currentView === 'bundles' && !canAccessBundles ? (
+          <div style={{ padding: '2rem', textAlign: 'center' }}>
+            <h2 style={{ color: '#333' }}>Acceso Denegado</h2>
+            <p style={{ color: '#666' }}>No tienes permisos para ver esta página. Solo usuarios con nivel Office Manager o City Manager pueden acceder.</p>
           </div>
         ) : null}
 

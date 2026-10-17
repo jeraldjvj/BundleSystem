@@ -1,7 +1,7 @@
 import { pool } from '../config/database.js';
 
-const COLUMNS = 'profile_id, user_id, first_name, last_name, role_title, date_of_birth, profile_picture';
-const UPDATABLE_FIELDS = ['user_id', 'first_name', 'last_name', 'role_title', 'date_of_birth', 'profile_picture'];
+const COLUMNS = 'profile_id, user_id, first_name, last_name, role_title, date_of_birth, city, head_in_charge, profile_picture';
+const UPDATABLE_FIELDS = ['user_id', 'first_name', 'last_name', 'role_title', 'date_of_birth', 'city', 'head_in_charge', 'profile_picture'];
 
 const toUserProfile = (row) => ({
   profileId: row.profile_id,
@@ -10,6 +10,8 @@ const toUserProfile = (row) => ({
   lastName: row.last_name,
   roleTitle: row.role_title,
   dateOfBirth: row.date_of_birth,
+  city: row.city,
+  headInCharge: row.head_in_charge,
   profilePicture: row.profile_picture,
 });
 
@@ -24,10 +26,10 @@ export const userProfileRepository = {
     return rows.length ? toUserProfile(rows[0]) : null;
   },
 
-  async create({ user_id, first_name, last_name, role_title, date_of_birth, profile_picture }) {
+  async create({ user_id, first_name, last_name, role_title, date_of_birth, city, head_in_charge, profile_picture }) {
     const [result] = await pool.query(
-      'INSERT INTO user_profile (user_id, first_name, last_name, role_title, date_of_birth, profile_picture) VALUES (?, ?, ?, ?, ?, ?)',
-      [user_id, first_name, last_name, role_title, date_of_birth, profile_picture],
+      'INSERT INTO user_profile (user_id, first_name, last_name, role_title, date_of_birth, city, head_in_charge, profile_picture) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [user_id, first_name, last_name, role_title, date_of_birth, city, head_in_charge, profile_picture],
     );
     return this.findById(result.insertId);
   },
