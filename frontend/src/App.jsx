@@ -6,6 +6,8 @@ import UserList from './components/UserList';
 import StoreList from './components/StoreList';
 import StoreForm from './components/StoreForm';
 import StoreImport from './components/StoreImport';
+import StoreAssignForm from './components/StoreAssignForm';
+import StoreBatchAssignImport from './components/StoreBatchAssignImport';
 import ProjectForm from './components/ProjectForm';
 import ProjectList from './components/ProjectList';
 import BundleModelForm from './components/BundleModelForm';
@@ -31,11 +33,15 @@ function AppContent() {
     const level = user?.levelUser;
     if (level === 'Office Manager' || level === 'admin') return 'users';
     if (level === 'City Manager') return 'bundles';
-    return 'bundleDelivery';
+    if (level?.toLowerCase() === 'field force') return 'bundleDelivery';
+    return 'users';
   });
   const [editingStore, setEditingStore] = useState(null);
   const [showStoreForm, setShowStoreForm] = useState(false);
   const [showStoreImport, setShowStoreImport] = useState(false);
+  const [assigningStore, setAssigningStore] = useState(null);
+  const [showStoreAssign, setShowStoreAssign] = useState(false);
+  const [showStoreBatchImport, setShowStoreBatchImport] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [showUserForm, setShowUserForm] = useState(false);
   const [userListRefresh, setUserListRefresh] = useState(0);
@@ -67,6 +73,9 @@ function AppContent() {
     setCurrentView(view);
     setShowStoreForm(false);
     setShowStoreImport(false);
+    setShowStoreAssign(false);
+    setAssigningStore(null);
+    setShowStoreBatchImport(false);
     setEditingStore(null);
     setShowUserForm(false);
     setEditingUser(null);
@@ -301,6 +310,33 @@ function AppContent() {
     setEditingStore(null);
   };
 
+  const handleAssignStore = (store) => {
+    setAssigningStore(store);
+    setShowStoreAssign(true);
+  };
+
+  const handleStoreAssignSave = () => {
+    setShowStoreAssign(false);
+    setAssigningStore(null);
+  };
+
+  const handleStoreAssignCancel = () => {
+    setShowStoreAssign(false);
+    setAssigningStore(null);
+  };
+
+  const handleBatchImportStore = () => {
+    setShowStoreBatchImport(true);
+  };
+
+  const handleStoreBatchImportComplete = () => {
+    setShowStoreBatchImport(false);
+  };
+
+  const handleStoreBatchImportCancel = () => {
+    setShowStoreBatchImport(false);
+  };
+
   const handleImportComplete = () => {
     setShowStoreImport(false);
   };
@@ -315,10 +351,11 @@ function AppContent() {
 
   const canAccessManagement = user.levelUser === 'Office Manager' || user.levelUser === 'admin';
   const canAccessBundles = canAccessManagement || user.levelUser === 'City Manager';
+  const canAccessDelivery = user.levelUser?.toLowerCase() === 'field force';
 
   return (
     <div style={{ margin: 0, padding: 0, width: '100%', minHeight: '100vh', overflowX: 'hidden' }}>
-      <Navbar currentView={currentView} onViewChange={handleViewChange} canAccessManagement={canAccessManagement} canAccessBundles={canAccessBundles} />
+      <Navbar currentView={currentView} onViewChange={handleViewChange} canAccessManagement={canAccessManagement} canAccessBundles={canAccessBundles} canAccessDelivery={canAccessDelivery} />
       
       <main style={{ 
         backgroundColor: '#f8f9fa', 
@@ -390,6 +427,17 @@ function AppContent() {
                 onImportComplete={handleImportComplete}
                 onCancel={handleImportCancel}
               />
+            ) : showStoreBatchImport ? (
+              <StoreBatchAssignImport
+                onImportComplete={handleStoreBatchImportComplete}
+                onCancel={handleStoreBatchImportCancel}
+              />
+            ) : showStoreAssign ? (
+              <StoreAssignForm
+                store={assigningStore}
+                onSave={handleStoreAssignSave}
+                onCancel={handleStoreAssignCancel}
+              />
             ) : showStoreForm ? (
               <StoreForm 
                 store={editingStore} 
@@ -401,6 +449,8 @@ function AppContent() {
                 onEdit={handleEditStore} 
                 onCreate={handleCreateStore}
                 onImport={handleImportStore}
+                onBatchImport={handleBatchImportStore}
+                onAssign={handleAssignStore}
               />
             )}
           </>
@@ -565,13 +615,18 @@ function AppContent() {
           </div>
         ) : null}
 
-        {currentView === 'bundleDelivery' && (
+        {currentView === 'bundleDelivery' && canAccessDelivery ? (
           <BundleDeliveryForm
             key={deliveryFormKey}
             onSave={() => setDeliveryFormKey(prev => prev + 1)}
             onCancel={() => handleViewChange(canAccessBundles ? 'bundles' : 'bundleDelivery') || setDeliveryFormKey(prev => prev + 1)}
           />
-        )}
+        ) : currentView === 'bundleDelivery' && !canAccessDelivery ? (
+          <div style={{ padding: '2rem', textAlign: 'center' }}>
+            <h2 style={{ color: '#333' }}>Acceso Denegado</h2>
+            <p style={{ color: '#666' }}>No tienes permisos para ver esta página. Solo usuarios con nivel Field Force pueden acceder.</p>
+          </div>
+        ) : null}
       </main>
     </div>
   );

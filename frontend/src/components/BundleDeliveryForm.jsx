@@ -65,49 +65,73 @@ function BundleDeliveryForm({ onSave, onCancel }) {
     loadStores();
   }, [user.userId]);
 
-  const verifySerial = async () => {
+  // Verificación automática del serial con debounce (600ms tras dejar de escribir)
+  useEffect(() => {
     const serial = serialInput.trim();
-    if (!serial) return;
-    setSerialChecking(true);
-    setSerialMsg(null);
     setVerifiedBundle(null);
-    try {
-      const res = await bundleService.verifySerial(serial, user.userId);
-      setVerifiedBundle(res.data);
-      setSerialMsg({ ok: true, text: `Verificado: ${res.data.bundleModelName || 'Bundle'} — ${res.data.projectName || ''}` });
-    } catch (err) {
-      const msg = err.response?.status === 403
-        ? 'Este serial existe pero NO está asignado a tu usuario'
-        : err.response?.status === 404
-          ? 'Serial no encontrado en la base de datos'
-          : (err.response?.data?.error || err.message);
-      setSerialMsg({ ok: false, text: msg });
-    } finally {
-      setSerialChecking(false);
-    }
-  };
+    setSerialMsg(null);
+    setSerialChecking(false);
+    if (serial.length < 4) return;
 
-  const verifyImei = async () => {
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      setSerialChecking(true);
+      try {
+        const res = await bundleService.verifySerial(serial, user.userId);
+        if (cancelled) return;
+        setVerifiedBundle(res.data);
+        setSerialMsg({ ok: true, text: `Verificado: ${res.data.bundleModelName || 'Bundle'}` });
+      } catch (err) {
+        if (cancelled) return;
+        const msg = err.response?.status === 403
+          ? 'Este serial existe pero NO está asignado a tu usuario'
+          : err.response?.status === 404
+            ? 'Serial no encontrado en la base de datos'
+            : (err.response?.data?.error || err.message);
+        setSerialMsg({ ok: false, text: msg });
+      } finally {
+        if (!cancelled) setSerialChecking(false);
+      }
+    }, 600);
+
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [serialInput, user.userId]);
+
+  // Verificación automática del IMEI con debounce
+  useEffect(() => {
     const imei = imeiInput.trim();
-    if (!imei) return;
-    setImeiChecking(true);
-    setImeiMsg(null);
     setVerifiedPhone(null);
-    try {
-      const res = await smartphoneService.getByImei(imei);
-      setVerifiedPhone(res.data);
-      setImeiMsg({ ok: true, text: `Encontrado: ${res.data.modelName || 'Smartphone'} (${res.data.status})` });
-    } catch (err) {
-      setImeiMsg({
-        ok: false,
-        text: err.response?.status === 404
-          ? 'IMEI no encontrado en smartphones_database'
-          : (err.response?.data?.error || err.message)
-      });
-    } finally {
-      setImeiChecking(false);
-    }
-  };
+    setImeiMsg(null);
+    setImeiChecking(false);
+    if (imei.length < 8) return;
+
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      setImeiChecking(true);
+      try {
+        const res = await smartphoneService.getByImei(imei);
+        if (cancelled) return;
+        if (String(res.data.status).toLowerCase() === 'delivered') {
+          setImeiMsg({ ok: false, text: 'BANDEO YA ENTREGADO' });
+          return;
+        }
+        setVerifiedPhone(res.data);
+        setImeiMsg({ ok: true, text: `Verificado: ${res.data.skuName || res.data.modelName || 'Smartphone'} — ${res.data.distributorName || ''}` });
+      } catch (err) {
+        if (cancelled) return;
+        setImeiMsg({
+          ok: false,
+          text: err.response?.status === 404
+            ? 'IMEI no encontrado en smartphones_database'
+            : (err.response?.data?.error || err.message)
+        });
+      } finally {
+        if (!cancelled) setImeiChecking(false);
+      }
+    }, 600);
+
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [imeiInput]);
 
   const handlePicture = (e) => {
     const file = e.target.files?.[0];
@@ -126,7 +150,7 @@ function BundleDeliveryForm({ onSave, onCancel }) {
     if (!selectedStore) return setError('Selecciona un store');
     if (!picture) return setError('Sube o toma una fotografía del cliente');
     if (!formData.client_full_name.trim()) return setError('El nombre del cliente es requerido');
-    if (!formData.client_phone.trim()) return setError('El teléfono del cliente es requerido');
+    if (!/^\d{8}$/.test(formData.client_phone)) return setError('El teléfono debe tener exactamente 8 dígitos');
 
     setSubmitting(true);
     try {
@@ -136,7 +160,7 @@ function BundleDeliveryForm({ onSave, onCancel }) {
         bundle_id: verifiedBundle.bundleId,
         smartphones_id: verifiedPhone.smartphonesId,
         client_full_name: formData.client_full_name.trim(),
-        client_phone: formData.client_phone.trim(),
+        client_phone: `+591${formData.client_phone.trim()}`,
         client_picture: upload.data.client_picture,
         store_code: selectedStore.storeCode,
         store_name: selectedStore.storeName,
@@ -174,62 +198,32 @@ function BundleDeliveryForm({ onSave, onCancel }) {
         <div style={sectionStyle}>
           <h3 style={{ marginTop: 0 }}>Bundle</h3>
           <label style={labelStyle}>Número de Serie (Serial Number) *</label>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <input
-              type="text"
-              value={serialInput}
-              onChange={(e) => { setSerialInput(e.target.value); setVerifiedBundle(null); setSerialMsg(null); }}
-              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); verifySerial(); } }}
-              placeholder="Ej. 71619..."
-              style={{ ...inputStyle, flex: 1 }}
-              required
-            />
-            <button
-              type="button"
-              onClick={verifySerial}
-              disabled={serialChecking || !serialInput.trim()}
-              style={{ padding: '0.75rem 1.25rem', backgroundColor: '#17a2b8', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', whiteSpace: 'nowrap' }}
-            >
-              {serialChecking ? 'Verificando…' : 'Verificar'}
-            </button>
-          </div>
+          <input
+            type="text"
+            value={serialInput}
+            onChange={(e) => setSerialInput(e.target.value)}
+            placeholder="Ej. 71619..."
+            style={inputStyle}
+            required
+          />
+          {serialChecking && <div style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#666' }}>Verificando…</div>}
           {serialMsg && <div style={msgStyle(serialMsg.ok)}>{serialMsg.text}</div>}
-          {verifiedBundle && (
-            <div style={{ marginTop: '0.75rem', padding: '0.75rem', backgroundColor: '#e7f3ff', borderRadius: '4px', fontSize: '0.875rem' }}>
-              <strong>Bundle #{verifiedBundle.bundleId}</strong> — {verifiedBundle.bundleModelName} — {verifiedBundle.projectName}
-            </div>
-          )}
         </div>
 
         {/* Smartphone por IMEI */}
         <div style={sectionStyle}>
           <h3 style={{ marginTop: 0 }}>Smartphone</h3>
           <label style={labelStyle}>IMEI 1 *</label>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <input
-              type="text"
-              value={imeiInput}
-              onChange={(e) => { setImeiInput(e.target.value); setVerifiedPhone(null); setImeiMsg(null); }}
-              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); verifyImei(); } }}
-              placeholder="Ej. 860000000000001"
-              style={{ ...inputStyle, flex: 1 }}
-              required
-            />
-            <button
-              type="button"
-              onClick={verifyImei}
-              disabled={imeiChecking || !imeiInput.trim()}
-              style={{ padding: '0.75rem 1.25rem', backgroundColor: '#17a2b8', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', whiteSpace: 'nowrap' }}
-            >
-              {imeiChecking ? 'Buscando…' : 'Buscar'}
-            </button>
-          </div>
+          <input
+            type="text"
+            value={imeiInput}
+            onChange={(e) => setImeiInput(e.target.value)}
+            placeholder="Ej. 860000000000001"
+            style={inputStyle}
+            required
+          />
+          {imeiChecking && <div style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#666' }}>Buscando…</div>}
           {imeiMsg && <div style={msgStyle(imeiMsg.ok)}>{imeiMsg.text}</div>}
-          {verifiedPhone && (
-            <div style={{ marginTop: '0.75rem', padding: '0.75rem', backgroundColor: '#e7f3ff', borderRadius: '4px', fontSize: '0.875rem' }}>
-              <strong>ID #{verifiedPhone.smartphonesId}</strong> — {verifiedPhone.modelName} — {verifiedPhone.skuName}
-            </div>
-          )}
         </div>
 
         {/* Datos del cliente */}
@@ -240,7 +234,7 @@ function BundleDeliveryForm({ onSave, onCancel }) {
             <input
               type="text"
               value={formData.client_full_name}
-              onChange={(e) => setFormData(prev => ({ ...prev, client_full_name: e.target.value }))}
+              onChange={(e) => setFormData(prev => ({ ...prev, client_full_name: e.target.value.toUpperCase() }))}
               maxLength={120}
               style={inputStyle}
               required
@@ -248,14 +242,36 @@ function BundleDeliveryForm({ onSave, onCancel }) {
           </div>
           <div style={{ marginBottom: '1rem' }}>
             <label style={labelStyle}>Teléfono *</label>
-            <input
-              type="text"
-              value={formData.client_phone}
-              onChange={(e) => setFormData(prev => ({ ...prev, client_phone: e.target.value }))}
-              maxLength={45}
-              style={inputStyle}
-              required
-            />
+            <div style={{ display: 'flex', alignItems: 'stretch', border: '1px solid #ccc', borderRadius: '4px', overflow: 'hidden', backgroundColor: 'white' }}>
+              <span style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                padding: '0 0.75rem',
+                backgroundColor: '#f8f9fa',
+                borderRight: '1px solid #ccc',
+                fontSize: '1rem',
+                color: '#333',
+                whiteSpace: 'nowrap'
+              }}>
+                <svg width="20" height="14" viewBox="0 0 20 14" style={{ borderRadius: '2px', display: 'block' }}>
+                  <rect width="20" height="14" fill="#007934" />
+                  <rect width="20" height="9.33" fill="#F9E300" />
+                  <rect width="20" height="4.66" fill="#D52B1E" />
+                </svg>
+                +591
+              </span>
+              <input
+                type="text"
+                inputMode="numeric"
+                value={formData.client_phone}
+                onChange={(e) => setFormData(prev => ({ ...prev, client_phone: e.target.value.replace(/\D/g, '').slice(0, 8) }))}
+                maxLength={8}
+                placeholder="70000000"
+                style={{ ...inputStyle, border: 'none', borderRadius: 0, outline: 'none' }}
+                required
+              />
+            </div>
           </div>
           <div>
             <label style={labelStyle}>Fotografía del Cliente *</label>

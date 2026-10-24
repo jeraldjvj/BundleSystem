@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { storeService } from '../services/api';
 
-function StoreList({ onEdit, onCreate, onImport }) {
+function StoreList({ onEdit, onCreate, onImport, onBatchImport, onAssign }) {
   const [stores, setStores] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -41,6 +41,21 @@ function StoreList({ onEdit, onCreate, onImport }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
         <h2>Tiendas</h2>
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <button
+            onClick={onBatchImport}
+            style={{
+              padding: '0.75rem 1.5rem',
+              backgroundColor: '#6f42c1',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '1rem',
+              fontWeight: 'bold'
+            }}
+          >
+            📦 Batch Importar Excel
+          </button>
           <button
             onClick={onImport}
             style={{
@@ -100,6 +115,36 @@ function StoreList({ onEdit, onCreate, onImport }) {
                 <td style={{ padding: '1rem', color: '#333' }}>{store.userFullName || store.userEmail || '-'}</td>
                 <td style={{ padding: '1rem', color: '#333' }}>{store.city || '-'}</td>
                 <td style={{ padding: '1rem', textAlign: 'center' }}>
+                  <button
+                    onClick={() => onAssign(store)}
+                    style={{
+                      padding: '0.5rem',
+                      backgroundColor: '#17a2b8',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      marginRight: '0.5rem',
+                      fontSize: '0.875rem',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '36px',
+                      height: '36px'
+                    }}
+                    title="Asignar Tienda"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="5" cy="5.5" r="2.5"></circle>
+                      <path d="M1.2 18c0-3.5 1.7-5.2 3.8-5.2s3.8 1.7 3.8 5.2"></path>
+                      <circle cx="19" cy="5.5" r="2.5"></circle>
+                      <path d="M15.2 18c0-3.5 1.7-5.2 3.8-5.2s3.8 1.7 3.8 5.2"></path>
+                      <path d="M10 10.5h4"></path>
+                      <path d="M12.5 9l1.7 1.5-1.7 1.5"></path>
+                      <path d="M14 14.5h-4"></path>
+                      <path d="M11.5 13l-1.7 1.5 1.7 1.5"></path>
+                    </svg>
+                  </button>
                   <button
                     onClick={() => onEdit(store)}
                     style={{
