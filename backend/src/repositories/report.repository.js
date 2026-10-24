@@ -4,6 +4,9 @@ import { pool } from '../config/database.js';
 export const reportRepository = {
   async summary(scope = null) {
     const bundleWhere = scope ? 'WHERE b.user_id IN (?)' : '';
+    const bundleAvailableWhere = scope
+      ? "WHERE b.user_id IN (?) AND b.status = 'available'"
+      : "WHERE b.status = 'available'";
     const deliveryWhere = scope ? 'WHERE bd.user_id IN (?)' : '';
     const storeWhere = scope ? 'WHERE user_id IN (?)' : '';
     const params = scope ? [scope.userIds] : [];
@@ -12,6 +15,16 @@ export const reportRepository = {
       `SELECT status, COUNT(*) AS count FROM bundle b ${bundleWhere} GROUP BY status`,
       params
     );
+
+    const [bundlesAvailableByUser] = await pool.query(`
+      SELECT CONCAT(up.first_name, ' ', up.last_name) AS name, COUNT(*) AS count
+      FROM bundle b
+      JOIN user u ON b.user_id = u.user_id
+      LEFT JOIN user_profile up ON u.user_id = up.user_id
+      ${scope ? "WHERE b.status = 'available' AND b.user_id IN (?)" : "WHERE b.status = 'available'"}
+      GROUP BY b.user_id, up.first_name, up.last_name
+      ORDER BY count DESC
+    `, params);
 
     // smartphones_database no tiene user_id: es inventario global
     const [smartphonesByStatus] = await pool.query(
@@ -86,16 +99,18 @@ export const reportRepository = {
 
     const [[totals]] = await pool.query(`SELECT
       (SELECT COUNT(*) FROM bundle b ${bundleWhere}) AS bundles,
+      (SELECT COUNT(*) FROM bundle b ${bundleAvailableWhere}) AS bundlesAvailable,
       (SELECT COUNT(*) FROM smartphones_database) AS smartphones,
       (SELECT COUNT(*) FROM bundle_delivered bd ${deliveryWhere}) AS deliveries,
       (SELECT COUNT(*) FROM stores ${storeWhere}) AS stores,
       (SELECT COUNT(*) FROM user) AS users,
       (SELECT COUNT(*) FROM project) AS projects
-    `, scope ? [scope.userIds, scope.userIds, scope.userIds] : []);
+    `, scope ? [scope.userIds, scope.userIds, scope.userIds, scope.userIds] : []);
 
     return {
       totals,
       bundlesByStatus,
+      bundlesAvailableByUser,
       smartphonesByStatus,
       deliveriesByStore,
       deliveriesByUser,
