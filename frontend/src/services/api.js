@@ -70,6 +70,14 @@ export const distributorService = {
   deleteDistributor: (id) => api.delete(`/distributors/${id}`),
 };
 
+export const smartphoneService = {
+  getSmartphones: () => api.get('/smartphones'),
+  getSmartphone: (id) => api.get(`/smartphones/${id}`),
+  createSmartphone: (data) => api.post('/smartphones', data),
+  updateSmartphone: (id, data) => api.patch(`/smartphones/${id}`, data),
+  deleteSmartphone: (id) => api.delete(`/smartphones/${id}`),
+};
+
 export const bundleService = {
   getBundles: () => api.get('/bundles'),
   getBundle: (id) => api.get(`/bundles/${id}`),

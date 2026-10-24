@@ -5,11 +5,11 @@ export const smartphoneIdSchema = z.object({
 });
 
 export const createSmartphoneSchema = z.object({
-  smartphones_id: z.coerce.number().int().positive(),
+  smartphones_id: z.coerce.number().int().positive().optional(),
   smartphone_model_id: z.coerce.number().int().positive(),
   tag_model: z.string().min(1).max(45),
   imei_1: z.string().min(1).max(45),
-  distributor: z.string().min(1).max(45),
+  distributor_id: z.coerce.number().int().positive(),
   status: z.string().max(45).default('available'),
 });
 

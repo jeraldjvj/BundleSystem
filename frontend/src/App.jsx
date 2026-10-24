@@ -17,6 +17,9 @@ import DistributorList from './components/DistributorList';
 import BundleForm from './components/BundleForm';
 import BundleList from './components/BundleList';
 import BundleImport from './components/BundleImport';
+import SmartphoneForm from './components/SmartphoneForm';
+import SmartphoneList from './components/SmartphoneList';
+import SmartphoneImport from './components/SmartphoneImport';
 import Navbar from './components/Navbar';
 import './App.css';
 
@@ -45,6 +48,10 @@ function AppContent() {
   const [showBundleForm, setShowBundleForm] = useState(false);
   const [showBundleImport, setShowBundleImport] = useState(false);
   const [bundleListRefresh, setBundleListRefresh] = useState(0);
+  const [editingSmartphone, setEditingSmartphone] = useState(null);
+  const [showSmartphoneForm, setShowSmartphoneForm] = useState(false);
+  const [showSmartphoneImport, setShowSmartphoneImport] = useState(false);
+  const [smartphoneListRefresh, setSmartphoneListRefresh] = useState(0);
 
   const handleViewChange = (view) => {
     setCurrentView(view);
@@ -64,6 +71,43 @@ function AppContent() {
     setShowBundleForm(false);
     setShowBundleImport(false);
     setEditingBundle(null);
+    setShowSmartphoneForm(false);
+    setShowSmartphoneImport(false);
+    setEditingSmartphone(null);
+  };
+
+  const handleEditSmartphone = (smartphone) => {
+    setEditingSmartphone(smartphone);
+    setShowSmartphoneForm(true);
+  };
+
+  const handleCreateSmartphone = () => {
+    setEditingSmartphone(null);
+    setShowSmartphoneForm(true);
+  };
+
+  const handleSmartphoneSave = () => {
+    setShowSmartphoneForm(false);
+    setEditingSmartphone(null);
+    setSmartphoneListRefresh(prev => prev + 1);
+  };
+
+  const handleSmartphoneCancel = () => {
+    setShowSmartphoneForm(false);
+    setEditingSmartphone(null);
+  };
+
+  const handleImportSmartphone = () => {
+    setShowSmartphoneImport(true);
+  };
+
+  const handleSmartphoneImportComplete = () => {
+    setShowSmartphoneImport(false);
+    setSmartphoneListRefresh(prev => prev + 1);
+  };
+
+  const handleSmartphoneImportCancel = () => {
+    setShowSmartphoneImport(false);
   };
 
   const handleEditBundle = (bundle) => {
@@ -419,6 +463,43 @@ function AppContent() {
           <div style={{ padding: '2rem', textAlign: 'center' }}>
             <h2 style={{ color: '#333' }}>Acceso Denegado</h2>
             <p style={{ color: '#666' }}>No tienes permisos para ver esta página. Solo usuarios con nivel Office Manager o City Manager pueden acceder.</p>
+          </div>
+        ) : null}
+
+        {currentView === 'smartphones' && canAccessManagement ? (
+          <>
+            {showSmartphoneImport ? (
+              <SmartphoneImport
+                onImportComplete={handleSmartphoneImportComplete}
+                onCancel={handleSmartphoneImportCancel}
+              />
+            ) : showSmartphoneForm ? (
+              <SmartphoneForm
+                smartphone={editingSmartphone}
+                onSave={handleSmartphoneSave}
+                onCancel={handleSmartphoneCancel}
+              />
+            ) : (
+              <div style={{ width: '100%', maxWidth: '100%' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', padding: '0 1rem', flexWrap: 'wrap', gap: '1rem' }}>
+                  <h2 style={{ margin: 0, color: '#333' }}>Gestión de Smartphones</h2>
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <button onClick={handleImportSmartphone} style={{ padding: '0.75rem 1.5rem', backgroundColor: '#17a2b8', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold' }}>
+                      📥 Importar Excel
+                    </button>
+                    <button onClick={handleCreateSmartphone} style={{ padding: '0.75rem 1.5rem', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold' }}>
+                      + Agregar Smartphone
+                    </button>
+                  </div>
+                </div>
+                <SmartphoneList onEdit={handleEditSmartphone} onRefresh={smartphoneListRefresh} />
+              </div>
+            )}
+          </>
+        ) : currentView === 'smartphones' && !canAccessManagement ? (
+          <div style={{ padding: '2rem', textAlign: 'center' }}>
+            <h2 style={{ color: '#333' }}>Acceso Denegado</h2>
+            <p style={{ color: '#666' }}>No tienes permisos para ver esta página. Solo usuarios con nivel Office Manager pueden acceder.</p>
           </div>
         ) : null}
 

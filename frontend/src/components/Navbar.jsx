@@ -325,6 +325,26 @@ function Navbar({ currentView, onViewChange, canAccessManagement, canAccessBundl
             )}
             {canAccessManagement && (
               <button
+                onClick={() => handleViewChange('smartphones')}
+                style={{
+                  width: '100%',
+                  padding: '1rem',
+                  backgroundColor: currentView === 'smartphones' ? '#495057' : 'transparent',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  fontSize: '1rem',
+                  marginBottom: '0.5rem',
+                  transition: 'background-color 0.2s'
+                }}
+              >
+                Smartphones
+              </button>
+            )}
+            {canAccessManagement && (
+              <button
                 onClick={() => handleViewChange('distributors')}
                 style={{
                   width: '100%',
