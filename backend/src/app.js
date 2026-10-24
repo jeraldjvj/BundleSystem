@@ -8,9 +8,10 @@ import { errorHandler } from './middlewares/errorHandler.js';
 
 const app = express();
 
-app.use(helmet());
+app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.use(cors({ origin: config.corsOrigin }));
 app.use(express.json());
+app.use('/uploads', express.static('uploads'));
 
 app.use(config.apiPrefix, routes);
 
