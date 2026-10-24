@@ -21,12 +21,18 @@ import BundleAssignForm from './components/BundleAssignForm';
 import SmartphoneForm from './components/SmartphoneForm';
 import SmartphoneList from './components/SmartphoneList';
 import SmartphoneImport from './components/SmartphoneImport';
+import BundleDeliveryForm from './components/BundleDeliveryForm';
 import Navbar from './components/Navbar';
 import './App.css';
 
 function AppContent() {
   const { user, logout } = useAuth();
-  const [currentView, setCurrentView] = useState('users');
+  const [currentView, setCurrentView] = useState(() => {
+    const level = user?.levelUser;
+    if (level === 'Office Manager' || level === 'admin') return 'users';
+    if (level === 'City Manager') return 'bundles';
+    return 'bundleDelivery';
+  });
   const [editingStore, setEditingStore] = useState(null);
   const [showStoreForm, setShowStoreForm] = useState(false);
   const [showStoreImport, setShowStoreImport] = useState(false);
@@ -55,6 +61,7 @@ function AppContent() {
   const [showSmartphoneForm, setShowSmartphoneForm] = useState(false);
   const [showSmartphoneImport, setShowSmartphoneImport] = useState(false);
   const [smartphoneListRefresh, setSmartphoneListRefresh] = useState(0);
+  const [deliveryFormKey, setDeliveryFormKey] = useState(0);
 
   const handleViewChange = (view) => {
     setCurrentView(view);
@@ -557,6 +564,14 @@ function AppContent() {
             <p style={{ color: '#666' }}>No tienes permisos para ver esta página. Solo usuarios con nivel Office Manager pueden acceder.</p>
           </div>
         ) : null}
+
+        {currentView === 'bundleDelivery' && (
+          <BundleDeliveryForm
+            key={deliveryFormKey}
+            onSave={() => setDeliveryFormKey(prev => prev + 1)}
+            onCancel={() => handleViewChange(canAccessBundles ? 'bundles' : 'bundleDelivery') || setDeliveryFormKey(prev => prev + 1)}
+          />
+        )}
       </main>
     </div>
   );

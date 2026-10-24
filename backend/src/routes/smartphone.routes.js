@@ -11,6 +11,7 @@ import {
 const router = Router();
 
 router.get('/', asyncHandler(smartphoneController.getAll));
+router.get('/imei/:imei', asyncHandler(smartphoneController.getByImei));
 router.get('/:smartphones_id', validate(smartphoneIdSchema, 'params'), asyncHandler(smartphoneController.getById));
 router.post('/', validate(createSmartphoneSchema), asyncHandler(smartphoneController.create));
 router.patch(

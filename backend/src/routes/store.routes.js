@@ -11,6 +11,7 @@ import {
 const router = Router();
 
 router.get('/', asyncHandler(storeController.getAll));
+router.get('/user/:user_id', asyncHandler(storeController.getByUserId));
 router.get('/:store_code', validate(storeCodeSchema, 'params'), asyncHandler(storeController.getById));
 router.post('/', validate(createStoreSchema), asyncHandler(storeController.create));
 router.patch(

@@ -343,6 +343,24 @@ function Navbar({ currentView, onViewChange, canAccessManagement, canAccessBundl
                 Smartphones
               </button>
             )}
+            <button
+              onClick={() => handleViewChange('bundleDelivery')}
+              style={{
+                width: '100%',
+                padding: '1rem',
+                backgroundColor: currentView === 'bundleDelivery' ? '#495057' : 'transparent',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                textAlign: 'left',
+                fontSize: '1rem',
+                marginBottom: '0.5rem',
+                transition: 'background-color 0.2s'
+              }}
+            >
+              Entrega de Bundles
+            </button>
             {canAccessManagement && (
               <button
                 onClick={() => handleViewChange('distributors')}

@@ -12,6 +12,16 @@ export const bundleController = {
     res.json(bundle);
   },
 
+  async verifySerial(req, res) {
+    const { serial, userId } = req.params;
+    const bundle = await bundleRepository.findBySerial(serial);
+    if (!bundle) throw new HttpError(404, 'Serial number not found');
+    if (Number(bundle.userId) !== Number(userId)) {
+      throw new HttpError(403, 'Este bundle no está asignado a tu usuario');
+    }
+    res.json(bundle);
+  },
+
   async create(req, res) {
     const bundle = await bundleRepository.create(req.body);
     res.status(201).json(bundle);

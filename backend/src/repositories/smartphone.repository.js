@@ -35,6 +35,20 @@ export const smartphoneRepository = {
     return rows.length ? toSmartphone(rows[0]) : null;
   },
 
+  async findByImei(imei) {
+    const [rows] = await pool.query(`
+      SELECT s.${COLUMNS.split(', ').join(', s.')},
+        sm.model_name,
+        sm.sku_name,
+        d.distributor_name
+      FROM smartphones_database s
+      LEFT JOIN smartphone_model sm ON s.smartphone_model_id = sm.smartphone_model_id
+      LEFT JOIN distributor d ON s.distributor_id = d.distributor_id
+      WHERE s.imei_1 = ?
+    `, [imei]);
+    return rows.length ? toSmartphone(rows[0]) : null;
+  },
+
   async create({ smartphones_id, smartphone_model_id, tag_model, imei_1, distributor_id, status = 'available' }) {
     let id = smartphones_id;
     if (!id) {

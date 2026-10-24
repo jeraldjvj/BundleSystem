@@ -22,6 +22,14 @@ export const storeRepository = {
     return rows.map(toStore);
   },
 
+  async findByUserId(userId) {
+    const [rows] = await pool.query(
+      `SELECT ${COLUMNS} FROM stores s LEFT JOIN user u ON s.user_id = u.user_id LEFT JOIN user_profile up ON u.user_id = up.user_id WHERE s.user_id = ? ORDER BY s.store_name`,
+      [userId]
+    );
+    return rows.map(toStore);
+  },
+
   async findById(storeCode) {
     const [rows] = await pool.query(
       `SELECT ${COLUMNS} FROM stores s LEFT JOIN user u ON s.user_id = u.user_id LEFT JOIN user_profile up ON u.user_id = up.user_id WHERE s.store_code = ?`,

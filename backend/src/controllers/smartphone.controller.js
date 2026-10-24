@@ -12,6 +12,12 @@ export const smartphoneController = {
     res.json(smartphone);
   },
 
+  async getByImei(req, res) {
+    const smartphone = await smartphoneRepository.findByImei(req.params.imei);
+    if (!smartphone) throw new HttpError(404, 'IMEI not found in smartphones_database');
+    res.json(smartphone);
+  },
+
   async create(req, res) {
     const smartphone = await smartphoneRepository.create(req.body);
     res.status(201).json(smartphone);

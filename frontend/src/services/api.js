@@ -25,6 +25,7 @@ export const userService = {
 export const storeService = {
   getStores: () => api.get('/stores'),
   getStore: (code) => api.get(`/stores/${code}`),
+  getStoresByUser: (userId) => api.get(`/stores/user/${userId}`),
   createStore: (data) => api.post('/stores', data),
   updateStore: (code, data) => api.patch(`/stores/${code}`, data),
   deleteStore: (code) => api.delete(`/stores/${code}`),
@@ -73,6 +74,7 @@ export const distributorService = {
 export const smartphoneService = {
   getSmartphones: () => api.get('/smartphones'),
   getSmartphone: (id) => api.get(`/smartphones/${id}`),
+  getByImei: (imei) => api.get(`/smartphones/imei/${encodeURIComponent(imei)}`),
   createSmartphone: (data) => api.post('/smartphones', data),
   updateSmartphone: (id, data) => api.patch(`/smartphones/${id}`, data),
   deleteSmartphone: (id) => api.delete(`/smartphones/${id}`),
@@ -84,7 +86,20 @@ export const bundleService = {
   createBundle: (data) => api.post('/bundles', data),
   updateBundle: (id, data) => api.patch(`/bundles/${id}`, data),
   assignBundle: (id, data) => api.post(`/bundles/${id}/assign`, data),
+  verifySerial: (serial, userId) => api.get(`/bundles/verify-serial/${encodeURIComponent(serial)}/${userId}`),
   deleteBundle: (id) => api.delete(`/bundles/${id}`),
+};
+
+export const bundleDeliveredService = {
+  getDeliveries: () => api.get('/bundle-delivered'),
+  createDelivery: (data) => api.post('/bundle-delivered', data),
+  uploadPicture: (file) => {
+    const fd = new FormData();
+    fd.append('picture', file);
+    return api.post('/bundle-delivered/upload-picture', fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
 };
 
 export default api;

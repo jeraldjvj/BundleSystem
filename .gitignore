@@ -27,3 +27,7 @@ Thumbs.db
 *.swp
 *.swo
 *~
+
+# Uploaded client pictures
+backend/uploads/
+!backend/uploads/.gitkeep

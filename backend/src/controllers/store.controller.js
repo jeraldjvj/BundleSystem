@@ -6,6 +6,10 @@ export const storeController = {
     res.json(await storeRepository.findAll());
   },
 
+  async getByUserId(req, res) {
+    res.json(await storeRepository.findByUserId(req.params.user_id));
+  },
+
   async getById(req, res) {
     const store = await storeRepository.findById(req.params.store_code);
     if (!store) throw new HttpError(404, 'Store not found');

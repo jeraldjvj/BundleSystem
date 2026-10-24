@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { bundleService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
@@ -8,6 +9,8 @@ function BundleList({ onEdit, onCreate, onImport, onAssign, onRefresh }) {
   const [bundles, setBundles] = useState([]);
   const [filters, setFilters] = useState({});
   const [activeFilter, setActiveFilter] = useState(null);
+  const [showScanner, setShowScanner] = useState(false);
+  const scannerRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -31,6 +34,66 @@ function BundleList({ onEdit, onCreate, onImport, onAssign, onRefresh }) {
   useEffect(() => {
     loadBundles();
   }, [onRefresh]);
+
+  useEffect(() => {
+    if (!showScanner) return;
+
+    const scanner = new Html5Qrcode('barcode-scanner', {
+      useBarCodeDetectorIfSupported: true,
+      formatsToSupport: [
+        Html5QrcodeSupportedFormats.CODE_128,
+        Html5QrcodeSupportedFormats.CODE_39,
+        Html5QrcodeSupportedFormats.EAN_13,
+        Html5QrcodeSupportedFormats.EAN_8,
+        Html5QrcodeSupportedFormats.UPC_A,
+        Html5QrcodeSupportedFormats.UPC_E,
+        Html5QrcodeSupportedFormats.ITF,
+        Html5QrcodeSupportedFormats.CODABAR,
+        Html5QrcodeSupportedFormats.QR_CODE
+      ]
+    });
+    scannerRef.current = scanner;
+    let cancelled = false;
+
+    const startPromise = scanner.start(
+      { facingMode: 'environment' },
+      {
+        fps: 10,
+        qrbox: (viewfinderWidth, viewfinderHeight) => ({
+          width: Math.floor(viewfinderWidth * 0.9),
+          height: Math.floor(viewfinderHeight * 0.4)
+        }),
+        aspectRatio: 1.7778,
+        videoConstraints: {
+          facingMode: 'environment',
+          width: { ideal: 1920 },
+          height: { ideal: 1080 }
+        }
+      },
+      (decodedText) => {
+        setFilters(prev => ({ ...prev, serialNumber: decodedText }));
+        setActiveFilter('serialNumber');
+        setShowScanner(false);
+      },
+      () => {}
+    );
+
+    startPromise.catch(err => {
+      if (!cancelled) {
+        setError('No se pudo acceder a la cámara: ' + err);
+        setShowScanner(false);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+      // Detener solo cuando start() haya terminado para evitar errores de estado
+      startPromise
+        .catch(() => {})
+        .then(() => scanner.stop().then(() => scanner.clear()))
+        .catch(() => {});
+    };
+  }, [showScanner]);
 
   const loadBundles = async () => {
     try {
@@ -135,6 +198,29 @@ function BundleList({ onEdit, onCreate, onImport, onAssign, onRefresh }) {
                           <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                         </svg>
                       </button>
+                      {col.key === 'serialNumber' && (
+                        <button
+                          onClick={() => setShowScanner(true)}
+                          style={{
+                            padding: '0.25rem',
+                            backgroundColor: 'transparent',
+                            border: 'none',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            color: '#6c757d'
+                          }}
+                          title="Escanear código de barras"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round">
+                            <line x1="4" y1="5" x2="4" y2="19" strokeWidth="3"/>
+                            <line x1="8.5" y1="5" x2="8.5" y2="19" strokeWidth="1.5"/>
+                            <line x1="12" y1="5" x2="12" y2="19" strokeWidth="2.5"/>
+                            <line x1="16" y1="5" x2="16" y2="19" strokeWidth="1.5"/>
+                            <line x1="19.5" y1="5" x2="19.5" y2="19" strokeWidth="3"/>
+                          </svg>
+                        </button>
+                      )}
                     </div>
                     {activeFilter === col.key && (
                       <input
@@ -262,6 +348,55 @@ function BundleList({ onEdit, onCreate, onImport, onAssign, onRefresh }) {
               )}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {showScanner && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            zIndex: 2000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+          onClick={() => setShowScanner(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: 'white',
+              borderRadius: '8px',
+              padding: '1.5rem',
+              maxWidth: '420px',
+              width: '90%'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h3 style={{ margin: 0 }}>Escanear Código de Barras</h3>
+              <button
+                onClick={() => setShowScanner(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '1.25rem',
+                  cursor: 'pointer',
+                  color: '#666'
+                }}
+              >
+                ✕
+              </button>
+            </div>
+            <div id="barcode-scanner" style={{ width: '100%', overflow: 'hidden', borderRadius: '4px' }}></div>
+            <p style={{ fontSize: '0.875rem', color: '#666', marginTop: '0.75rem', textAlign: 'center' }}>
+              Apunta la cámara al código de barras del número de serie
+            </p>
+          </div>
         </div>
       )}
     </div>
