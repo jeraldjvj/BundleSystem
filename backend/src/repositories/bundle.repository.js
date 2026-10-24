@@ -1,7 +1,7 @@
 import { pool } from '../config/database.js';
 
-const COLUMNS = 'bundle_id, project_id, user_id, serial_number, bundle_model_id, create_time';
-const UPDATABLE_FIELDS = ['project_id', 'user_id', 'serial_number', 'bundle_model_id', 'create_time'];
+const COLUMNS = 'bundle_id, project_id, user_id, serial_number, bundle_model_id, create_time, status';
+const UPDATABLE_FIELDS = ['project_id', 'user_id', 'serial_number', 'bundle_model_id', 'create_time', 'status'];
 
 const toBundle = (row) => ({
   bundleId: row.bundle_id,
@@ -10,6 +10,7 @@ const toBundle = (row) => ({
   serialNumber: row.serial_number,
   bundleModelId: row.bundle_model_id,
   createTime: row.create_time,
+  status: row.status,
   projectName: row.project_name,
   bundleModelName: row.bundle_name,
   userFullName: row.user_full_name,

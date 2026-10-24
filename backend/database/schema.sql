@@ -72,6 +72,7 @@ CREATE TABLE IF NOT EXISTS `bundle_system`.`bundle` (
   `serial_number` VARCHAR(50) NOT NULL,
   `bundle_model_id` INT NOT NULL,
   `create_time` TIMESTAMP NOT NULL,
+  `status` VARCHAR(45) NOT NULL DEFAULT 'available',
   PRIMARY KEY (`bundle_id`, `project_id`, `user_id`, `bundle_model_id`),
   UNIQUE INDEX `serial_number_UNIQUE` (`serial_number` ASC) VISIBLE,
   UNIQUE INDEX `bundle_id_UNIQUE` (`bundle_id` ASC) VISIBLE,

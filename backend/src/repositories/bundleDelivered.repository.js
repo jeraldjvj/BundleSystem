@@ -28,11 +28,26 @@ export const bundleDeliveredRepository = {
   },
 
   async create({ user_id, bundle_id, smartphones_id, client_full_name, client_phone, client_picture, create_time, store_code, store_name }) {
-    const [result] = await pool.query(
-      'INSERT INTO bundle_delivered (user_id, bundle_id, smartphones_id, client_full_name, client_phone, client_picture, create_time, store_code, store_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [user_id, bundle_id, smartphones_id, client_full_name, client_phone, client_picture, create_time || new Date(), store_code, store_name],
-    );
-    return this.findById(result.insertId);
+    const connection = await pool.getConnection();
+    try {
+      await connection.beginTransaction();
+
+      const [result] = await connection.query(
+        'INSERT INTO bundle_delivered (user_id, bundle_id, smartphones_id, client_full_name, client_phone, client_picture, create_time, store_code, store_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [user_id, bundle_id, smartphones_id, client_full_name, client_phone, client_picture, create_time || new Date(), store_code, store_name],
+      );
+
+      await connection.query('UPDATE bundle SET status = ? WHERE bundle_id = ?', ['delivered', bundle_id]);
+      await connection.query('UPDATE smartphones_database SET status = ? WHERE smartphones_id = ?', ['delivered', smartphones_id]);
+
+      await connection.commit();
+      return this.findById(result.insertId);
+    } catch (error) {
+      await connection.rollback();
+      throw error;
+    } finally {
+      connection.release();
+    }
   },
 
   async update(bundleDeliveredId, data) {

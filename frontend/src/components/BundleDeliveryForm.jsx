@@ -1,6 +1,30 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { bundleService, smartphoneService, storeService, bundleDeliveredService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+
+const barcodeIcon = (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round">
+    <line x1="4" y1="5" x2="4" y2="19" strokeWidth="3"/>
+    <line x1="8.5" y1="5" x2="8.5" y2="19" strokeWidth="1.5"/>
+    <line x1="12" y1="5" x2="12" y2="19" strokeWidth="2.5"/>
+    <line x1="16" y1="5" x2="16" y2="19" strokeWidth="1.5"/>
+    <line x1="19.5" y1="5" x2="19.5" y2="19" strokeWidth="3"/>
+  </svg>
+);
+
+const scanButtonStyle = {
+  padding: '0.5rem 0.75rem',
+  backgroundColor: '#343a40',
+  color: 'white',
+  border: 'none',
+  borderRadius: '4px',
+  cursor: 'pointer',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  flexShrink: 0
+};
 
 const inputStyle = {
   width: '100%',
@@ -51,6 +75,9 @@ function BundleDeliveryForm({ onSave, onCancel }) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  const [scanTarget, setScanTarget] = useState(null); // 'serial' | 'imei'
+  const scannerRef = useRef(null);
+
   useEffect(() => {
     const loadStores = async () => {
       try {
@@ -79,6 +106,10 @@ function BundleDeliveryForm({ onSave, onCancel }) {
       try {
         const res = await bundleService.verifySerial(serial, user.userId);
         if (cancelled) return;
+        if (String(res.data.status).toLowerCase() === 'delivered') {
+          setSerialMsg({ ok: false, text: 'BANDEO YA ENTREGADO' });
+          return;
+        }
         setVerifiedBundle(res.data);
         setSerialMsg({ ok: true, text: `Verificado: ${res.data.bundleModelName || 'Bundle'}` });
       } catch (err) {
@@ -122,7 +153,7 @@ function BundleDeliveryForm({ onSave, onCancel }) {
         setImeiMsg({
           ok: false,
           text: err.response?.status === 404
-            ? 'IMEI no encontrado en smartphones_database'
+            ? 'IMEI no encontrado en la base de datos'
             : (err.response?.data?.error || err.message)
         });
       } finally {
@@ -132,6 +163,60 @@ function BundleDeliveryForm({ onSave, onCancel }) {
 
     return () => { cancelled = true; clearTimeout(timer); };
   }, [imeiInput]);
+
+  // Escáner de código de barras (CODE_128) por cámara
+  useEffect(() => {
+    if (!scanTarget) return;
+
+    const scanner = new Html5Qrcode('delivery-barcode-scanner', {
+      useBarCodeDetectorIfSupported: true,
+      formatsToSupport: [
+        Html5QrcodeSupportedFormats.CODE_128,
+        Html5QrcodeSupportedFormats.CODE_39,
+        Html5QrcodeSupportedFormats.EAN_13,
+        Html5QrcodeSupportedFormats.EAN_8,
+        Html5QrcodeSupportedFormats.ITF,
+        Html5QrcodeSupportedFormats.QR_CODE
+      ]
+    });
+    scannerRef.current = scanner;
+    let cancelled = false;
+
+    const startPromise = scanner.start(
+      { facingMode: 'environment' },
+      {
+        fps: 10,
+        qrbox: (w, h) => ({ width: Math.floor(w * 0.9), height: Math.floor(h * 0.4) }),
+        aspectRatio: 1.7778,
+        videoConstraints: {
+          facingMode: 'environment',
+          width: { ideal: 1920 },
+          height: { ideal: 1080 }
+        }
+      },
+      (decodedText) => {
+        if (scanTarget === 'serial') setSerialInput(decodedText);
+        else if (scanTarget === 'imei') setImeiInput(decodedText.replace(/\D/g, ''));
+        setScanTarget(null);
+      },
+      () => {}
+    );
+
+    startPromise.catch(err => {
+      if (!cancelled) {
+        setError('No se pudo acceder a la cámara: ' + err);
+        setScanTarget(null);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+      startPromise
+        .catch(() => {})
+        .then(() => scanner.stop().then(() => scanner.clear()))
+        .catch(() => {});
+    };
+  }, [scanTarget]);
 
   const handlePicture = (e) => {
     const file = e.target.files?.[0];
@@ -198,14 +283,24 @@ function BundleDeliveryForm({ onSave, onCancel }) {
         <div style={sectionStyle}>
           <h3 style={{ marginTop: 0 }}>Bundle</h3>
           <label style={labelStyle}>Número de Serie (Serial Number) *</label>
-          <input
-            type="text"
-            value={serialInput}
-            onChange={(e) => setSerialInput(e.target.value)}
-            placeholder="Ej. 71619..."
-            style={inputStyle}
-            required
-          />
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <input
+              type="text"
+              value={serialInput}
+              onChange={(e) => setSerialInput(e.target.value)}
+              placeholder="Ej. 71619..."
+              style={{ ...inputStyle, flex: 1 }}
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setScanTarget('serial')}
+              style={scanButtonStyle}
+              title="Escanear código de barras"
+            >
+              {barcodeIcon}
+            </button>
+          </div>
           {serialChecking && <div style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#666' }}>Verificando…</div>}
           {serialMsg && <div style={msgStyle(serialMsg.ok)}>{serialMsg.text}</div>}
         </div>
@@ -214,14 +309,24 @@ function BundleDeliveryForm({ onSave, onCancel }) {
         <div style={sectionStyle}>
           <h3 style={{ marginTop: 0 }}>Smartphone</h3>
           <label style={labelStyle}>IMEI 1 *</label>
-          <input
-            type="text"
-            value={imeiInput}
-            onChange={(e) => setImeiInput(e.target.value)}
-            placeholder="Ej. 860000000000001"
-            style={inputStyle}
-            required
-          />
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <input
+              type="text"
+              value={imeiInput}
+              onChange={(e) => setImeiInput(e.target.value)}
+              placeholder="Ej. 860000000000001"
+              style={{ ...inputStyle, flex: 1 }}
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setScanTarget('imei')}
+              style={scanButtonStyle}
+              title="Escanear código de barras"
+            >
+              {barcodeIcon}
+            </button>
+          </div>
           {imeiChecking && <div style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#666' }}>Buscando…</div>}
           {imeiMsg && <div style={msgStyle(imeiMsg.ok)}>{imeiMsg.text}</div>}
         </div>
@@ -354,6 +459,58 @@ function BundleDeliveryForm({ onSave, onCancel }) {
           </button>
         </div>
       </form>
+
+      {scanTarget && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            zIndex: 2000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+          onClick={() => setScanTarget(null)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: 'white',
+              borderRadius: '8px',
+              padding: '1.5rem',
+              maxWidth: '420px',
+              width: '90%'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h3 style={{ margin: 0 }}>
+                Escanear {scanTarget === 'serial' ? 'Número de Serie' : 'IMEI'}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setScanTarget(null)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '1.25rem',
+                  cursor: 'pointer',
+                  color: '#666'
+                }}
+              >
+                ✕
+              </button>
+            </div>
+            <div id="delivery-barcode-scanner" style={{ width: '100%', overflow: 'hidden', borderRadius: '4px' }}></div>
+            <p style={{ fontSize: '0.875rem', color: '#666', marginTop: '0.75rem', textAlign: 'center' }}>
+              Apunta la cámara al código de barras CODE_128
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
