@@ -270,9 +270,9 @@ function BundleDeliveryForm({ onSave, onCancel }) {
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: '1rem' }}>
-      <h2 style={{ color: '#333' }}>Entrega de Bundles</h2>
+      <h2 style={{ color: '#333' }}>Entrega de Bandeos</h2>
       <p style={{ color: '#666', marginBottom: '1.5rem' }}>
-        Registra la entrega de un bundle a un cliente. La entrega se asignará a tu usuario ({user?.firstName} {user?.lastName}).
+        Registra la entrega de un bandeo a un cliente.
       </p>
 
       {error && <div style={{ padding: '1rem', marginBottom: '1rem', backgroundColor: '#f8d7da', color: '#721c24', borderRadius: '4px' }}>{error}</div>}
@@ -281,7 +281,7 @@ function BundleDeliveryForm({ onSave, onCancel }) {
       <form onSubmit={handleSubmit}>
         {/* Bundle por serial */}
         <div style={sectionStyle}>
-          <h3 style={{ marginTop: 0 }}>Bundle</h3>
+          <h3 style={{ marginTop: 0 }}>Bandeo</h3>
           <label style={labelStyle}>Número de Serie (Serial Number) *</label>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <input
@@ -379,7 +379,7 @@ function BundleDeliveryForm({ onSave, onCancel }) {
             </div>
           </div>
           <div>
-            <label style={labelStyle}>Fotografía del Cliente *</label>
+            <label style={labelStyle}>Fotografía de la Entrega *</label>
             <input
               type="file"
               accept="image/*"
@@ -403,7 +403,7 @@ function BundleDeliveryForm({ onSave, onCancel }) {
 
         {/* Store */}
         <div style={sectionStyle}>
-          <h3 style={{ marginTop: 0 }}>Store</h3>
+          <h3 style={{ marginTop: 0 }}>Tienda</h3>
           {storesLoading ? (
             <p style={{ color: '#666' }}>Cargando stores…</p>
           ) : stores.length === 0 ? (
@@ -412,14 +412,14 @@ function BundleDeliveryForm({ onSave, onCancel }) {
             </div>
           ) : (
             <>
-              <label style={labelStyle}>Nombre del Store *</label>
+              <label style={labelStyle}>Nombre de Tienda *</label>
               <select
                 value={selectedStore?.storeCode || ''}
                 onChange={(e) => setSelectedStore(stores.find(s => s.storeCode === e.target.value) || null)}
                 style={inputStyle}
                 required
               >
-                <option value="">— Selecciona un store —</option>
+                <option value="">Selecciona una Tienda</option>
                 {stores.map(s => (
                   <option key={s.storeCode} value={s.storeCode}>{s.storeName}</option>
                 ))}

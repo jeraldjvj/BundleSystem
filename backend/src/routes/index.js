@@ -11,6 +11,7 @@ import bundleDeliveredRoutes from './bundleDelivered.routes.js';
 import storeRoutes from './store.routes.js';
 import userProfileRoutes from './userProfile.routes.js';
 import distributorRoutes from './distributor.routes.js';
+import reportRoutes from './report.routes.js';
 import { pool } from '../config/database.js';
 import { HttpError } from '../utils/HttpError.js';
 import bcrypt from 'bcrypt';
@@ -117,5 +118,6 @@ router.use('/bundle-delivered', bundleDeliveredRoutes);
 router.use('/stores', storeRoutes);
 router.use('/user-profiles', userProfileRoutes);
 router.use('/distributors', distributorRoutes);
+router.use('/reports', reportRoutes);
 
 export default router;

@@ -90,6 +90,12 @@ export const bundleService = {
   deleteBundle: (id) => api.delete(`/bundles/${id}`),
 };
 
+export const reportService = {
+  getSummary: (user) => api.get('/reports/summary', {
+    params: { userId: user.userId, levelUser: user.levelUser },
+  }),
+};
+
 export const bundleDeliveredService = {
   getDeliveries: () => api.get('/bundle-delivered'),
   createDelivery: (data) => api.post('/bundle-delivered', data),

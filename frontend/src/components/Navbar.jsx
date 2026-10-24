@@ -191,7 +191,7 @@ function Navbar({ currentView, onViewChange, canAccessManagement, canAccessBundl
           flexDirection: 'column'
         }}
       >
-        <div style={{ flex: 1 }}>
+        <div style={{ flex: 1, overflowY: 'auto' }}>
           <h2 style={{ 
             color: 'white', 
             marginBottom: '2rem', 
@@ -203,6 +203,24 @@ function Navbar({ currentView, onViewChange, canAccessManagement, canAccessBundl
           </h2>
 
           <nav style={{ padding: '0 1rem' }}>
+            <button
+                onClick={() => handleViewChange('reports')}
+                style={{
+                  width: '100%',
+                  padding: '1rem',
+                  backgroundColor: currentView === 'reports' ? '#495057' : 'transparent',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  fontSize: '1rem',
+                  marginBottom: '0.5rem',
+                  transition: 'background-color 0.2s'
+                }}
+              >
+                Reportes
+              </button>
             {canAccessManagement && (
               <button
                 onClick={() => handleViewChange('users')}

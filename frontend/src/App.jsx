@@ -24,18 +24,13 @@ import SmartphoneForm from './components/SmartphoneForm';
 import SmartphoneList from './components/SmartphoneList';
 import SmartphoneImport from './components/SmartphoneImport';
 import BundleDeliveryForm from './components/BundleDeliveryForm';
+import ReportsDashboard from './components/ReportsDashboard';
 import Navbar from './components/Navbar';
 import './App.css';
 
 function AppContent() {
   const { user, logout } = useAuth();
-  const [currentView, setCurrentView] = useState(() => {
-    const level = user?.levelUser;
-    if (level === 'Office Manager' || level === 'admin') return 'users';
-    if (level === 'City Manager') return 'bundles';
-    if (level?.toLowerCase() === 'field force') return 'bundleDelivery';
-    return 'users';
-  });
+  const [currentView, setCurrentView] = useState('reports');
   const [editingStore, setEditingStore] = useState(null);
   const [showStoreForm, setShowStoreForm] = useState(false);
   const [showStoreImport, setShowStoreImport] = useState(false);
@@ -614,6 +609,8 @@ function AppContent() {
             <p style={{ color: '#666' }}>No tienes permisos para ver esta página. Solo usuarios con nivel Office Manager pueden acceder.</p>
           </div>
         ) : null}
+
+        {currentView === 'reports' && <ReportsDashboard />}
 
         {currentView === 'bundleDelivery' && canAccessDelivery ? (
           <BundleDeliveryForm
