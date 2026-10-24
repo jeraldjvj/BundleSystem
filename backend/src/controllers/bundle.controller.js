@@ -23,6 +23,12 @@ export const bundleController = {
     res.json(bundle);
   },
 
+  async assign(req, res) {
+    const bundle = await bundleRepository.assign(req.params.bundle_id, req.body.new_user_id);
+    if (!bundle) throw new HttpError(404, 'Bundle not found');
+    res.json(bundle);
+  },
+
   async remove(req, res) {
     const deleted = await bundleRepository.remove(req.params.bundle_id);
     if (!deleted) throw new HttpError(404, 'Bundle not found');

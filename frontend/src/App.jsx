@@ -17,6 +17,7 @@ import DistributorList from './components/DistributorList';
 import BundleForm from './components/BundleForm';
 import BundleList from './components/BundleList';
 import BundleImport from './components/BundleImport';
+import BundleAssignForm from './components/BundleAssignForm';
 import SmartphoneForm from './components/SmartphoneForm';
 import SmartphoneList from './components/SmartphoneList';
 import SmartphoneImport from './components/SmartphoneImport';
@@ -47,6 +48,8 @@ function AppContent() {
   const [editingBundle, setEditingBundle] = useState(null);
   const [showBundleForm, setShowBundleForm] = useState(false);
   const [showBundleImport, setShowBundleImport] = useState(false);
+  const [assigningBundle, setAssigningBundle] = useState(null);
+  const [showBundleAssign, setShowBundleAssign] = useState(false);
   const [bundleListRefresh, setBundleListRefresh] = useState(0);
   const [editingSmartphone, setEditingSmartphone] = useState(null);
   const [showSmartphoneForm, setShowSmartphoneForm] = useState(false);
@@ -70,7 +73,9 @@ function AppContent() {
     setEditingDistributor(null);
     setShowBundleForm(false);
     setShowBundleImport(false);
+    setShowBundleAssign(false);
     setEditingBundle(null);
+    setAssigningBundle(null);
     setShowSmartphoneForm(false);
     setShowSmartphoneImport(false);
     setEditingSmartphone(null);
@@ -142,6 +147,22 @@ function AppContent() {
 
   const handleBundleImportCancel = () => {
     setShowBundleImport(false);
+  };
+
+  const handleAssignBundle = (bundle) => {
+    setAssigningBundle(bundle);
+    setShowBundleAssign(true);
+  };
+
+  const handleBundleAssignSave = () => {
+    setShowBundleAssign(false);
+    setAssigningBundle(null);
+    setBundleListRefresh(prev => prev + 1);
+  };
+
+  const handleBundleAssignCancel = () => {
+    setShowBundleAssign(false);
+    setAssigningBundle(null);
   };
 
   const handleEditUser = (user) => {
@@ -444,6 +465,12 @@ function AppContent() {
                 onImportComplete={handleBundleImportComplete}
                 onCancel={handleBundleImportCancel}
               />
+            ) : showBundleAssign ? (
+              <BundleAssignForm
+                bundle={assigningBundle}
+                onSave={handleBundleAssignSave}
+                onCancel={handleBundleAssignCancel}
+              />
             ) : showBundleForm ? (
               <BundleForm
                 bundle={editingBundle}
@@ -455,6 +482,7 @@ function AppContent() {
                 onEdit={handleEditBundle}
                 onCreate={handleCreateBundle}
                 onImport={handleImportBundle}
+                onAssign={handleAssignBundle}
                 onRefresh={bundleListRefresh}
               />
             )}

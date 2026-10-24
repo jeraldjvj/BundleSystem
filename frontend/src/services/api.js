@@ -83,6 +83,7 @@ export const bundleService = {
   getBundle: (id) => api.get(`/bundles/${id}`),
   createBundle: (data) => api.post('/bundles', data),
   updateBundle: (id, data) => api.patch(`/bundles/${id}`, data),
+  assignBundle: (id, data) => api.post(`/bundles/${id}/assign`, data),
   deleteBundle: (id) => api.delete(`/bundles/${id}`),
 };
 

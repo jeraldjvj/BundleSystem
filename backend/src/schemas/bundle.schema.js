@@ -13,3 +13,7 @@ export const createBundleSchema = z.object({
 });
 
 export const updateBundleSchema = createBundleSchema.partial();
+
+export const assignBundleSchema = z.object({
+  new_user_id: z.coerce.number().int().positive(),
+});

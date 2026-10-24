@@ -6,6 +6,7 @@ import {
   bundleIdSchema,
   createBundleSchema,
   updateBundleSchema,
+  assignBundleSchema,
 } from '../schemas/bundle.schema.js';
 
 const router = Router();
@@ -13,6 +14,12 @@ const router = Router();
 router.get('/', asyncHandler(bundleController.getAll));
 router.get('/:bundle_id', validate(bundleIdSchema, 'params'), asyncHandler(bundleController.getById));
 router.post('/', validate(createBundleSchema), asyncHandler(bundleController.create));
+router.post(
+  '/:bundle_id/assign',
+  validate(bundleIdSchema, 'params'),
+  validate(assignBundleSchema),
+  asyncHandler(bundleController.assign),
+);
 router.patch(
   '/:bundle_id',
   validate(bundleIdSchema, 'params'),

@@ -2,11 +2,31 @@ import { useState, useEffect } from 'react';
 import { bundleService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
-function BundleList({ onEdit, onCreate, onImport, onRefresh }) {
+function BundleList({ onEdit, onCreate, onImport, onAssign, onRefresh }) {
   const { user } = useAuth();
+  const canEditBundles = user?.levelUser === 'Office Manager' || user?.levelUser === 'admin';
   const [bundles, setBundles] = useState([]);
+  const [filters, setFilters] = useState({});
+  const [activeFilter, setActiveFilter] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  const columns = [
+    { key: 'bundleId', label: 'ID', value: b => String(b.bundleId) },
+    { key: 'serialNumber', label: 'Número de Serie', value: b => b.serialNumber },
+    { key: 'projectName', label: 'Proyecto', value: b => b.projectName || String(b.projectId) },
+    { key: 'bundleModelName', label: 'Modelo de Bundle', value: b => b.bundleModelName || String(b.bundleModelId) },
+    { key: 'assignee', label: 'Asignado a', value: b => b.userFullName || b.userEmail || String(b.userId) },
+    { key: 'createTime', label: 'Fecha de Creación', value: b => b.createTime ? new Date(b.createTime).toLocaleDateString() : '' },
+  ];
+
+  const filteredBundles = bundles.filter(b =>
+    columns.every(c => {
+      const f = (filters[c.key] || '').toLowerCase();
+      if (!f) return true;
+      return String(c.value(b) ?? '').toLowerCase().includes(f);
+    })
+  );
 
   useEffect(() => {
     loadBundles();
@@ -93,27 +113,93 @@ function BundleList({ onEdit, onCreate, onImport, onRefresh }) {
           <table style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: 'white', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', tableLayout: 'auto', minWidth: '800px' }}>
             <thead>
               <tr style={{ backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6' }}>
-                <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 'bold', color: '#495057' }}>ID</th>
-                <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 'bold', color: '#495057' }}>Número de Serie</th>
-                <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 'bold', color: '#495057' }}>Proyecto</th>
-                <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 'bold', color: '#495057' }}>Modelo de Bundle</th>
-                <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 'bold', color: '#495057' }}>Asignado a</th>
-                <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 'bold', color: '#495057' }}>Fecha de Creación</th>
+                {columns.map(col => (
+                  <th key={col.key} style={{ padding: '1rem', textAlign: 'left', fontWeight: 'bold', color: '#495057', verticalAlign: 'top' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span>{col.label}</span>
+                      <button
+                        onClick={() => setActiveFilter(activeFilter === col.key ? null : col.key)}
+                        style={{
+                          padding: '0.25rem',
+                          backgroundColor: 'transparent',
+                          border: 'none',
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          color: filters[col.key] ? '#007bff' : '#6c757d'
+                        }}
+                        title={`Buscar en ${col.label}`}
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="11" cy="11" r="8"></circle>
+                          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                      </button>
+                    </div>
+                    {activeFilter === col.key && (
+                      <input
+                        type="text"
+                        autoFocus
+                        placeholder={`Buscar ${col.label}...`}
+                        value={filters[col.key] || ''}
+                        onChange={(e) => setFilters(prev => ({ ...prev, [col.key]: e.target.value }))}
+                        style={{
+                          width: '100%',
+                          marginTop: '0.5rem',
+                          padding: '0.35rem 0.5rem',
+                          border: '1px solid #ccc',
+                          borderRadius: '4px',
+                          fontSize: '0.8rem',
+                          fontWeight: 'normal',
+                          boxSizing: 'border-box'
+                        }}
+                      />
+                    )}
+                  </th>
+                ))}
                 <th style={{ padding: '1rem', textAlign: 'center', fontWeight: 'bold', color: '#495057' }}>Acciones</th>
               </tr>
             </thead>
             <tbody>
-              {bundles.map((bundle) => (
+              {filteredBundles.map((bundle) => (
                 <tr key={bundle.bundleId} style={{ borderBottom: '1px solid #dee2e6' }}>
-                  <td style={{ padding: '1rem', color: '#333' }}>{bundle.bundleId}</td>
-                  <td style={{ padding: '1rem', color: '#333' }}>{bundle.serialNumber}</td>
-                  <td style={{ padding: '1rem', color: '#333' }}>{bundle.projectName || bundle.projectId}</td>
-                  <td style={{ padding: '1rem', color: '#333' }}>{bundle.bundleModelName || bundle.bundleModelId}</td>
-                  <td style={{ padding: '1rem', color: '#333' }}>{bundle.userFullName || bundle.userEmail || bundle.userId}</td>
-                  <td style={{ padding: '1rem', color: '#333' }}>
-                    {bundle.createTime ? new Date(bundle.createTime).toLocaleDateString() : '-'}
-                  </td>
+                  {columns.map(col => (
+                    <td key={col.key} style={{ padding: '1rem', color: '#333' }}>
+                      {col.key === 'createTime' ? (col.value(bundle) || '-') : col.value(bundle)}
+                    </td>
+                  ))}
                   <td style={{ padding: '1rem', textAlign: 'center' }}>
+                    <button
+                      onClick={() => onAssign(bundle)}
+                      style={{
+                        padding: '0.5rem',
+                        backgroundColor: '#17a2b8',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        marginRight: '0.5rem',
+                        fontSize: '0.875rem',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: '36px',
+                        height: '36px'
+                      }}
+                      title="Asignar Bundle"
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="5" cy="5.5" r="2.5"></circle>
+                        <path d="M1.2 18c0-3.5 1.7-5.2 3.8-5.2s3.8 1.7 3.8 5.2"></path>
+                        <circle cx="19" cy="5.5" r="2.5"></circle>
+                        <path d="M15.2 18c0-3.5 1.7-5.2 3.8-5.2s3.8 1.7 3.8 5.2"></path>
+                        <path d="M10 10.5h4"></path>
+                        <path d="M12.5 9l1.7 1.5-1.7 1.5"></path>
+                        <path d="M14 14.5h-4"></path>
+                        <path d="M11.5 13l-1.7 1.5 1.7 1.5"></path>
+                      </svg>
+                    </button>
+                    {canEditBundles && (<>
                     <button
                       onClick={() => onEdit(bundle)}
                       style={{
@@ -163,9 +249,17 @@ function BundleList({ onEdit, onCreate, onImport, onRefresh }) {
                         <line x1="14" y1="11" x2="14" y2="17"></line>
                       </svg>
                     </button>
+                    </>)}
                   </td>
                 </tr>
               ))}
+              {filteredBundles.length === 0 && (
+                <tr>
+                  <td colSpan={columns.length + 1} style={{ padding: '2rem', textAlign: 'center', color: '#666' }}>
+                    No se encontraron resultados con los filtros aplicados
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

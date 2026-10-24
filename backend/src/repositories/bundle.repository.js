@@ -61,6 +61,36 @@ export const bundleRepository = {
     return this.findById(bundleId);
   },
 
+  async assign(bundleId, newUserId) {
+    const connection = await pool.getConnection();
+    try {
+      await connection.beginTransaction();
+
+      const [rows] = await connection.query('SELECT user_id FROM bundle WHERE bundle_id = ?', [bundleId]);
+      if (rows.length === 0) {
+        await connection.rollback();
+        return null;
+      }
+      const oldUserId = rows[0].user_id;
+
+      await connection.query('UPDATE bundle SET user_id = ? WHERE bundle_id = ?', [newUserId, bundleId]);
+
+      const [[{ maxId }]] = await connection.query('SELECT MAX(transfer_history_id) as maxId FROM transfer_history');
+      await connection.query(
+        'INSERT INTO transfer_history (transfer_history_id, old_user_id, new_user_id, create_time) VALUES (?, ?, ?, ?)',
+        [(maxId || 0) + 1, oldUserId, newUserId, new Date()],
+      );
+
+      await connection.commit();
+      return this.findById(bundleId);
+    } catch (error) {
+      await connection.rollback();
+      throw error;
+    } finally {
+      connection.release();
+    }
+  },
+
   async remove(bundleId) {
     const [result] = await pool.query('DELETE FROM bundle WHERE bundle_id = ?', [bundleId]);
     return result.affectedRows > 0;

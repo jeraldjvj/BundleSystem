@@ -219,6 +219,18 @@ ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8mb3;
 
 
+-- -----------------------------------------------------
+-- Table `bundle_system`.`transfer_history`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `bundle_system`.`transfer_history` (
+  `transfer_history_id` INT NOT NULL,
+  `old_user_id` BIGINT NOT NULL,
+  `new_user_id` BIGINT NOT NULL,
+  `create_time` TIMESTAMP NOT NULL,
+  PRIMARY KEY (`transfer_history_id`))
+ENGINE = InnoDB;
+
+
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
