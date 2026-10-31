@@ -102,7 +102,7 @@ flowchart LR
     subgraph Client[Capa 1 — Cliente]
         UI[React Components]
         CAM[Cámara html5-qrcode]
-        XL[xlsx Import/Export]
+        XL["xlsx Import/Export"]
         CH[ECharts + GeoJSON]
     end
     subgraph Server[Capa 2 — Servidor]
@@ -112,8 +112,8 @@ flowchart LR
         REPO[Repositories SQL]
     end
     subgraph Data[Capa 3 — Datos]
-        DB[(MySQL)]
-        FS[/uploads]
+        DB[("MySQL")]
+        FS["uploads/ (fotos)"]
     end
     UI -->|axios x-user-id| API
     API --> Z --> REPO --> DB
