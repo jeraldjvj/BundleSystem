@@ -11,6 +11,7 @@ const toSmartphone = (row) => ({
   distributorId: row.distributor_id,
   status: row.status,
   modelName: row.model_name,
+  productId: row.product_id,
   skuName: row.sku_name,
   distributorName: row.distributor_name,
 });
@@ -20,6 +21,7 @@ export const smartphoneRepository = {
     const [rows] = await pool.query(`
       SELECT s.${COLUMNS.split(', ').join(', s.')},
         sm.model_name,
+        sm.product_id,
         sm.sku_name,
         d.distributor_name
       FROM smartphones_database s
@@ -39,6 +41,7 @@ export const smartphoneRepository = {
     const [rows] = await pool.query(`
       SELECT s.${COLUMNS.split(', ').join(', s.')},
         sm.model_name,
+        sm.product_id,
         sm.sku_name,
         d.distributor_name
       FROM smartphones_database s

@@ -64,126 +64,132 @@ function BundleForm({ bundle, onSave, onCancel }) {
 
       if (bundle) {
         await bundleService.updateBundle(bundle.bundleId, bundleData);
-        setSuccess('Bundle actualizado exitosamente!');
+        setSuccess('Bandeo actualizado exitosamente!');
       } else {
         await bundleService.createBundle(bundleData);
-        setSuccess('Bundle creado exitosamente!');
+        setSuccess('Bandeo creado exitosamente!');
       }
       setTimeout(() => onSave(), 1000);
     } catch (err) {
-      setError(err.response?.data?.error || err.message || 'Error al guardar el bundle');
+      setError(err.response?.data?.error || err.message || 'Error al guardar el bandeo');
     } finally {
       setLoading(false);
     }
   };
 
+  const inputStyle = {
+    width: '100%',
+    padding: '0.7rem 0.9rem',
+    border: '1px solid #e0e0e0',
+    borderRadius: '10px',
+    fontSize: '0.95rem',
+    backgroundColor: '#f8f9fa',
+    outline: 'none',
+    boxSizing: 'border-box',
+    color: '#333'
+  };
+
+  const labelStyle = { display: 'block', marginBottom: '0.4rem', fontWeight: 600, color: '#444', fontSize: '0.875rem' };
+
   return (
-    <div style={{ maxWidth: '600px', margin: '2rem auto', padding: '2rem', border: '1px solid #ddd', borderRadius: '8px', backgroundColor: 'white', width: '100%', boxSizing: 'border-box' }}>
-      <h2>{bundle ? 'Editar Bundle' : 'Crear Nuevo Bundle'}</h2>
+    <div style={{ maxWidth: '560px', margin: '2rem auto', backgroundColor: 'white', borderRadius: '16px', boxShadow: '0 8px 30px rgba(0,0,0,0.08)', overflow: 'hidden', width: '100%', boxSizing: 'border-box' }}>
+      <div style={{ background: 'linear-gradient(135deg, #1a2340, #2d3f6e)', padding: '1.5rem 2rem', color: 'white' }}>
+        <h2 style={{ margin: 0, fontSize: '1.25rem' }}>{bundle ? 'Editar Bandeo' : 'Crear Nuevo Bandeo'}</h2>
+        <p style={{ margin: '0.25rem 0 0', fontSize: '0.85rem', opacity: 0.75 }}>
+          {bundle ? 'Actualiza los datos del bandeo' : 'Registra un nuevo bandeo en el sistema'}
+        </p>
+      </div>
 
-      {success && (
-        <div style={{ padding: '1rem', marginBottom: '1rem', backgroundColor: '#d4edda', color: '#155724', borderRadius: '4px' }}>
-          {success}
-        </div>
-      )}
+      <div style={{ padding: '2rem' }}>
+        {success && (
+          <div style={{ padding: '0.85rem 1rem', marginBottom: '1.25rem', backgroundColor: '#d4edda', color: '#155724', borderRadius: '10px', fontSize: '0.875rem' }}>
+            {success}
+          </div>
+        )}
 
-      {error && (
-        <div style={{ padding: '1rem', marginBottom: '1rem', backgroundColor: '#f8d7da', color: '#721c24', borderRadius: '4px' }}>
-          {error}
-        </div>
-      )}
+        {error && (
+          <div style={{ padding: '0.85rem 1rem', marginBottom: '1.25rem', backgroundColor: '#fdecea', color: '#c0392b', borderRadius: '10px', fontSize: '0.875rem' }}>
+            {error}
+          </div>
+        )}
 
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '1.5rem' }}>
-          <label htmlFor="serial_number" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-            Número de Serie: *
-          </label>
-          <input
-            type="text"
-            id="serial_number"
-            name="serial_number"
-            value={formData.serial_number}
-            onChange={handleChange}
-            required
-            style={{ width: '100%', padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px', fontSize: '1rem', boxSizing: 'border-box' }}
-          />
-        </div>
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: '1.1rem' }}>
+            <label htmlFor="serial_number" style={labelStyle}>Número de Serie:</label>
+            <input
+              type="text"
+              id="serial_number"
+              name="serial_number"
+              value={formData.serial_number}
+              onChange={handleChange}
+              required
+              placeholder="Ej: 71619/CEAGDF6P403967"
+              style={inputStyle}
+            />
+          </div>
 
-        <div style={{ marginBottom: '1.5rem' }}>
-          <label htmlFor="project_id" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-            Proyecto: *
-          </label>
-          <select
-            id="project_id"
-            name="project_id"
-            value={formData.project_id}
-            onChange={handleChange}
-            required
-            style={{ width: '100%', padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px', fontSize: '1rem', boxSizing: 'border-box' }}
-          >
-            <option value="">Selecciona un proyecto</option>
-            {projects.map(p => (
-              <option key={p.projectId} value={p.projectId}>{p.projectName}</option>
-            ))}
-          </select>
-        </div>
+          <div style={{ marginBottom: '1.1rem' }}>
+            <label htmlFor="project_id" style={labelStyle}>Proyecto:</label>
+            <select
+              id="project_id"
+              name="project_id"
+              value={formData.project_id}
+              onChange={handleChange}
+              required
+              style={inputStyle}
+            >
+              <option value="">Selecciona un proyecto</option>
+              {projects.map(p => (
+                <option key={p.projectId} value={p.projectId}>{p.projectName}</option>
+              ))}
+            </select>
+          </div>
 
-        <div style={{ marginBottom: '1.5rem' }}>
-          <label htmlFor="bundle_model_id" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-            Modelo de Bundle: *
-          </label>
-          <select
-            id="bundle_model_id"
-            name="bundle_model_id"
-            value={formData.bundle_model_id}
-            onChange={handleChange}
-            required
-            style={{ width: '100%', padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px', fontSize: '1rem', boxSizing: 'border-box' }}
-          >
-            <option value="">Selecciona un modelo</option>
-            {bundleModels.map(bm => (
-              <option key={bm.bundleModelId} value={bm.bundleModelId}>{bm.bundleName}</option>
-            ))}
-          </select>
-        </div>
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label htmlFor="bundle_model_id" style={labelStyle}>Modelo de Bandeo:</label>
+            <select
+              id="bundle_model_id"
+              name="bundle_model_id"
+              value={formData.bundle_model_id}
+              onChange={handleChange}
+              required
+              style={inputStyle}
+            >
+              <option value="">Selecciona un modelo</option>
+              {bundleModels.map(bm => (
+                <option key={bm.bundleModelId} value={bm.bundleModelId}>{bm.bundleName}</option>
+              ))}
+            </select>
+          </div>
 
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          <button
-            type="submit"
-            disabled={loading}
-            style={{
-              flex: 1,
-              padding: '0.75rem',
-              backgroundColor: loading ? '#6c757d' : '#28a745',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              fontSize: '1rem',
-              fontWeight: 'bold'
-            }}
-          >
-            {loading ? 'Guardando...' : (bundle ? 'Actualizar Bundle' : 'Crear Bundle')}
-          </button>
-          <button
-            type="button"
-            onClick={onCancel}
-            style={{
-              flex: 1,
-              padding: '0.75rem',
-              backgroundColor: '#6c757d',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '1rem',
-              fontWeight: 'bold'
-            }}
-          >
-            Cancelar
-          </button>
-        </div>
-      </form>
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                flex: 1, padding: '0.8rem', border: 'none', borderRadius: '10px',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                background: loading ? '#6c757d' : 'linear-gradient(135deg, #5470c6, #2d3f6e)',
+                color: 'white', fontSize: '1rem', fontWeight: 'bold',
+                boxShadow: '0 4px 14px rgba(84,112,198,0.3)'
+              }}
+            >
+              {loading ? 'Guardando...' : (bundle ? 'Actualizar Bandeo' : 'Crear Bandeo')}
+            </button>
+            <button
+              type="button"
+              onClick={onCancel}
+              style={{
+                flex: 1, padding: '0.8rem', backgroundColor: 'white', color: '#555',
+                border: '1px solid #ddd', borderRadius: '10px', cursor: 'pointer',
+                fontSize: '1rem', fontWeight: 'bold'
+              }}
+            >
+              Cancelar
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

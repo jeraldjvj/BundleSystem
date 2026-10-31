@@ -42,6 +42,16 @@ router.post('/login', async (req, res, next) => {
 
     const user = users[0];
 
+    // Usuario inactivo no puede iniciar sesión
+    if (user.status !== 'active') {
+      throw new HttpError(403, 'Cuenta inactiva. Contacta al administrador.');
+    }
+
+    // Bloqueo por intentos fallidos: máximo 5, se desbloquea al día siguiente
+    if (user.locked_until && new Date(user.locked_until) > new Date()) {
+      throw new HttpError(403, 'Cuenta bloqueada por demasiados intentos fallidos. Intenta nuevamente mañana.');
+    }
+
     // Verify password hash - if not hashed, try direct comparison for migration
     let isPasswordValid = false;
     try {
@@ -52,7 +62,25 @@ router.post('/login', async (req, res, next) => {
     }
     
     if (!isPasswordValid) {
-      throw new HttpError(401, 'Invalid credentials');
+      const attempts = (user.failed_attempts || 0) + 1;
+      if (attempts >= 5) {
+        // Bloquear hasta mañana a las 00:00
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(0, 0, 0, 0);
+        await pool.query(
+          'UPDATE user SET failed_attempts = 0, locked_until = ? WHERE user_id = ?',
+          [tomorrow, user.user_id]
+        );
+        throw new HttpError(403, 'Cuenta bloqueada por demasiados intentos fallidos. Intenta nuevamente mañana.');
+      }
+      await pool.query('UPDATE user SET failed_attempts = ? WHERE user_id = ?', [attempts, user.user_id]);
+      throw new HttpError(401, `Credenciales inválidas. Te quedan ${5 - attempts} intento(s).`);
+    }
+
+    // Login exitoso: resetear contador y bloqueo
+    if (user.failed_attempts > 0 || user.locked_until) {
+      await pool.query('UPDATE user SET failed_attempts = 0, locked_until = NULL WHERE user_id = ?', [user.user_id]);
     }
 
     res.json({
@@ -101,6 +129,22 @@ router.post('/migrate-passwords', async (req, res, next) => {
       totalUsers: users.length,
       errors: errors
     });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Rechaza peticiones de usuarios inactivos (sesión inválida aunque esté abierta)
+router.use(async (req, _res, next) => {
+  try {
+    const userId = req.headers['x-user-id'];
+    if (userId) {
+      const [rows] = await pool.query('SELECT status FROM user WHERE user_id = ?', [userId]);
+      if (rows.length === 0 || rows[0].status !== 'active') {
+        throw new HttpError(403, 'Cuenta inactiva. No puedes realizar cambios en el sistema.');
+      }
+    }
+    next();
   } catch (error) {
     next(error);
   }

@@ -34,7 +34,7 @@ export const bundleController = {
   },
 
   async assign(req, res) {
-    const bundle = await bundleRepository.assign(req.params.bundle_id, req.body.new_user_id);
+    const bundle = await bundleRepository.assign(req.params.bundle_id, req.body.new_user_id, req.headers['x-user-id']);
     if (!bundle) throw new HttpError(404, 'Bundle not found');
     res.json(bundle);
   },

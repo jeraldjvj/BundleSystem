@@ -80,7 +80,7 @@ export const bundleRepository = {
     return this.findById(bundleId);
   },
 
-  async assign(bundleId, newUserId) {
+  async assign(bundleId, newUserId, managerUserId) {
     const connection = await pool.getConnection();
     try {
       await connection.beginTransaction();
@@ -96,8 +96,8 @@ export const bundleRepository = {
 
       const [[{ maxId }]] = await connection.query('SELECT MAX(transfer_history_id) as maxId FROM transfer_history');
       await connection.query(
-        'INSERT INTO transfer_history (transfer_history_id, bundle_id, old_user_id, new_user_id, create_time) VALUES (?, ?, ?, ?, ?)',
-        [(maxId || 0) + 1, bundleId, oldUserId, newUserId, new Date()],
+        'INSERT INTO transfer_history (transfer_history_id, bundle_id, old_user_id, new_user_id, manager_user_id, create_time, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [(maxId || 0) + 1, bundleId, oldUserId, newUserId, managerUserId || oldUserId, new Date(), 'completed'],
       );
 
       await connection.commit();

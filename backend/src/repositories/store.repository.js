@@ -1,12 +1,11 @@
 import { pool } from '../config/database.js';
 
-const COLUMNS = 's.store_code, s.user_id, s.rms_store_code, s.store_name, s.city, u.mi_id, CONCAT(up.first_name, \' \', up.last_name) as user_full_name, u.email';
-const UPDATABLE_FIELDS = ['user_id', 'rms_store_code', 'store_name', 'city'];
+const COLUMNS = 's.store_code, s.user_id, s.store_name, s.city, u.mi_id, CONCAT(up.first_name, \' \', up.last_name) as user_full_name, u.email';
+const UPDATABLE_FIELDS = ['user_id', 'store_name', 'city'];
 
 const toStore = (row) => ({
   storeCode: row.store_code,
   userId: row.user_id,
-  rmsStoreCode: row.rms_store_code,
   storeName: row.store_name,
   city: row.city,
   miId: row.mi_id,
@@ -38,10 +37,10 @@ export const storeRepository = {
     return rows.length ? toStore(rows[0]) : null;
   },
 
-  async create({ store_code, user_id, rms_store_code, store_name, city }) {
+  async create({ store_code, user_id, store_name, city }) {
     const [result] = await pool.query(
-      'INSERT INTO stores (store_code, user_id, rms_store_code, store_name, city) VALUES (?, ?, ?, ?, ?)',
-      [store_code, user_id, rms_store_code, store_name, city],
+      'INSERT INTO stores (store_code, user_id, store_name, city) VALUES (?, ?, ?, ?)',
+      [store_code, user_id, store_name, city],
     );
     return this.findById(store_code);
   },

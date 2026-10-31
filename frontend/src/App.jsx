@@ -371,13 +371,7 @@ function AppContent() {
               />
             ) : (
               <div style={{ width: '100%', maxWidth: '100%' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', padding: '0 1rem', flexWrap: 'wrap', gap: '1rem' }}>
-                  <h2 style={{ margin: 0, color: '#333' }}>Gestión de Usuarios</h2>
-                  <button onClick={handleCreateUser} style={{ padding: '0.75rem 1.5rem', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold' }}>
-                    + Crear Usuario
-                  </button>
-                </div>
-                <UserList onEdit={handleEditUser} onRefresh={userListRefresh} />
+                <UserList onEdit={handleEditUser} onRefresh={userListRefresh} onCreate={handleCreateUser} />
               </div>
             )}
           </>
@@ -398,10 +392,11 @@ function AppContent() {
               />
             ) : (
               <div style={{ width: '100%', maxWidth: '100%' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', padding: '0 1rem', flexWrap: 'wrap', gap: '1rem' }}>
-                  <h2 style={{ margin: 0, color: '#333' }}>Gestión de Proyectos</h2>
-                  <button onClick={handleCreateProject} style={{ padding: '0.75rem 1.5rem', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold' }}>
-                    + Crear Proyecto
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', marginTop: '10px', padding: '0 1rem', flexWrap: 'wrap', gap: '1rem' }}>
+                  <h2 style={{ margin: 0, color: '#1a2340', fontSize: '1.4rem' }}>Gestión de Proyectos</h2>
+                  <button onClick={handleCreateProject} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.6rem 1.15rem', background: 'linear-gradient(135deg, #5470c6, #2d3f6e)', color: 'white', border: 'none', borderRadius: '10px', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 600, boxShadow: '0 4px 14px rgba(84,112,198,0.3)' }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Crear Proyecto
                   </button>
                 </div>
                 <ProjectList onEdit={handleEditProject} onRefresh={projectListRefresh} />
@@ -466,13 +461,7 @@ function AppContent() {
               />
             ) : (
               <div style={{ width: '100%', maxWidth: '100%' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', padding: '0 1rem', flexWrap: 'wrap', gap: '1rem' }}>
-                  <h2 style={{ margin: 0, color: '#333' }}>Gestión de Modelos de Bundle</h2>
-                  <button onClick={handleCreateBundleModel} style={{ padding: '0.75rem 1.5rem', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold' }}>
-                    + Crear Modelo
-                  </button>
-                </div>
-                <BundleModelList onEdit={handleEditBundleModel} onRefresh={bundleModelListRefresh} />
+                <BundleModelList onEdit={handleEditBundleModel} onRefresh={bundleModelListRefresh} onCreate={handleCreateBundleModel} />
               </div>
             )}
           </>
@@ -493,13 +482,7 @@ function AppContent() {
               />
             ) : (
               <div style={{ width: '100%', maxWidth: '100%' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', padding: '0 1rem', flexWrap: 'wrap', gap: '1rem' }}>
-                  <h2 style={{ margin: 0, color: '#333' }}>Gestión de Modelos de Smartphone</h2>
-                  <button onClick={handleCreateSmartphoneModel} style={{ padding: '0.75rem 1.5rem', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold' }}>
-                    + Crear Modelo
-                  </button>
-                </div>
-                <SmartphoneModelList onEdit={handleEditSmartphoneModel} onRefresh={smartphoneModelListRefresh} />
+                <SmartphoneModelList onEdit={handleEditSmartphoneModel} onRefresh={smartphoneModelListRefresh} onCreate={handleCreateSmartphoneModel} />
               </div>
             )}
           </>
@@ -561,18 +544,7 @@ function AppContent() {
               />
             ) : (
               <div style={{ width: '100%', maxWidth: '100%' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', padding: '0 1rem', flexWrap: 'wrap', gap: '1rem' }}>
-                  <h2 style={{ margin: 0, color: '#333' }}>Gestión de Smartphones</h2>
-                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                    <button onClick={handleImportSmartphone} style={{ padding: '0.75rem 1.5rem', backgroundColor: '#17a2b8', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold' }}>
-                      📥 Importar Excel
-                    </button>
-                    <button onClick={handleCreateSmartphone} style={{ padding: '0.75rem 1.5rem', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold' }}>
-                      + Agregar Smartphone
-                    </button>
-                  </div>
-                </div>
-                <SmartphoneList onEdit={handleEditSmartphone} onRefresh={smartphoneListRefresh} />
+                <SmartphoneList onEdit={handleEditSmartphone} onRefresh={smartphoneListRefresh} onCreate={handleCreateSmartphone} onImport={handleImportSmartphone} />
               </div>
             )}
           </>
@@ -593,13 +565,7 @@ function AppContent() {
               />
             ) : (
               <div style={{ width: '100%', maxWidth: '100%' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', padding: '0 1rem', flexWrap: 'wrap', gap: '1rem' }}>
-                  <h2 style={{ margin: 0, color: '#333' }}>Gestión de Distribuidores</h2>
-                  <button onClick={handleCreateDistributor} style={{ padding: '0.75rem 1.5rem', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold' }}>
-                    + Crear Distribuidor
-                  </button>
-                </div>
-                <DistributorList onEdit={handleEditDistributor} onRefresh={distributorListRefresh} />
+                <DistributorList onEdit={handleEditDistributor} onRefresh={distributorListRefresh} onCreate={handleCreateDistributor} />
               </div>
             )}
           </>

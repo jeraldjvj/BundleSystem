@@ -84,7 +84,7 @@ export const reportRepository = {
       SELECT bd.bundle_delivered_id, bd.user_id, bd.client_full_name, bd.client_phone,
         bd.client_picture, bd.create_time, bd.store_code, bd.store_name,
         b.serial_number, bm.bundle_name,
-        sp.imei_1, sm.model_name,
+        sp.imei_1, sm.model_name, st.city,
         CONCAT(up.first_name, ' ', up.last_name) AS delivered_by
       FROM bundle_delivered bd
       LEFT JOIN bundle b ON bd.bundle_id = b.bundle_id
@@ -93,6 +93,7 @@ export const reportRepository = {
       LEFT JOIN smartphone_model sm ON sp.smartphone_model_id = sm.smartphone_model_id
       LEFT JOIN user u ON bd.user_id = u.user_id
       LEFT JOIN user_profile up ON u.user_id = up.user_id
+      LEFT JOIN stores st ON bd.store_code = st.store_code
       ${deliveryWhere}
       ORDER BY bd.create_time DESC
     `, params);

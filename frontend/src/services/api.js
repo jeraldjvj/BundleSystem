@@ -9,6 +9,29 @@ const api = axios.create({
   },
 });
 
+// Enviar el user_id de la sesión en cada petición para validar estado en backend
+api.interceptors.request.use((config) => {
+  try {
+    const stored = JSON.parse(localStorage.getItem('user') || 'null');
+    const userId = stored?.userId ?? stored?.user_id ?? stored?.user?.userId;
+    if (userId) config.headers['x-user-id'] = userId;
+  } catch { /* ignore */ }
+  return config;
+});
+
+// Si el backend responde 403 por cuenta inactiva, cerrar sesión
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const msg = error.response?.data?.error || '';
+    if (error.response?.status === 403 && msg.toLowerCase().includes('inactiva')) {
+      localStorage.removeItem('user');
+      window.location.href = '/';
+    }
+    return Promise.reject(error);
+  }
+);
+
 export const authService = {
   login: (email, password) => api.post('/login', { email, password }),
 };

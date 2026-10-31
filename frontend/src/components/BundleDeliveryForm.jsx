@@ -18,7 +18,7 @@ const scanButtonStyle = {
   backgroundColor: '#343a40',
   color: 'white',
   border: 'none',
-  borderRadius: '4px',
+  borderRadius: '10px',
   cursor: 'pointer',
   display: 'inline-flex',
   alignItems: 'center',
@@ -28,27 +28,34 @@ const scanButtonStyle = {
 
 const inputStyle = {
   width: '100%',
-  padding: '0.75rem',
-  border: '1px solid #ccc',
-  borderRadius: '4px',
-  fontSize: '1rem',
+  padding: '0.7rem 0.9rem',
+  border: '1px solid #e0e0e0',
+  borderRadius: '10px',
+  fontSize: '0.95rem',
+  backgroundColor: '#f8f9fa',
+  color: '#333',
+  colorScheme: 'light',
+  outline: 'none',
   boxSizing: 'border-box'
 };
 
 const labelStyle = {
   display: 'block',
-  marginBottom: '0.5rem',
-  fontWeight: 'bold',
-  color: '#333'
+  marginBottom: '0.4rem',
+  fontWeight: 600,
+  color: '#444',
+  fontSize: '0.875rem'
 };
 
 const sectionStyle = {
-  marginBottom: '1.5rem',
+  marginBottom: '1.25rem',
   padding: '1.5rem',
   backgroundColor: 'white',
-  borderRadius: '8px',
-  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+  borderRadius: '16px',
+  boxShadow: '0 4px 20px rgba(0,0,0,0.06)'
 };
+
+const sectionTitle = { margin: '0 0 1rem', color: '#1a2340', fontSize: '1rem', fontWeight: 700 };
 
 function BundleDeliveryForm({ onSave, onCancel }) {
   const { user } = useAuth();
@@ -66,6 +73,8 @@ function BundleDeliveryForm({ onSave, onCancel }) {
   const [stores, setStores] = useState([]);
   const [storesLoading, setStoresLoading] = useState(true);
   const [selectedStore, setSelectedStore] = useState(null);
+  const [storeSearch, setStoreSearch] = useState('');
+  const [showStoreDropdown, setShowStoreDropdown] = useState(false);
 
   const [formData, setFormData] = useState({ client_full_name: '', client_phone: '' });
   const [picture, setPicture] = useState(null);
@@ -230,7 +239,7 @@ function BundleDeliveryForm({ onSave, onCancel }) {
     setError('');
     setSuccess('');
 
-    if (!verifiedBundle) return setError('Verifica el Número de Serie del bundle primero');
+    if (!verifiedBundle) return setError('Verifica el Número de Serie del bandeo primero');
     if (!verifiedPhone) return setError('Verifica el IMEI del smartphone primero');
     if (!selectedStore) return setError('Selecciona un store');
     if (!picture) return setError('Sube o toma una fotografía del cliente');
@@ -262,7 +271,7 @@ function BundleDeliveryForm({ onSave, onCancel }) {
   const msgStyle = (ok) => ({
     marginTop: '0.5rem',
     padding: '0.5rem 0.75rem',
-    borderRadius: '4px',
+    borderRadius: '10px',
     fontSize: '0.875rem',
     backgroundColor: ok ? '#d4edda' : '#f8d7da',
     color: ok ? '#155724' : '#721c24'
@@ -270,18 +279,20 @@ function BundleDeliveryForm({ onSave, onCancel }) {
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: '1rem' }}>
-      <h2 style={{ color: '#333' }}>Entrega de Bandeos</h2>
-      <p style={{ color: '#666', marginBottom: '1.5rem' }}>
-        Registra la entrega de un bandeo a un cliente.
-      </p>
+      <div style={{ background: 'linear-gradient(135deg, #1a2340, #2d3f6e)', borderRadius: '16px', padding: '1.5rem 2rem', color: 'white', marginBottom: '1.5rem', marginTop: '10px' }}>
+        <h2 style={{ margin: 0, fontSize: '1.4rem' }}>Entrega de Bandeos</h2>
+        <p style={{ margin: '0.25rem 0 0', fontSize: '0.85rem', opacity: 0.75 }}>
+          Registra la entrega de un bandeo a un cliente
+        </p>
+      </div>
 
-      {error && <div style={{ padding: '1rem', marginBottom: '1rem', backgroundColor: '#f8d7da', color: '#721c24', borderRadius: '4px' }}>{error}</div>}
-      {success && <div style={{ padding: '1rem', marginBottom: '1rem', backgroundColor: '#d4edda', color: '#155724', borderRadius: '4px' }}>{success}</div>}
+      {error && <div style={{ padding: '0.85rem 1rem', marginBottom: '1.25rem', backgroundColor: '#fdecea', color: '#c0392b', borderRadius: '10px', fontSize: '0.875rem' }}>{error}</div>}
+      {success && <div style={{ padding: '0.85rem 1rem', marginBottom: '1.25rem', backgroundColor: '#d4edda', color: '#155724', borderRadius: '10px', fontSize: '0.875rem' }}>{success}</div>}
 
       <form onSubmit={handleSubmit}>
-        {/* Bundle por serial */}
+        {/* Bandeo por serial */}
         <div style={sectionStyle}>
-          <h3 style={{ marginTop: 0 }}>Bandeo</h3>
+          <h3 style={sectionTitle}>Bandeo</h3>
           <label style={labelStyle}>Número de Serie (Serial Number) *</label>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <input
@@ -307,7 +318,7 @@ function BundleDeliveryForm({ onSave, onCancel }) {
 
         {/* Smartphone por IMEI */}
         <div style={sectionStyle}>
-          <h3 style={{ marginTop: 0 }}>Smartphone</h3>
+          <h3 style={sectionTitle}>Smartphone</h3>
           <label style={labelStyle}>IMEI 1 *</label>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <input
@@ -333,7 +344,7 @@ function BundleDeliveryForm({ onSave, onCancel }) {
 
         {/* Datos del cliente */}
         <div style={sectionStyle}>
-          <h3 style={{ marginTop: 0 }}>Cliente</h3>
+          <h3 style={sectionTitle}>Cliente</h3>
           <div style={{ marginBottom: '1rem' }}>
             <label style={labelStyle}>Nombre Completo *</label>
             <input
@@ -347,7 +358,7 @@ function BundleDeliveryForm({ onSave, onCancel }) {
           </div>
           <div style={{ marginBottom: '1rem' }}>
             <label style={labelStyle}>Teléfono *</label>
-            <div style={{ display: 'flex', alignItems: 'stretch', border: '1px solid #ccc', borderRadius: '4px', overflow: 'hidden', backgroundColor: 'white' }}>
+            <div style={{ display: 'flex', alignItems: 'stretch', border: '1px solid #e0e0e0', borderRadius: '10px', overflow: 'hidden', backgroundColor: '#f8f9fa' }}>
               <span style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -380,15 +391,27 @@ function BundleDeliveryForm({ onSave, onCancel }) {
           </div>
           <div>
             <label style={labelStyle}>Fotografía de la Entrega *</label>
-            <input
-              type="file"
-              accept="image/*"
-              capture="environment"
-              onChange={handlePicture}
-              style={{ fontSize: '0.9rem' }}
-              required={!picture}
-            />
-            <p style={{ fontSize: '0.8rem', color: '#666', marginTop: '0.25rem' }}>
+            <label style={{
+              display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+              padding: '0.6rem 1.15rem', backgroundColor: '#eef2fb', color: '#2d3f6e',
+              border: '1px solid #c7d3f0', borderRadius: '10px', cursor: 'pointer',
+              fontSize: '0.875rem', fontWeight: 600
+            }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                <circle cx="12" cy="13" r="4"/>
+              </svg>
+              {picture ? 'Cambiar foto' : 'Tomar o subir foto'}
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={handlePicture}
+                style={{ display: 'none' }}
+                required={!picture}
+              />
+            </label>
+            <p style={{ fontSize: '0.8rem', color: '#888', marginTop: '0.5rem' }}>
               En un dispositivo móvil puedes tomar la foto directamente con la cámara, o elegir una imagen de la galería.
             </p>
             {picturePreview && (
@@ -403,29 +426,69 @@ function BundleDeliveryForm({ onSave, onCancel }) {
 
         {/* Store */}
         <div style={sectionStyle}>
-          <h3 style={{ marginTop: 0 }}>Tienda</h3>
+          <h3 style={sectionTitle}>Tienda</h3>
           {storesLoading ? (
             <p style={{ color: '#666' }}>Cargando stores…</p>
           ) : stores.length === 0 ? (
-            <div style={{ padding: '0.75rem', backgroundColor: '#fff3cd', color: '#856404', borderRadius: '4px' }}>
+            <div style={{ padding: '0.75rem', backgroundColor: '#fff3cd', color: '#856404', borderRadius: '10px' }}>
               No tienes stores asignados. Pide a un Office Manager que asigne un store a tu usuario.
             </div>
           ) : (
             <>
               <label style={labelStyle}>Nombre de Tienda *</label>
-              <select
-                value={selectedStore?.storeCode || ''}
-                onChange={(e) => setSelectedStore(stores.find(s => s.storeCode === e.target.value) || null)}
+              <input
+                type="text"
+                value={storeSearch}
+                onChange={(e) => { setStoreSearch(e.target.value); setSelectedStore(null); setShowStoreDropdown(true); }}
+                onFocus={() => setShowStoreDropdown(true)}
+                onBlur={() => setTimeout(() => setShowStoreDropdown(false), 150)}
+                placeholder="Busca por nombre, código o ciudad..."
+                required={!selectedStore}
                 style={inputStyle}
-                required
-              >
-                <option value="">Selecciona una Tienda</option>
-                {stores.map(s => (
-                  <option key={s.storeCode} value={s.storeCode}>{s.storeName}</option>
-                ))}
-              </select>
+              />
+              {showStoreDropdown && (
+                <div
+                  onMouseDown={(e) => e.preventDefault()}
+                  style={{
+                    backgroundColor: 'white', border: '1px solid #e0e0e0', borderRadius: '10px',
+                    marginTop: '0.35rem', maxHeight: '190px', overflowY: 'auto', overscrollBehavior: 'contain',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.12)'
+                  }}
+                >
+                  {(() => {
+                    const q = storeSearch.toLowerCase();
+                    const filtered = stores.filter(s =>
+                      !q || (s.storeName || '').toLowerCase().includes(q) ||
+                      String(s.storeCode).toLowerCase().includes(q) ||
+                      (s.city || '').toLowerCase().includes(q)
+                    );
+                    if (filtered.length === 0) {
+                      return <div style={{ padding: '0.9rem 1rem', color: '#999', fontSize: '0.85rem', textAlign: 'center' }}>Sin resultados</div>;
+                    }
+                    return filtered.map(s => (
+                      <div
+                        key={s.storeCode}
+                        onMouseDown={() => {
+                          setSelectedStore(s);
+                          setStoreSearch(s.storeName);
+                          setShowStoreDropdown(false);
+                        }}
+                        style={{
+                          padding: '0.7rem 1rem', cursor: 'pointer', fontSize: '0.9rem', color: '#333',
+                          backgroundColor: selectedStore?.storeCode === s.storeCode ? '#eef2fb' : 'transparent',
+                          borderBottom: '1px solid #f0f0f0'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f0f4fc'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = selectedStore?.storeCode === s.storeCode ? '#eef2fb' : 'transparent'}
+                      >
+                        {s.storeName} <span style={{ color: '#999', fontSize: '0.8rem' }}>— {s.storeCode}, {s.city}</span>
+                      </div>
+                    ));
+                  })()}
+                </div>
+              )}
               {selectedStore && (
-                <div style={{ marginTop: '0.75rem', padding: '0.75rem', backgroundColor: '#e7f3ff', borderRadius: '4px', fontSize: '0.875rem' }}>
+                <div style={{ marginTop: '0.75rem', padding: '0.75rem', backgroundColor: '#e7f3ff', borderRadius: '10px', fontSize: '0.875rem' }}>
                   Store Code: <strong>{selectedStore.storeCode}</strong> — {selectedStore.city}
                 </div>
               )}
@@ -437,7 +500,7 @@ function BundleDeliveryForm({ onSave, onCancel }) {
           <button
             type="button"
             onClick={onCancel}
-            style={{ padding: '0.75rem 1.5rem', backgroundColor: '#6c757d', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '1rem' }}
+            style={{ padding: '0.8rem 1.5rem', backgroundColor: 'white', color: '#555', border: '1px solid #ddd', borderRadius: '10px', cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold' }}
           >
             Cancelar
           </button>
@@ -445,14 +508,15 @@ function BundleDeliveryForm({ onSave, onCancel }) {
             type="submit"
             disabled={submitting || !verifiedBundle || !verifiedPhone || !selectedStore || !picture}
             style={{
-              padding: '0.75rem 1.5rem',
-              backgroundColor: submitting || !verifiedBundle || !verifiedPhone || !selectedStore || !picture ? '#adb5bd' : '#28a745',
+              padding: '0.8rem 1.5rem',
+              background: submitting || !verifiedBundle || !verifiedPhone || !selectedStore || !picture ? '#adb5bd' : 'linear-gradient(135deg, #5470c6, #2d3f6e)',
               color: 'white',
               border: 'none',
-              borderRadius: '4px',
+              borderRadius: '10px',
               cursor: submitting ? 'wait' : 'pointer',
               fontSize: '1rem',
-              fontWeight: 'bold'
+              fontWeight: 'bold',
+              boxShadow: !(submitting || !verifiedBundle || !verifiedPhone || !selectedStore || !picture) ? '0 4px 14px rgba(84,112,198,0.3)' : 'none'
             }}
           >
             {submitting ? 'Registrando…' : 'Registrar Entrega'}
@@ -504,7 +568,7 @@ function BundleDeliveryForm({ onSave, onCancel }) {
                 ✕
               </button>
             </div>
-            <div id="delivery-barcode-scanner" style={{ width: '100%', overflow: 'hidden', borderRadius: '4px' }}></div>
+            <div id="delivery-barcode-scanner" style={{ width: '100%', overflow: 'hidden', borderRadius: '10px' }}></div>
             <p style={{ fontSize: '0.875rem', color: '#666', marginTop: '0.75rem', textAlign: 'center' }}>
               Apunta la cámara al código de barras CODE_128
             </p>

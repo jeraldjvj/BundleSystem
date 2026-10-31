@@ -183,7 +183,6 @@ DEFAULT CHARACTER SET = utf8mb3;
 CREATE TABLE IF NOT EXISTS `bundle_system`.`stores` (
   `store_code` VARCHAR(45) NOT NULL,
   `user_id` BIGINT NOT NULL,
-  `rms_store_code` VARCHAR(45) NOT NULL,
   `store_name` VARCHAR(45) NOT NULL,
   `city` VARCHAR(45) NOT NULL,
   PRIMARY KEY (`store_code`, `user_id`),
@@ -226,9 +225,11 @@ DEFAULT CHARACTER SET = utf8mb3;
 CREATE TABLE IF NOT EXISTS `bundle_system`.`transfer_history` (
   `transfer_history_id` INT NOT NULL,
   `bundle_id` INT NOT NULL,
+  `manager_user_id` BIGINT NOT NULL,
   `old_user_id` BIGINT NOT NULL,
   `new_user_id` BIGINT NOT NULL,
   `create_time` TIMESTAMP NOT NULL,
+  `status` VARCHAR(45) NOT NULL,
   PRIMARY KEY (`transfer_history_id`, `bundle_id`),
   INDEX `fk_transfer_history_bundle1_idx` (`bundle_id` ASC) VISIBLE,
   CONSTRAINT `fk_transfer_history_bundle1`

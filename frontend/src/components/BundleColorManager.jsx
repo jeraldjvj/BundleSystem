@@ -116,7 +116,7 @@ function BundleColorManager({ bundleModel, onClose, onColorsAdded, singleSelect 
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <h2 style={{ margin: 0, color: '#333' }}>
-          {singleSelect ? 'Colores del Bundle' : 'Gestionar Colores del Bundle'}
+          {singleSelect ? 'Colores del Bandeo' : 'Gestionar Colores del Bandeo'}
         </h2>
         <button
           onClick={onClose}

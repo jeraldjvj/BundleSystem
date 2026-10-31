@@ -77,17 +77,17 @@ function SmartphoneForm({ smartphone, onSave, onCancel }) {
   };
 
   return (
-    <div style={{ maxWidth: '600px', margin: '2rem auto', padding: '2rem', border: '1px solid #ddd', borderRadius: '8px', backgroundColor: 'white', width: '100%', boxSizing: 'border-box' }}>
-      <h2>{smartphone ? 'Editar Smartphone' : 'Agregar Smartphone'}</h2>
+    <div style={{ maxWidth: '600px', margin: '2rem auto', padding: '2rem', borderRadius: '16px', boxShadow: '0 8px 30px rgba(0,0,0,0.08)', backgroundColor: 'white', width: '100%', boxSizing: 'border-box' }}>
+      <h2 style={{ color: '#1a2340' }}>{smartphone ? 'Editar Smartphone' : 'Agregar Smartphone'}</h2>
 
       {success && (
-        <div style={{ padding: '1rem', marginBottom: '1rem', backgroundColor: '#d4edda', color: '#155724', borderRadius: '4px' }}>
+        <div style={{ padding: '1rem', marginBottom: '1rem', backgroundColor: '#d4edda', color: '#155724', borderRadius: '10px' }}>
           {success}
         </div>
       )}
 
       {error && (
-        <div style={{ padding: '1rem', marginBottom: '1rem', backgroundColor: '#f8d7da', color: '#721c24', borderRadius: '4px' }}>
+        <div style={{ padding: '1rem', marginBottom: '1rem', backgroundColor: '#f8d7da', color: '#721c24', borderRadius: '10px' }}>
           {error}
         </div>
       )}
@@ -103,7 +103,7 @@ function SmartphoneForm({ smartphone, onSave, onCancel }) {
             value={formData.smartphone_model_id}
             onChange={handleChange}
             required
-            style={{ width: '100%', padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px', fontSize: '1rem', boxSizing: 'border-box' }}
+            style={{ width: '100%', padding: '0.7rem 0.9rem', border: '1px solid #e0e0e0', borderRadius: '10px', fontSize: '0.95rem', backgroundColor: '#f8f9fa', color: '#333', colorScheme: 'light', outline: 'none', boxSizing: 'border-box' }}
           >
             <option value="">Selecciona un modelo</option>
             {models.map(m => (
@@ -126,7 +126,7 @@ function SmartphoneForm({ smartphone, onSave, onCancel }) {
             onChange={handleChange}
             required
             maxLength={45}
-            style={{ width: '100%', padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px', fontSize: '1rem', boxSizing: 'border-box' }}
+            style={{ width: '100%', padding: '0.7rem 0.9rem', border: '1px solid #e0e0e0', borderRadius: '10px', fontSize: '0.95rem', backgroundColor: '#f8f9fa', color: '#333', colorScheme: 'light', outline: 'none', boxSizing: 'border-box' }}
           />
         </div>
 
@@ -140,7 +140,7 @@ function SmartphoneForm({ smartphone, onSave, onCancel }) {
             value={formData.distributor_id}
             onChange={handleChange}
             required
-            style={{ width: '100%', padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px', fontSize: '1rem', boxSizing: 'border-box' }}
+            style={{ width: '100%', padding: '0.7rem 0.9rem', border: '1px solid #e0e0e0', borderRadius: '10px', fontSize: '0.95rem', backgroundColor: '#f8f9fa', color: '#333', colorScheme: 'light', outline: 'none', boxSizing: 'border-box' }}
           >
             <option value="">Selecciona un distribuidor</option>
             {distributors.map(d => (
@@ -156,10 +156,10 @@ function SmartphoneForm({ smartphone, onSave, onCancel }) {
             style={{
               flex: 1,
               padding: '0.75rem',
-              backgroundColor: loading ? '#6c757d' : '#28a745',
+              background: loading ? '#adb5bd' : 'linear-gradient(135deg, #5470c6, #2d3f6e)',
               color: 'white',
               border: 'none',
-              borderRadius: '4px',
+              borderRadius: '10px',
               cursor: loading ? 'not-allowed' : 'pointer',
               fontSize: '1rem',
               fontWeight: 'bold'
@@ -173,10 +173,10 @@ function SmartphoneForm({ smartphone, onSave, onCancel }) {
             style={{
               flex: 1,
               padding: '0.75rem',
-              backgroundColor: '#6c757d',
+              backgroundColor: '#adb5bd',
               color: 'white',
               border: 'none',
-              borderRadius: '4px',
+              borderRadius: '10px',
               cursor: 'pointer',
               fontSize: '1rem',
               fontWeight: 'bold'

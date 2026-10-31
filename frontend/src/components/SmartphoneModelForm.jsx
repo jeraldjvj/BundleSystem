@@ -58,21 +58,21 @@ function SmartphoneModelForm({ smartphoneModel, onSave, onCancel }) {
     }
   };
 
-  const inputStyle = { width: '100%', padding: '0.5rem', border: '1px solid #ccc', borderRadius: '4px' };
+  const inputStyle = { width: '100%', padding: '0.7rem 0.9rem', border: '1px solid #e0e0e0', borderRadius: '10px', fontSize: '0.95rem', backgroundColor: '#f8f9fa', color: '#333', colorScheme: 'light', outline: 'none', boxSizing: 'border-box' };
   const labelStyle = { display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' };
 
   return (
-    <div style={{ maxWidth: '600px', margin: '2rem auto', padding: '2rem', border: '1px solid #ddd', borderRadius: '8px', width: '100%', boxSizing: 'border-box' }}>
-      <h2>{smartphoneModel ? 'Editar Modelo de Smartphone' : 'Crear Modelo de Smartphone'}</h2>
+    <div style={{ maxWidth: '600px', margin: '2rem auto', padding: '2rem', borderRadius: '16px', boxShadow: '0 8px 30px rgba(0,0,0,0.08)', width: '100%', boxSizing: 'border-box' }}>
+      <h2 style={{ color: '#1a2340' }}>{smartphoneModel ? 'Editar Modelo de Smartphone' : 'Crear Modelo de Smartphone'}</h2>
 
       {message && (
-        <div style={{ padding: '1rem', marginBottom: '1rem', backgroundColor: '#d4edda', color: '#155724', borderRadius: '4px' }}>
+        <div style={{ padding: '1rem', marginBottom: '1rem', backgroundColor: '#d4edda', color: '#155724', borderRadius: '10px' }}>
           {message}
         </div>
       )}
 
       {error && (
-        <div style={{ padding: '1rem', marginBottom: '1rem', backgroundColor: '#f8d7da', color: '#721c24', borderRadius: '4px' }}>
+        <div style={{ padding: '1rem', marginBottom: '1rem', backgroundColor: '#f8d7da', color: '#721c24', borderRadius: '10px' }}>
           {error}
         </div>
       )}
@@ -185,10 +185,10 @@ function SmartphoneModelForm({ smartphoneModel, onSave, onCancel }) {
             style={{
               flex: 1,
               padding: '0.75rem',
-              backgroundColor: '#007bff',
+              background: 'linear-gradient(135deg, #5470c6, #2d3f6e)',
               color: 'white',
               border: 'none',
-              borderRadius: '4px',
+              borderRadius: '10px',
               cursor: 'pointer',
               fontSize: '1rem',
               fontWeight: 'bold'
@@ -202,10 +202,10 @@ function SmartphoneModelForm({ smartphoneModel, onSave, onCancel }) {
             style={{
               flex: 1,
               padding: '0.75rem',
-              backgroundColor: '#6c757d',
+              backgroundColor: '#adb5bd',
               color: 'white',
               border: 'none',
-              borderRadius: '4px',
+              borderRadius: '10px',
               cursor: 'pointer',
               fontSize: '1rem',
               fontWeight: 'bold'

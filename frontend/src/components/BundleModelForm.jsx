@@ -37,33 +37,33 @@ function BundleModelForm({ bundleModel, onSave, onCancel }) {
 
       if (bundleModel) {
         await bundleModelService.updateBundleModel(bundleModel.bundleModelId, dataToSubmit);
-        setMessage('Modelo de bundle actualizado exitosamente!');
+        setMessage('Modelo de bandeo actualizado exitosamente!');
       } else {
         await bundleModelService.createBundleModel(dataToSubmit);
-        setMessage('Modelo de bundle creado exitosamente!');
+        setMessage('Modelo de bandeo creado exitosamente!');
       }
       
       setTimeout(() => {
         onSave();
       }, 1000);
     } catch (err) {
-      setError('Error al guardar modelo de bundle: ' + (err.response?.data?.message || err.message));
+      setError('Error al guardar modelo de bandeo: ' + (err.response?.data?.message || err.message));
       console.error('Error:', err);
     }
   };
 
   return (
-    <div style={{ maxWidth: '600px', margin: '2rem auto', padding: '2rem', border: '1px solid #ddd', borderRadius: '8px', width: '100%', boxSizing: 'border-box' }}>
-      <h2>{bundleModel ? 'Editar Modelo de Bundle' : 'Crear Modelo de Bundle'}</h2>
+    <div style={{ maxWidth: '600px', margin: '2rem auto', padding: '2rem', borderRadius: '16px', boxShadow: '0 8px 30px rgba(0,0,0,0.08)', width: '100%', boxSizing: 'border-box' }}>
+      <h2 style={{ color: '#1a2340' }}>{bundleModel ? 'Editar Modelo de Bandeo' : 'Crear Modelo de Bandeo'}</h2>
       
       {message && (
-        <div style={{ padding: '1rem', marginBottom: '1rem', backgroundColor: '#d4edda', color: '#155724', borderRadius: '4px' }}>
+        <div style={{ padding: '1rem', marginBottom: '1rem', backgroundColor: '#d4edda', color: '#155724', borderRadius: '10px' }}>
           {message}
         </div>
       )}
       
       {error && (
-        <div style={{ padding: '1rem', marginBottom: '1rem', backgroundColor: '#f8d7da', color: '#721c24', borderRadius: '4px' }}>
+        <div style={{ padding: '1rem', marginBottom: '1rem', backgroundColor: '#f8d7da', color: '#721c24', borderRadius: '10px' }}>
           {error}
         </div>
       )}
@@ -71,7 +71,7 @@ function BundleModelForm({ bundleModel, onSave, onCancel }) {
       <form onSubmit={handleSubmit}>
         <div style={{ marginBottom: '1rem' }}>
           <label htmlFor="bundle_name" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-            Nombre del Bundle:
+            Nombre del Bandeo:
           </label>
           <input
             type="text"
@@ -81,7 +81,7 @@ function BundleModelForm({ bundleModel, onSave, onCancel }) {
             onChange={handleChange}
             required
             maxLength={45}
-            style={{ width: '100%', padding: '0.5rem', border: '1px solid #ccc', borderRadius: '4px' }}
+            style={{ width: '100%', padding: '0.7rem 0.9rem', border: '1px solid #e0e0e0', borderRadius: '10px', fontSize: '0.95rem', backgroundColor: '#f8f9fa', color: '#333', colorScheme: 'light', outline: 'none', boxSizing: 'border-box' }}
           />
         </div>
 
@@ -91,10 +91,10 @@ function BundleModelForm({ bundleModel, onSave, onCancel }) {
             style={{
               flex: 1,
               padding: '0.75rem',
-              backgroundColor: '#007bff',
+              background: 'linear-gradient(135deg, #5470c6, #2d3f6e)',
               color: 'white',
               border: 'none',
-              borderRadius: '4px',
+              borderRadius: '10px',
               cursor: 'pointer',
               fontSize: '1rem',
               fontWeight: 'bold'
@@ -108,10 +108,10 @@ function BundleModelForm({ bundleModel, onSave, onCancel }) {
             style={{
               flex: 1,
               padding: '0.75rem',
-              backgroundColor: '#6c757d',
+              backgroundColor: '#adb5bd',
               color: 'white',
               border: 'none',
-              borderRadius: '4px',
+              borderRadius: '10px',
               cursor: 'pointer',
               fontSize: '1rem',
               fontWeight: 'bold'

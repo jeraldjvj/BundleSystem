@@ -25,8 +25,8 @@ const useChart = (option, deps = []) => {
 
 const cardStyle = {
   backgroundColor: 'white',
-  borderRadius: '8px',
-  boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+  borderRadius: '16px',
+  boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
   padding: '1.25rem'
 };
 
@@ -45,6 +45,8 @@ function ReportsDashboard() {
   const [previewImg, setPreviewImg] = useState(null);
   const [detailDelivery, setDetailDelivery] = useState(null);
   const [mapReady, setMapReady] = useState(false);
+  const [deliveryFilters, setDeliveryFilters] = useState({});
+  const [deliveryActiveFilter, setDeliveryActiveFilter] = useState(null);
 
   // Registra el mapa de Bolivia en ECharts una sola vez
   useEffect(() => {
@@ -136,9 +138,10 @@ function ReportsDashboard() {
     }]
   });
 
-  const bundlesPieRef = useChart(data && pieOption('Bandeos Disponibles por Usuario', data.bundlesAvailableByUser, ['50%', '55%'], 'name'));
+  const canSeeProfiles = level !== 'field force';
+  const bundlesPieRef = useChart(canSeeProfiles && data && pieOption('Bandeos Disponibles por Usuario', data.bundlesAvailableByUser, ['50%', '55%'], 'name'));
   const storeBarRef = useChart(data && barOption('Entregas por Tienda', data.deliveriesByStore, 'store_name', '#91cc75'));
-  const userBarRef = useChart(data && barOption('Entregas por Usuario', data.deliveriesByUser, 'name', '#73c0de'));
+  const userBarRef = useChart(canSeeProfiles && data && barOption('Entregas por Usuario', data.deliveriesByUser, 'name', '#73c0de'));
   const dayLineRef = useChart(data && lineOption('Entregas por Día', data.deliveriesByDay));
   // Ciudad del store → departamento de Bolivia + coordenadas para el scatter
   const DEPT_MAP = {
@@ -209,14 +212,30 @@ function ReportsDashboard() {
       }
     ]
   };
-  const cityMapRef = useChart(mapOption, [mapReady]);
-  const canSeeProfiles = level !== 'field force';
+  const cityMapRef = useChart(canSeeProfiles && mapOption, [mapReady]);
   const profilesBarRef = useChart(canSeeProfiles && data && barOption('Cantidad de Perfiles', data.usersByLevel, 'name', '#3ba272'));
 
   if (loading) return <div style={{ textAlign: 'center', padding: '2rem' }}>Cargando reporte…</div>;
   if (error) return <div style={{ padding: '1rem', backgroundColor: '#f8d7da', color: '#721c24', borderRadius: '4px' }}>{error}</div>;
 
   const t = data.totals;
+
+  const deliveryColumns = [
+    { key: 'cliente', label: 'Cliente', value: d => d.client_full_name },
+    { key: 'tienda', label: 'Tienda', value: d => d.store_name },
+    { key: 'usuario', label: 'Usuario', value: d => d.delivered_by },
+    { key: 'sn', label: 'SN del Bandeo', value: d => d.serial_number },
+    { key: 'imei', label: 'IMEI', value: d => d.imei_1 },
+    { key: 'ciudad', label: 'Ciudad', value: d => d.city },
+    { key: 'fecha', label: 'Fecha de Entrega', value: d => new Date(d.create_time).toISOString().substring(0, 10) },
+  ];
+  const filteredDeliveries = data.deliveriesList.filter(d =>
+    deliveryColumns.every(c => {
+      const f = (deliveryFilters[c.key] || '').toLowerCase();
+      if (!f) return true;
+      return String(c.value(d) ?? '').toLowerCase().includes(f);
+    })
+  );
   const kpis = [
     { label: 'Total Bandeos', value: t.bundles, color: '#5470c6' },
     { label: 'Bandeos Disponibles', value: t.bundlesAvailable, color: '#91cc75' },
@@ -225,15 +244,16 @@ function ReportsDashboard() {
     { label: 'Usuarios', value: t.users, color: '#73c0de' },
     { label: 'Proyectos', value: t.projects, color: '#9a60b4' },
   ].filter(k => {
-    if (level === 'field force' && (k.label === 'Usuarios' || k.label === 'Bandeos Disponibles')) return false;
-    if (level === 'city manager' && k.label === 'Bandeos Disponibles') return false;
+    if (level === 'field force' && k.label === 'Usuarios') return false;
     return true;
   });
 
   return (
     <div style={{ padding: '1rem', width: '100%', boxSizing: 'border-box' }}>
-      <h2 style={{ marginBottom: '0.25rem', color: '#333' }}>Reporte de Resumen</h2>
-      <p style={{ color: '#666', marginBottom: '1.5rem', fontSize: '0.875rem' }}>{scopeLabel}</p>
+      <div style={{ background: 'linear-gradient(135deg, #1a2340, #2d3f6e)', borderRadius: '16px', padding: '1.5rem 2rem', color: 'white', marginBottom: '1.5rem', marginTop: '10px' }}>
+        <h2 style={{ margin: 0, fontSize: '1.4rem' }}>Reporte de Resumen</h2>
+        <p style={{ margin: '0.25rem 0 0', fontSize: '0.85rem', opacity: 0.75 }}>{scopeLabel}</p>
+      </div>
 
       {/* KPIs */}
       <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
@@ -247,19 +267,25 @@ function ReportsDashboard() {
 
       {/* Gráficos */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '1rem' }}>
-        <div style={cardStyle}><div ref={bundlesPieRef} style={{ width: '100%', height: '320px' }} /></div>
+        {canSeeProfiles && (
+          <div style={cardStyle}><div ref={bundlesPieRef} style={{ width: '100%', height: '320px' }} /></div>
+        )}
         {canSeeProfiles && (
           <div style={cardStyle}><div ref={profilesBarRef} style={{ width: '100%', height: '320px' }} /></div>
         )}
-        <div style={cardStyle}><div ref={cityMapRef} style={{ width: '100%', height: '420px' }} /></div>
+        {canSeeProfiles && (
+          <div style={cardStyle}><div ref={cityMapRef} style={{ width: '100%', height: '420px' }} /></div>
+        )}
         <div style={cardStyle}><div ref={storeBarRef} style={{ width: '100%', height: '320px' }} /></div>
-        <div style={cardStyle}><div ref={userBarRef} style={{ width: '100%', height: '320px' }} /></div>
+        {canSeeProfiles && (
+          <div style={cardStyle}><div ref={userBarRef} style={{ width: '100%', height: '320px' }} /></div>
+        )}
         <div style={cardStyle}><div ref={dayLineRef} style={{ width: '100%', height: '320px' }} /></div>
       </div>
 
       {/* Lista de entregas */}
       <div style={{ ...cardStyle, marginTop: '1rem' }}>
-        <h3 style={{ marginTop: 0 }}>Entregas Registradas ({data.deliveriesList.length})</h3>
+        <h3 style={{ margin: '0 0 1rem', color: '#1a2340', fontSize: '1rem' }}>Entregas Registradas ({filteredDeliveries.length} de {data.deliveriesList.length})</h3>
         {data.deliveriesList.length === 0 ? (
           <p style={{ color: '#666' }}>No hay entregas registradas.</p>
         ) : (
@@ -268,14 +294,69 @@ function ReportsDashboard() {
               <thead>
                 <tr style={{ backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6' }}>
                   <th style={{ padding: '0.75rem', textAlign: 'center', color: '#495057' }}>#</th>
-                  <th style={{ padding: '0.75rem', textAlign: 'left', color: '#495057' }}>Cliente</th>
-                  <th style={{ padding: '0.75rem', textAlign: 'left', color: '#495057' }}>Store</th>
+                  {deliveryColumns.filter(col => col.key !== 'fecha' && (canSeeProfiles || (col.key !== 'usuario' && col.key !== 'ciudad'))).map(col => (
+                    <th key={col.key} style={{ padding: '0.75rem', textAlign: 'left', color: '#495057', verticalAlign: 'top' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span>{col.label}</span>
+                        <button
+                          onClick={() => setDeliveryActiveFilter(deliveryActiveFilter === col.key ? null : col.key)}
+                          style={{ padding: '0.25rem', backgroundColor: 'transparent', border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', color: deliveryFilters[col.key] ? '#5470c6' : '#6c757d' }}
+                          title={`Buscar en ${col.label}`}
+                        >
+                          {col.key === 'fecha' ? (
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                              <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                            </svg>
+                          ) : (
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <circle cx="11" cy="11" r="8"></circle>
+                              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                          )}
+                        </button>
+                      </div>
+                      {deliveryActiveFilter === col.key && (
+                        <input
+                          type={col.key === 'fecha' ? 'date' : 'text'}
+                          autoFocus
+                          placeholder={`Buscar ${col.label}...`}
+                          value={deliveryFilters[col.key] || ''}
+                          onChange={(e) => setDeliveryFilters(prev => ({ ...prev, [col.key]: e.target.value }))}
+                          style={{ width: '100%', marginTop: '0.5rem', padding: '0.35rem 0.6rem', border: '1px solid #e0e0e0', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 'normal', boxSizing: 'border-box', backgroundColor: '#f8f9fa', color: '#333', colorScheme: 'light', outline: 'none' }}
+                        />
+                      )}
+                    </th>
+                  ))}
                   <th style={{ padding: '0.75rem', textAlign: 'center', color: '#495057' }}>Foto</th>
-                  <th style={{ padding: '0.75rem', textAlign: 'left', color: '#495057' }}>Fecha de Entrega</th>
+                  <th style={{ padding: '0.75rem', textAlign: 'left', color: '#495057', verticalAlign: 'top' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span>Fecha de Entrega</span>
+                      <button
+                        onClick={() => setDeliveryActiveFilter(deliveryActiveFilter === 'fecha' ? null : 'fecha')}
+                        style={{ padding: '0.25rem', backgroundColor: 'transparent', border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', color: deliveryFilters['fecha'] ? '#5470c6' : '#6c757d' }}
+                        title="Filtrar por fecha"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                          <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                      </button>
+                    </div>
+                    {deliveryActiveFilter === 'fecha' && (
+                      <input
+                        type="date"
+                        autoFocus
+                        value={deliveryFilters['fecha'] || ''}
+                        onChange={(e) => setDeliveryFilters(prev => ({ ...prev, fecha: e.target.value }))}
+                        style={{ width: '100%', marginTop: '0.5rem', padding: '0.35rem 0.6rem', border: '1px solid #e0e0e0', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 'normal', boxSizing: 'border-box', backgroundColor: '#f8f9fa', color: '#333', colorScheme: 'light', outline: 'none' }}
+                      />
+                    )}
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {data.deliveriesList.map((d, i) => (
+                {filteredDeliveries.map((d, i) => (
                   <tr key={d.bundle_delivered_id} style={{ borderBottom: '1px solid #dee2e6' }}>
                     <td style={{ padding: '0.5rem', textAlign: 'center', color: '#666' }}>{i + 1}</td>
                     <td
@@ -288,6 +369,10 @@ function ReportsDashboard() {
                       {d.client_full_name}
                     </td>
                     <td style={{ padding: '0.5rem', color: '#666' }}>{d.store_name}</td>
+                    {canSeeProfiles && <td style={{ padding: '0.5rem', color: '#666' }}>{d.delivered_by || '-'}</td>}
+                    <td style={{ padding: '0.5rem', color: '#666' }}>{d.serial_number || '-'}</td>
+                    <td style={{ padding: '0.5rem', color: '#666' }}>{d.imei_1 || '-'}</td>
+                    {canSeeProfiles && <td style={{ padding: '0.5rem', color: '#666' }}>{d.city || '-'}</td>}
                     <td style={{ padding: '0.5rem', textAlign: 'center' }}>
                       {d.client_picture ? (
                         <img
@@ -304,6 +389,13 @@ function ReportsDashboard() {
                     </td>
                   </tr>
                 ))}
+                {filteredDeliveries.length === 0 && (
+                  <tr>
+                    <td colSpan="9" style={{ padding: '1.5rem', textAlign: 'center', color: '#999', fontSize: '0.9rem' }}>
+                      No se encontraron resultados para los filtros aplicados
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -365,8 +457,8 @@ function ReportsDashboard() {
                 {[
                   ['Cliente', detailDelivery.client_full_name],
                   ['Teléfono', detailDelivery.client_phone],
-                  ['Serial del Bundle', detailDelivery.serial_number],
-                  ['Modelo de Bundle', detailDelivery.bundle_name],
+                  ['Serial del Bandeo', detailDelivery.serial_number],
+                  ['Modelo de Bandeo', detailDelivery.bundle_name],
                   ['IMEI', detailDelivery.imei_1],
                   ['Modelo Smartphone', detailDelivery.model_name],
                   ['Store', `${detailDelivery.store_name} (${detailDelivery.store_code})`],

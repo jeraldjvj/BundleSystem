@@ -1,26 +1,21 @@
 import { useState, useEffect } from 'react';
-import { storeService, userService } from '../services/api';
+import { storeService } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 function StoreForm({ store, onSave, onCancel }) {
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     store_code: '',
-    mi_id: '',
-    rms_store_code: '',
     store_name: '',
     city: '',
   });
 
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-  const [loadingMiId, setLoadingMiId] = useState(false);
-  const [miIdError, setMiIdError] = useState('');
-
   useEffect(() => {
     if (store) {
       setFormData({
         store_code: store.storeCode,
-        mi_id: store.miId || '',
-        rms_store_code: store.rmsStoreCode,
         store_name: store.storeName,
         city: store.city || '',
       });
@@ -33,29 +28,6 @@ function StoreForm({ store, onSave, onCancel }) {
       ...prev,
       [name]: value
     }));
-    if (name === 'mi_id') {
-      setMiIdError('');
-    }
-  };
-
-  const handleMiIdBlur = async () => {
-    if (!formData.mi_id) return;
-    
-    setLoadingMiId(true);
-    setMiIdError('');
-    
-    try {
-      const response = await userService.getUsers();
-      const user = response.data.find(u => u.miId === formData.mi_id);
-      
-      if (!user) {
-        setMiIdError('MI ID no encontrado');
-      }
-    } catch (err) {
-      setMiIdError('Error al validar MI ID');
-    } finally {
-      setLoadingMiId(false);
-    }
   };
 
   const handleSubmit = async (e) => {
@@ -63,23 +35,13 @@ function StoreForm({ store, onSave, onCancel }) {
     setMessage('');
     setError('');
 
-    // Validar MI ID
     try {
-      const response = await userService.getUsers();
-      const user = response.data.find(u => u.miId === formData.mi_id);
-      
-      if (!user) {
-        setError('MI ID no encontrado en la base de datos');
-        return;
-      }
-
       const storeData = {
         store_code: formData.store_code,
-        user_id: user.userId,
-        rms_store_code: formData.rms_store_code,
         store_name: formData.store_name,
         city: formData.city,
       };
+      if (!store) storeData.user_id = user.userId;
 
       if (store) {
         await storeService.updateStore(formData.store_code, storeData);
@@ -99,17 +61,23 @@ function StoreForm({ store, onSave, onCancel }) {
   };
 
   return (
-    <div style={{ maxWidth: '600px', margin: '2rem auto', padding: '2rem', border: '1px solid #ddd', borderRadius: '8px', width: '100%', boxSizing: 'border-box' }}>
-      <h2>{store ? 'Editar Tienda' : 'Crear Tienda'}</h2>
-      
+    <div style={{ maxWidth: '560px', margin: '2rem auto', backgroundColor: 'white', borderRadius: '16px', boxShadow: '0 8px 30px rgba(0,0,0,0.08)', overflow: 'hidden', width: '100%', boxSizing: 'border-box' }}>
+      <div style={{ background: 'linear-gradient(135deg, #1a2340, #2d3f6e)', padding: '1.5rem 2rem', color: 'white' }}>
+        <h2 style={{ margin: 0, fontSize: '1.25rem' }}>{store ? 'Editar Tienda' : 'Crear Tienda'}</h2>
+        <p style={{ margin: '0.25rem 0 0', fontSize: '0.85rem', opacity: 0.75 }}>
+          {store ? 'Actualiza los datos de la tienda' : 'Registra una nueva tienda en el sistema'}
+        </p>
+      </div>
+
+      <div style={{ padding: '2rem' }}>
       {message && (
-        <div style={{ padding: '1rem', marginBottom: '1rem', backgroundColor: '#d4edda', color: '#155724', borderRadius: '4px' }}>
+        <div style={{ padding: '1rem', marginBottom: '1rem', backgroundColor: '#d4edda', color: '#155724', borderRadius: '10px' }}>
           {message}
         </div>
       )}
       
       {error && (
-        <div style={{ padding: '1rem', marginBottom: '1rem', backgroundColor: '#f8d7da', color: '#721c24', borderRadius: '4px' }}>
+        <div style={{ padding: '1rem', marginBottom: '1rem', backgroundColor: '#f8d7da', color: '#721c24', borderRadius: '10px' }}>
           {error}
         </div>
       )}
@@ -128,7 +96,7 @@ function StoreForm({ store, onSave, onCancel }) {
             required
             disabled={!!store}
             maxLength={45}
-            style={{ width: '100%', padding: '0.5rem', border: '1px solid #ccc', borderRadius: '4px', backgroundColor: store ? '#f8f9fa' : 'white' }}
+            style={{ width: '100%', padding: '0.7rem 0.9rem', border: '1px solid #e0e0e0', borderRadius: '10px', fontSize: '0.95rem', backgroundColor: store ? '#ececec' : '#f8f9fa', color: '#333', colorScheme: 'light', outline: 'none', boxSizing: 'border-box' }}
           />
         </div>
 
@@ -144,44 +112,10 @@ function StoreForm({ store, onSave, onCancel }) {
             onChange={handleChange}
             required
             maxLength={45}
-            style={{ width: '100%', padding: '0.5rem', border: '1px solid #ccc', borderRadius: '4px' }}
+            style={{ width: '100%', padding: '0.7rem 0.9rem', border: '1px solid #e0e0e0', borderRadius: '10px', fontSize: '0.95rem', backgroundColor: '#f8f9fa', color: '#333', colorScheme: 'light', outline: 'none', boxSizing: 'border-box' }}
           />
         </div>
 
-        <div style={{ marginBottom: '1rem' }}>
-          <label htmlFor="rms_store_code" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-            Código RMS:
-          </label>
-          <input
-            type="text"
-            id="rms_store_code"
-            name="rms_store_code"
-            value={formData.rms_store_code}
-            onChange={handleChange}
-            required
-            maxLength={45}
-            style={{ width: '100%', padding: '0.5rem', border: '1px solid #ccc', borderRadius: '4px' }}
-          />
-        </div>
-
-        <div style={{ marginBottom: '1rem' }}>
-          <label htmlFor="mi_id" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-            MI ID:
-          </label>
-          <input
-            type="text"
-            id="mi_id"
-            name="mi_id"
-            value={formData.mi_id}
-            onChange={handleChange}
-            onBlur={handleMiIdBlur}
-            required
-            maxLength={10}
-            style={{ width: '100%', padding: '0.5rem', border: '1px solid #ccc', borderRadius: '4px' }}
-          />
-          {loadingMiId && <span style={{ fontSize: '0.875rem', color: '#666', marginLeft: '0.5rem' }}>Validando...</span>}
-          {miIdError && <div style={{ color: '#dc3545', fontSize: '0.875rem', marginTop: '0.25rem' }}>{miIdError}</div>}
-        </div>
 
         <div style={{ marginBottom: '1rem' }}>
           <label htmlFor="city" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
@@ -195,7 +129,7 @@ function StoreForm({ store, onSave, onCancel }) {
             onChange={handleChange}
             required
             maxLength={50}
-            style={{ width: '100%', padding: '0.5rem', border: '1px solid #ccc', borderRadius: '4px' }}
+            style={{ width: '100%', padding: '0.7rem 0.9rem', border: '1px solid #e0e0e0', borderRadius: '10px', fontSize: '0.95rem', backgroundColor: '#f8f9fa', color: '#333', colorScheme: 'light', outline: 'none', boxSizing: 'border-box' }}
           />
         </div>
 
@@ -205,10 +139,10 @@ function StoreForm({ store, onSave, onCancel }) {
             style={{
               flex: 1,
               padding: '0.75rem',
-              backgroundColor: '#007bff',
+              background: 'linear-gradient(135deg, #5470c6, #2d3f6e)',
               color: 'white',
               border: 'none',
-              borderRadius: '4px',
+              borderRadius: '10px',
               cursor: 'pointer',
               fontSize: '1rem',
               fontWeight: 'bold'
@@ -222,10 +156,10 @@ function StoreForm({ store, onSave, onCancel }) {
             style={{
               flex: 1,
               padding: '0.75rem',
-              backgroundColor: '#6c757d',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
+              backgroundColor: 'white',
+              color: '#555',
+              border: '1px solid #ddd',
+              borderRadius: '10px',
               cursor: 'pointer',
               fontSize: '1rem',
               fontWeight: 'bold'
@@ -235,6 +169,7 @@ function StoreForm({ store, onSave, onCancel }) {
           </button>
         </div>
       </form>
+      </div>
     </div>
   );
 }

@@ -51,17 +51,17 @@ function BundleColorForm({ color, onSave, onCancel }) {
   };
 
   return (
-    <div style={{ padding: '1.5rem', backgroundColor: '#f8f9fa', borderRadius: '4px', marginBottom: '1rem' }}>
+    <div style={{ padding: '1.5rem', backgroundColor: '#f8f9fa', borderRadius: '10px', marginBottom: '1rem' }}>
       <h3 style={{ margin: '0 0 1rem 0', color: '#333' }}>{color ? 'Editar Color' : 'Crear Nuevo Color'}</h3>
       
       {message && (
-        <div style={{ padding: '0.75rem', marginBottom: '0.75rem', backgroundColor: '#d4edda', color: '#155724', borderRadius: '4px', fontSize: '0.875rem' }}>
+        <div style={{ padding: '0.75rem', marginBottom: '0.75rem', backgroundColor: '#d4edda', color: '#155724', borderRadius: '10px', fontSize: '0.875rem' }}>
           {message}
         </div>
       )}
       
       {error && (
-        <div style={{ padding: '0.75rem', marginBottom: '0.75rem', backgroundColor: '#f8d7da', color: '#721c24', borderRadius: '4px', fontSize: '0.875rem' }}>
+        <div style={{ padding: '0.75rem', marginBottom: '0.75rem', backgroundColor: '#f8d7da', color: '#721c24', borderRadius: '10px', fontSize: '0.875rem' }}>
           {error}
         </div>
       )}
@@ -79,7 +79,7 @@ function BundleColorForm({ color, onSave, onCancel }) {
             onChange={handleChange}
             required
             maxLength={45}
-            style={{ width: '100%', padding: '0.5rem', border: '1px solid #ccc', borderRadius: '4px', fontSize: '0.875rem' }}
+            style={{ width: '100%', padding: '0.7rem 0.9rem', border: '1px solid #e0e0e0', borderRadius: '10px', fontSize: '0.95rem', backgroundColor: '#f8f9fa', color: '#333', colorScheme: 'light', outline: 'none', boxSizing: 'border-box' }}
           />
         </div>
 
@@ -95,7 +95,7 @@ function BundleColorForm({ color, onSave, onCancel }) {
             onChange={handleChange}
             required
             maxLength={45}
-            style={{ width: '100%', padding: '0.5rem', border: '1px solid #ccc', borderRadius: '4px', fontSize: '0.875rem' }}
+            style={{ width: '100%', padding: '0.7rem 0.9rem', border: '1px solid #e0e0e0', borderRadius: '10px', fontSize: '0.95rem', backgroundColor: '#f8f9fa', color: '#333', colorScheme: 'light', outline: 'none', boxSizing: 'border-box' }}
           />
         </div>
 
@@ -105,10 +105,10 @@ function BundleColorForm({ color, onSave, onCancel }) {
             style={{
               flex: 1,
               padding: '0.5rem',
-              backgroundColor: '#007bff',
+              background: 'linear-gradient(135deg, #5470c6, #2d3f6e)',
               color: 'white',
               border: 'none',
-              borderRadius: '4px',
+              borderRadius: '10px',
               cursor: 'pointer',
               fontSize: '0.875rem',
               fontWeight: 'bold'
@@ -122,10 +122,10 @@ function BundleColorForm({ color, onSave, onCancel }) {
             style={{
               flex: 1,
               padding: '0.5rem',
-              backgroundColor: '#6c757d',
+              backgroundColor: '#adb5bd',
               color: 'white',
               border: 'none',
-              borderRadius: '4px',
+              borderRadius: '10px',
               cursor: 'pointer',
               fontSize: '0.875rem',
               fontWeight: 'bold'
