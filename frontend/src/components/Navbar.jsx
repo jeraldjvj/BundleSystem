@@ -1,11 +1,21 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { userService } from '../services/api';
 
 function Navbar({ currentView, onViewChange, canAccessManagement, canAccessBundles, canAccessDelivery }) {
   const [isOpen, setIsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [profileData, setProfileData] = useState(null);
   const { user, logout } = useAuth();
+
+  useEffect(() => {
+    if (!profileModalOpen || !user?.userId) return;
+    userService.getUser(user.userId)
+      .then(res => setProfileData(res.data))
+      .catch(() => setProfileData(null));
+  }, [profileModalOpen, user]);
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
@@ -39,8 +49,9 @@ function Navbar({ currentView, onViewChange, canAccessManagement, canAccessBundl
     { view: 'smartphones', label: 'Smartphones', show: canAccessManagement, icon: <svg {...iconProps}><rect x="7" y="2" width="10" height="20" rx="2"/><line x1="10" y1="18" x2="14" y2="18"/></svg> },
     { view: 'bundleDelivery', label: 'Entrega de Bandeos', show: canAccessDelivery, icon: <svg {...iconProps}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="9 15 11 17 15 13"/></svg> },
     { view: 'shareBundles', label: 'Compartir Bandeos', show: canAccessDelivery, icon: <svg {...iconProps}><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 0 1 4-4h12"/></svg> },
-    { view: 'receiveBundles', label: 'Recibir Bandeos', show: true, icon: <svg {...iconProps}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> },
-    { view: 'distributors', label: 'Distribuidores', show: canAccessManagement, icon: <svg {...iconProps}><rect x="1" y="7" width="14" height="10"/><path d="M15 10h4l4 4v3h-8z"/><circle cx="6" cy="19" r="2"/><circle cx="19" cy="19" r="2"/></svg> }
+
+    { view: 'distributors', label: 'Distribuidores', show: canAccessManagement, icon: <svg {...iconProps}><rect x="1" y="7" width="14" height="10"/><path d="M15 10h4l4 4v3h-8z"/><circle cx="6" cy="19" r="2"/><circle cx="19" cy="19" r="2"/></svg> },
+    { view: 'receiveBundles', label: 'Recibir Bandeos', show: true, icon: <svg {...iconProps}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> }
   ];
 
   return (
@@ -53,7 +64,7 @@ function Navbar({ currentView, onViewChange, canAccessManagement, canAccessBundl
           top: '1rem',
           left: '1rem',
           zIndex: 1001,
-          backgroundColor: '#343a40',
+          backgroundColor: isOpen ? 'transparent' : '#2d3f6e',
           color: 'white',
           border: 'none',
           padding: '0.75rem',
@@ -62,7 +73,8 @@ function Navbar({ currentView, onViewChange, canAccessManagement, canAccessBundl
           display: 'flex',
           flexDirection: 'column',
           gap: '4px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+          boxShadow: isOpen ? 'none' : '0 2px 8px rgba(0,0,0,0.2)',
+          transition: 'background-color 0.3s, box-shadow 0.3s'
         }}
       >
         <span style={{
@@ -167,6 +179,31 @@ function Navbar({ currentView, onViewChange, canAccessManagement, canAccessBundl
             zIndex: 1002
           }}>
             <button
+              onClick={() => { setProfileModalOpen(true); setProfileOpen(false); }}
+              style={{
+                width: '100%',
+                padding: '0.75rem 1rem',
+                backgroundColor: 'transparent',
+                color: '#1a2340',
+                border: 'none',
+                cursor: 'pointer',
+                textAlign: 'left',
+                fontSize: '0.875rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                transition: 'background-color 0.2s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+              Perfil
+            </button>
+            <button
               onClick={logout}
               style={{
                 width: '100%',
@@ -195,6 +232,90 @@ function Navbar({ currentView, onViewChange, canAccessManagement, canAccessBundl
           </div>
         )}
       </div>
+
+      {/* Profile modal */}
+      {profileModalOpen && (
+        <div
+          onClick={() => setProfileModalOpen(false)}
+          style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.55)', zIndex: 2000,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem'
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: 'white', borderRadius: '16px',
+              maxWidth: '400px', width: '100%', overflow: 'hidden',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+            }}
+          >
+            <div style={{ background: 'linear-gradient(135deg, #1a2340, #2d3f6e)', padding: '1.75rem 2rem', color: 'white', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div style={{
+                width: '64px', height: '64px', borderRadius: '50%', flexShrink: 0, overflow: 'hidden',
+                backgroundColor: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center'
+              }}>
+                {user?.profilePicture && !avatarError ? (
+                  <img
+                    src={user.profilePicture.startsWith('http') ? user.profilePicture : `http://localhost:3000/uploads/${user.profilePicture}`}
+                    alt="Avatar"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                ) : (
+                  <span style={{
+                    width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: 'linear-gradient(135deg, #5470c6, #73c0de)', color: 'white',
+                    fontSize: '1.5rem', fontWeight: 'bold'
+                  }}>
+                    {getInitials(user?.firstName, user?.lastName)}
+                  </span>
+                )}
+              </div>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1.15rem' }}>
+                  {`${user?.firstName || ''} ${user?.lastName || ''}`.trim() || user?.email}
+                </h3>
+                <p style={{ margin: '0.2rem 0 0', fontSize: '0.85rem', opacity: 0.8 }}>{user?.levelUser || 'Usuario'}</p>
+              </div>
+            </div>
+
+            <div style={{ padding: '1.5rem 2rem' }}>
+              {!profileData && <p style={{ color: '#888', fontSize: '0.9rem', textAlign: 'center', margin: '0.5rem 0 1rem' }}>Cargando perfil…</p>}
+              {[
+                ['Nombre', `${(profileData?.firstName ?? user?.firstName) || ''} ${(profileData?.lastName ?? user?.lastName) || ''}`.trim()],
+                ['MI ID', profileData?.miId ?? user?.miId],
+                ['Email', profileData?.email ?? user?.email],
+                ['Nivel', profileData?.levelUser ?? user?.levelUser],
+                ['Cargo', profileData?.roleTitle],
+                ['Fecha de Nacimiento', profileData?.dateOfBirth ? new Date(profileData.dateOfBirth).toLocaleDateString() : null],
+                ['Ciudad', profileData?.city],
+                ['Jefe a Cargo', profileData?.headInCharge],
+                ['Estado', profileData?.status ?? user?.status],
+                ['Miembro desde', profileData?.createTime ? new Date(profileData.createTime).toLocaleDateString() : null],
+              ].filter(([, v]) => v).map(([label, value]) => (
+                <div key={label} style={{
+                  display: 'flex', justifyContent: 'space-between', gap: '1rem',
+                  padding: '0.6rem 0', borderBottom: '1px solid #f0f0f0', fontSize: '0.9rem'
+                }}>
+                  <span style={{ color: '#888' }}>{label}</span>
+                  <strong style={{ color: '#1a2340', textAlign: 'right' }}>{value}</strong>
+                </div>
+              ))}
+              <button
+                onClick={() => setProfileModalOpen(false)}
+                style={{
+                  width: '100%', marginTop: '1.25rem', padding: '0.7rem',
+                  backgroundColor: 'white', color: '#555', border: '1px solid #ddd',
+                  borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.9rem'
+                }}
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Sidebar */}
       <div
