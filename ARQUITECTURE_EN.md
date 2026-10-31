@@ -131,6 +131,75 @@ schemas/       Zod schemas per entity
 - **Immutable audit**: every owner change stays in `transfer_history` with `manager_user_id` — you always know who moved what
 - **Indirect access**: nobody touches the DB directly; everything goes through the authenticated API
 
+---
+
+## Data on the Wire
+
+### What travels over the network
+
+| Channel | Data | Format |
+|---|---|---|
+| **Browser → API** (`:5173 → :3000`) | Login credentials, forms, filters | JSON over HTTP |
+| **API → Browser** | Lists, KPIs, deliveries, pending transfers | JSON |
+| **Browser → API** | Delivery and profile photos | `multipart/form-data` (Multer) |
+| **Every request** | Identity of who performs the action | `x-user-id` header |
+| **Backend → MySQL** | Queries and transactions | MySQL protocol (connection pool) |
+| **Browser ← /uploads** | Stored images | Static GET |
+
+### Security in transit
+
+- **Development**: plain HTTP on localhost (acceptable locally)
+- **Production (recommended)**: **HTTPS/TLS** on the server to encrypt credentials, `x-user-id` and photos in transit; CORS restricted to the frontend domain
+- The Axios interceptor adds `x-user-id` automatically — the frontend never "signs" anything; the backend validates the user on every request (active-user middleware)
+- The password only travels at login; the frontend never receives or stores the hash
+
+---
+
+## Data State
+
+Each entity has a state machine governing its lifecycle:
+
+### Bundle (`bundle.status`)
+```
+available ──(delivery registered)──► delivered
+   │
+   └──(transfer in progress: the bundle status does NOT change,
+       only a pending record exists in transfer_history)
+```
+
+### Transfer (`transfer_history.status`)
+```
+transfering ──(recipient approves)──► completed  → bundle.user_id = new_user_id
+           ──(recipient rejects)───► rejected   → bundle stays with sender
+           ──(sender cancels)──────► canceled   → bundle stays with sender
+```
+→ This is the only "multi-step transactional" flow: the `transfering` state
+blocks a new transfer of the same bundle until it is resolved.
+
+### Smartphone (`smartphones_database.status`)
+```
+available ──(delivery with verified IMEI)──► delivered
+```
+
+### User (`user.status` + `failed_attempts` + `locked_until`)
+```
+active ──(5 failed logins)────► locked_until = tomorrow 00:00
+active ──(admin deactivates)──► inactive → login and all APIs blocked (403)
+inactive ──(admin reactivates)► active
+```
+
+### Store (`stores.user_id`)
+```
+assigned to Office Manager (on creation)
+   ──(manual assignment or Excel)──► different owner user
+```
+
+### Transactions that guarantee state consistency
+
+- **Approve transfer**: `UPDATE bundle` + `UPDATE transfer_history` in a single transaction — never left half-done
+- **Register delivery**: `INSERT bundle_delivered` + `UPDATE bundle` + `UPDATE smartphones_database` atomically
+- **Direct assignment (Office Manager)**: `UPDATE bundle` + `INSERT transfer_history completed` atomically
+
 ## Resources diagram
 
 ```mermaid

@@ -131,6 +131,75 @@ schemas/       Esquemas Zod por entidad
 - **Auditoría inmutable**: cada cambio de propietario queda en `transfer_history` con `manager_user_id` — siempre se sabe quién movió qué
 - **Acceso indirecto**: nadie toca la BD directamente; todo pasa por la API autenticada
 
+---
+
+## Data on the Wire (Datos en Tránsito)
+
+### Qué viaja por la red
+
+| Canal | Datos | Formato |
+|---|---|---|
+| **Navegador → API** (`:5173 → :3000`) | Credenciales de login, formularios, filtros | JSON sobre HTTP |
+| **API → Navegador** | Listas, KPIs, entregas, transferencias pendientes | JSON |
+| **Navegador → API** | Fotos de entrega y perfil | `multipart/form-data` (Multer) |
+| **Todas las peticiones** | Identidad de quién ejecuta la acción | Header `x-user-id` |
+| **Backend → MySQL** | Consultas y transacciones | Protocolo MySQL (pool de conexiones) |
+| **Navegador ← /uploads** | Imágenes guardadas | GET estático |
+
+### Seguridad en tránsito
+
+- **Desarrollo**: HTTP plano en localhost (aceptable en local)
+- **Producción (recomendado)**: **HTTPS/TLS** en el servidor para cifrar credenciales, `x-user-id` y fotos en tránsito; CORS restringido al dominio del frontend
+- El interceptor de Axios agrega `x-user-id` automáticamente — el frontend nunca "firma" nada, el backend valida el usuario en cada petición (middleware de usuario activo)
+- Contraseña viaja solo en el login; el frontend nunca recibe ni almacena el hash
+
+---
+
+## Data State (Estados de los Datos)
+
+Cada entidad tiene una máquina de estados que gobierna su ciclo de vida:
+
+### Bandeo (`bundle.status`)
+```
+available ──(entrega registrada)──► delivered
+   │
+   └──(transfering en curso: NO cambia el status del bandeo,
+       solo existe un registro pendiente en transfer_history)
+```
+
+### Transferencia (`transfer_history.status`)
+```
+transfering ──(destinatario aprueba)──► completed  → bundle.user_id = new_user_id
+           ──(destinatario rechaza)──► rejected   → bandeo queda con emisor
+           ──(emisor cancela)────────► canceled   → bandeo queda con emisor
+```
+→ Es el único flujo "transaccional multi-paso": el estado `transfering` bloquea
+nueva transferencia del mismo bandeo hasta resolverse.
+
+### Smartphone (`smartphones_database.status`)
+```
+available ──(entrega con IMEI verificado)──► delivered
+```
+
+### Usuario (`user.status` + `failed_attempts` + `locked_until`)
+```
+active ──(5 fallos de login)──► locked_until = mañana 00:00
+active ──(admin inactiva)─────► inactive → login y todas las APIs bloqueadas (403)
+inactive ──(admin reactiva)───► active
+```
+
+### Tienda (`stores.user_id`)
+```
+asignada a Office Manager (al crearla)
+   ──(asignación manual o Excel)──► otro usuario propietario
+```
+
+### Transacciones que garantizan consistencia de estados
+
+- **Aprobar transferencia**: `UPDATE bundle` + `UPDATE transfer_history` en una sola transacción — nunca queda a mitad
+- **Registrar entrega**: `INSERT bundle_delivered` + `UPDATE bundle` + `UPDATE smartphones_database` atómicos
+- **Asignación directa (Office Manager)**: `UPDATE bundle` + `INSERT transfer_history completed` atómicos
+
 ## Diagrama de recursos
 
 ```mermaid
