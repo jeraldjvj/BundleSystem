@@ -95,6 +95,42 @@ schemas/       Esquemas Zod por entidad
 - Usuarios inactivos: login rechazado + todas las peticiones con `x-user-id` rechazadas
 - Escopado de datos por rol: Office Manager ve todo; City Manager ve su equipo; Field Force solo lo propio
 
+---
+
+## Data at Rest (Datos en Reposo)
+
+### Dónde residen los datos
+
+| Ubicación | Datos | Protección |
+|---|---|---|
+| **MySQL (tablas)** | Usuarios, bandeos, smartphones, tiendas, entregas, `transfer_history` | Contraseñas con **bcrypt hash** (nunca texto plano); pool de conexiones con credenciales en `.env` |
+| **`/uploads` (disco)** | Fotos de clientes de entregas y fotos de perfil | Nombres aleatorios generados por Multer (`uuid`); servido solo como estático |
+| **`.env`** | Credenciales de BD | Excluido del repositorio por `.gitignore`; nunca en el código |
+| **localStorage (navegador)** | Objeto `user` de sesión | Solo datos de perfil — la contraseña hash **no** viaja al frontend |
+
+### Ciclo de los datos en reposo
+
+```
+1. CAPTURA    → Formulario/API valida el dato con Zod
+2. ESCRITURA  → INSERT/UPDATE SQL dentro de transacción
+                (ej. aprobar transferencia: UPDATE bundle + UPDATE transfer_history
+                 juntos — si falla uno, rollback de ambos)
+3. REPOSO     → El dato persiste en MySQL/uploads con integridad referencial
+                (foreign keys: bundle→user, delivered→store, transfer_history→bundle)
+4. LECTURA    → Solo sale por la API, filtrado por scope del nivel de perfil
+                (Field Force solo lee lo suyo, nunca acceso directo a la BD)
+5. AUDITORÍA  → Los datos NO se borran: transfer_history conserva el historial
+                completo (transfering/completed/rejected/canceled); solo los
+                registros base (usuarios, tiendas, modelos) pueden eliminarse
+```
+
+### Puntos clave de seguridad en reposo
+
+- **Nada crítico en texto plano**: contraseña = bcrypt; MI ID y emails sí se almacenan legibles (los necesita el negocio)
+- **Integridad**: llaves foráneas en `schema.sql` garantizan que ningún registro quede huérfano
+- **Auditoría inmutable**: cada cambio de propietario queda en `transfer_history` con `manager_user_id` — siempre se sabe quién movió qué
+- **Acceso indirecto**: nadie toca la BD directamente; todo pasa por la API autenticada
+
 ## Diagrama de recursos
 
 ```mermaid
