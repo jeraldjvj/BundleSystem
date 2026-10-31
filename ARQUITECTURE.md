@@ -13,7 +13,7 @@
  Cámara/código barras          /uploads (fotos)
 ```
 
-Es **multi-tier**: presentación → lógica de negocio → datos. También es cliente/servidor clásico: el frontend no conoce SQL, solo consume la API REST del backend.
+Es **multi-tier:** presentación → lógica de negocio → datos. También es cliente/servidor clásico: el frontend no conoce SQL, solo consume la API REST del backend.
 
 - **Capa 1 (Presentación):** React SPA servida por Vite — toda la UI, navegación, validaciones de formulario y renderizado de gráficas.
 - **Capa 2 (Aplicación/Lógica):** API REST en Express — autenticación, reglas de negocio, control de roles, transacciones, generación de registros de auditoría.
