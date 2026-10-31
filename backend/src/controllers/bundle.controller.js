@@ -44,4 +44,42 @@ export const bundleController = {
     if (!deleted) throw new HttpError(404, 'Bundle not found');
     res.status(204).send();
   },
+
+  async requestTransfer(req, res) {
+    const result = await bundleRepository.requestTransfer(
+      req.params.bundle_id,
+      req.body.new_user_id,
+      req.headers['x-user-id']
+    );
+    if (result.error) throw new HttpError(400, result.error);
+    res.status(201).json({ message: 'Transferencia solicitada', ...result });
+  },
+
+  async pendingTransfers(req, res) {
+    res.json(await bundleRepository.findPendingTransfersFor(req.params.user_id));
+  },
+
+  async outgoingTransfers(req, res) {
+    res.json(await bundleRepository.findOutgoingPendingTransfers(req.params.user_id));
+  },
+
+  async cancelTransfer(req, res) {
+    const result = await bundleRepository.cancelTransfer(
+      req.params.transfer_history_id,
+      req.headers['x-user-id']
+    );
+    if (result.error) throw new HttpError(400, result.error);
+    res.json({ message: 'Transferencia cancelada' });
+  },
+
+  async resolveTransfer(req, res) {
+    const approve = req.path.endsWith('/approve');
+    const result = await bundleRepository.resolveTransfer(
+      req.params.transfer_history_id,
+      req.headers['x-user-id'],
+      approve
+    );
+    if (result.error) throw new HttpError(400, result.error);
+    res.json({ message: approve ? 'Transferencia aprobada' : 'Transferencia rechazada' });
+  },
 };

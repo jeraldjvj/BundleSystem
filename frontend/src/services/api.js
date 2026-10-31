@@ -39,7 +39,7 @@ export const authService = {
 export const userService = {
   getUsers: () => api.get('/users'),
   getUser: (id) => api.get(`/users/${id}`),
-  getUserByMiId: (miId) => api.get(`/users?mi_id=${miId}`),
+  getUserByMiId: (miId) => api.get(`/users/by-mi-id/${encodeURIComponent(miId)}`),
   createUser: (data) => api.post('/users', data),
   updateUser: (id, data) => api.patch(`/users/${id}`, data),
   deleteUser: (id) => api.delete(`/users/${id}`),
@@ -109,6 +109,12 @@ export const bundleService = {
   createBundle: (data) => api.post('/bundles', data),
   updateBundle: (id, data) => api.patch(`/bundles/${id}`, data),
   assignBundle: (id, data) => api.post(`/bundles/${id}/assign`, data),
+  requestTransfer: (id, data) => api.post(`/bundles/${id}/transfer-request`, data),
+  getPendingTransfers: (userId) => api.get(`/bundles/transfers/pending/${userId}`),
+  getOutgoingTransfers: (userId) => api.get(`/bundles/transfers/outgoing/${userId}`),
+  cancelTransfer: (id) => api.post(`/bundles/transfers/${id}/cancel`),
+  approveTransfer: (id) => api.post(`/bundles/transfers/${id}/approve`),
+  rejectTransfer: (id) => api.post(`/bundles/transfers/${id}/reject`),
   verifySerial: (serial, userId) => api.get(`/bundles/verify-serial/${encodeURIComponent(serial)}/${userId}`),
   deleteBundle: (id) => api.delete(`/bundles/${id}`),
 };

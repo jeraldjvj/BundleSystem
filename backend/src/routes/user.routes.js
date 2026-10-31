@@ -11,6 +11,7 @@ import {
 const router = Router();
 
 router.get('/', asyncHandler(userController.getAll));
+router.get('/by-mi-id/:mi_id', asyncHandler(userController.getByMiId));
 router.get('/:user_id', validate(userIdSchema, 'params'), asyncHandler(userController.getById));
 router.post('/', validate(createUserSchema), asyncHandler(userController.create));
 router.patch(

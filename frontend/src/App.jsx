@@ -24,6 +24,8 @@ import SmartphoneForm from './components/SmartphoneForm';
 import SmartphoneList from './components/SmartphoneList';
 import SmartphoneImport from './components/SmartphoneImport';
 import BundleDeliveryForm from './components/BundleDeliveryForm';
+import BundleShareForm from './components/BundleShareForm';
+import ReceiveBundles from './components/ReceiveBundles';
 import ReportsDashboard from './components/ReportsDashboard';
 import Navbar from './components/Navbar';
 import './App.css';
@@ -585,6 +587,17 @@ function AppContent() {
             onCancel={() => handleViewChange(canAccessBundles ? 'bundles' : 'bundleDelivery') || setDeliveryFormKey(prev => prev + 1)}
           />
         ) : currentView === 'bundleDelivery' && !canAccessDelivery ? (
+          <div style={{ padding: '2rem', textAlign: 'center' }}>
+            <h2 style={{ color: '#333' }}>Acceso Denegado</h2>
+            <p style={{ color: '#666' }}>No tienes permisos para ver esta página. Solo usuarios con nivel Field Force pueden acceder.</p>
+          </div>
+        ) : null}
+
+        {currentView === 'receiveBundles' && <ReceiveBundles />}
+
+        {currentView === 'shareBundles' && canAccessDelivery ? (
+          <BundleShareForm />
+        ) : currentView === 'shareBundles' && !canAccessDelivery ? (
           <div style={{ padding: '2rem', textAlign: 'center' }}>
             <h2 style={{ color: '#333' }}>Acceso Denegado</h2>
             <p style={{ color: '#666' }}>No tienes permisos para ver esta página. Solo usuarios con nivel Field Force pueden acceder.</p>

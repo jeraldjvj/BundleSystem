@@ -12,6 +12,13 @@ export const userController = {
     res.json(user);
   },
 
+  async getByMiId(req, res) {
+    const user = await userRepository.findByMiId(req.params.mi_id);
+    if (!user) throw new HttpError(404, 'Usuario no encontrado con ese MI ID');
+    if (String(user.status).toLowerCase() !== 'active') throw new HttpError(403, 'El usuario está inactivo');
+    res.json(user);
+  },
+
   async create(req, res) {
     const user = await userRepository.create(req.body);
     res.status(201).json(user);

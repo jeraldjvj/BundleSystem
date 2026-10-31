@@ -13,6 +13,8 @@ const router = Router();
 
 router.get('/', asyncHandler(bundleController.getAll));
 router.get('/verify-serial/:serial/:userId', asyncHandler(bundleController.verifySerial));
+router.get('/transfers/pending/:user_id', asyncHandler(bundleController.pendingTransfers));
+router.get('/transfers/outgoing/:user_id', asyncHandler(bundleController.outgoingTransfers));
 router.get('/:bundle_id', validate(bundleIdSchema, 'params'), asyncHandler(bundleController.getById));
 router.post('/', validate(createBundleSchema), asyncHandler(bundleController.create));
 router.post(
@@ -21,6 +23,15 @@ router.post(
   validate(assignBundleSchema),
   asyncHandler(bundleController.assign),
 );
+router.post(
+  '/:bundle_id/transfer-request',
+  validate(bundleIdSchema, 'params'),
+  validate(assignBundleSchema),
+  asyncHandler(bundleController.requestTransfer),
+);
+router.post('/transfers/:transfer_history_id/approve', asyncHandler(bundleController.resolveTransfer));
+router.post('/transfers/:transfer_history_id/reject', asyncHandler(bundleController.resolveTransfer));
+router.post('/transfers/:transfer_history_id/cancel', asyncHandler(bundleController.cancelTransfer));
 router.patch(
   '/:bundle_id',
   validate(bundleIdSchema, 'params'),

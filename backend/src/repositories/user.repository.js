@@ -39,6 +39,14 @@ export const userRepository = {
     return rows.length ? toUser(rows[0]) : null;
   },
 
+  async findByMiId(miId) {
+    const [rows] = await pool.query(
+      `SELECT ${COLUMNS} FROM user u LEFT JOIN user_profile up ON u.user_id = up.user_id WHERE u.mi_id = ?`,
+      [miId]
+    );
+    return rows.length ? toUser(rows[0]) : null;
+  },
+
   async create({ mi_id, email, password_hash, status = 'active', level_user = 'field force', first_name, last_name, role_title, date_of_birth, city, head_in_charge, profile_picture }) {
     const connection = await pool.getConnection();
     try {

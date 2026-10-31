@@ -114,4 +114,110 @@ export const bundleRepository = {
     const [result] = await pool.query('DELETE FROM bundle WHERE bundle_id = ?', [bundleId]);
     return result.affectedRows > 0;
   },
+
+  async requestTransfer(bundleId, newUserId, managerUserId) {
+    const [rows] = await pool.query('SELECT user_id, status FROM bundle WHERE bundle_id = ?', [bundleId]);
+    if (rows.length === 0) return { error: 'Bundle not found' };
+    const bundle = rows[0];
+    if (String(bundle.user_id) !== String(managerUserId)) {
+      return { error: 'El bandeo no está asignado a tu usuario' };
+    }
+    if (String(bundle.user_id) === String(newUserId)) {
+      return { error: 'No puedes transferir el bandeo a ti mismo' };
+    }
+    const [[pending]] = await pool.query(
+      `SELECT COUNT(*) AS c FROM transfer_history WHERE bundle_id = ? AND status = 'transfering'`,
+      [bundleId]
+    );
+    if (pending.c > 0) return { error: 'Ya hay una transferencia pendiente para este bandeo' };
+
+    const [[{ maxId }]] = await pool.query('SELECT MAX(transfer_history_id) as maxId FROM transfer_history');
+    const [result] = await pool.query(
+      'INSERT INTO transfer_history (transfer_history_id, bundle_id, old_user_id, new_user_id, manager_user_id, create_time, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [(maxId || 0) + 1, bundleId, managerUserId, newUserId, managerUserId, new Date(), 'transfering'],
+    );
+    return { transferHistoryId: result.insertId || (maxId || 0) + 1 };
+  },
+
+  async findPendingTransfersFor(userId) {
+    const [rows] = await pool.query(`
+      SELECT th.transfer_history_id, th.bundle_id, th.old_user_id, th.new_user_id, th.create_time,
+        b.serial_number, bm.bundle_name,
+        CONCAT(up.first_name, ' ', up.last_name) AS from_user_name
+      FROM transfer_history th
+      LEFT JOIN bundle b ON th.bundle_id = b.bundle_id
+      LEFT JOIN bundle_model bm ON b.bundle_model_id = bm.bundle_model_id
+      LEFT JOIN user u ON th.old_user_id = u.user_id
+      LEFT JOIN user_profile up ON u.user_id = up.user_id
+      WHERE th.new_user_id = ? AND th.status = 'transfering'
+      ORDER BY th.create_time DESC
+    `, [userId]);
+    return rows;
+  },
+
+  async findOutgoingPendingTransfers(userId) {
+    const [rows] = await pool.query(`
+      SELECT th.transfer_history_id, th.bundle_id, th.old_user_id, th.new_user_id, th.create_time,
+        b.serial_number, bm.bundle_name,
+        CONCAT(up.first_name, ' ', up.last_name) AS to_user_name
+      FROM transfer_history th
+      LEFT JOIN bundle b ON th.bundle_id = b.bundle_id
+      LEFT JOIN bundle_model bm ON b.bundle_model_id = bm.bundle_model_id
+      LEFT JOIN user u ON th.new_user_id = u.user_id
+      LEFT JOIN user_profile up ON u.user_id = up.user_id
+      WHERE th.old_user_id = ? AND th.status = 'transfering'
+      ORDER BY th.create_time DESC
+    `, [userId]);
+    return rows;
+  },
+
+  async cancelTransfer(transferHistoryId, userId) {
+    const [rows] = await pool.query(
+      `SELECT * FROM transfer_history WHERE transfer_history_id = ? AND status = 'transfering'`,
+      [transferHistoryId]
+    );
+    if (rows.length === 0) return { error: 'Transferencia no encontrada o ya resuelta' };
+    const transfer = rows[0];
+    if (String(transfer.old_user_id) !== String(userId)) {
+      return { error: 'No eres quien envió esta transferencia' };
+    }
+    await pool.query(
+      `UPDATE transfer_history SET status = 'canceled' WHERE transfer_history_id = ?`,
+      [transferHistoryId]
+    );
+    return { ok: true };
+  },
+
+  async resolveTransfer(transferHistoryId, userId, approve) {
+    const connection = await pool.getConnection();
+    try {
+      await connection.beginTransaction();
+      const [rows] = await connection.query(
+        `SELECT * FROM transfer_history WHERE transfer_history_id = ? AND status = 'transfering'`,
+        [transferHistoryId]
+      );
+      if (rows.length === 0) {
+        await connection.rollback();
+        return { error: 'Transferencia no encontrada o ya resuelta' };
+      }
+      const transfer = rows[0];
+      if (String(transfer.new_user_id) !== String(userId)) {
+        await connection.rollback();
+        return { error: 'No eres el destinatario de esta transferencia' };
+      }
+      if (approve) {
+        await connection.query('UPDATE bundle SET user_id = ? WHERE bundle_id = ?', [transfer.new_user_id, transfer.bundle_id]);
+        await connection.query(`UPDATE transfer_history SET status = 'completed' WHERE transfer_history_id = ?`, [transferHistoryId]);
+      } else {
+        await connection.query(`UPDATE transfer_history SET status = 'rejected' WHERE transfer_history_id = ?`, [transferHistoryId]);
+      }
+      await connection.commit();
+      return { ok: true };
+    } catch (error) {
+      await connection.rollback();
+      throw error;
+    } finally {
+      connection.release();
+    }
+  },
 };
