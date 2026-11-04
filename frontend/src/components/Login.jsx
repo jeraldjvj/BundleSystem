@@ -103,7 +103,7 @@ function Login() {
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '1.1rem' }}>
             <label htmlFor="email" style={{ display: 'block', marginBottom: '0.4rem', fontWeight: 600, color: '#444', fontSize: '0.875rem' }}>
-              Email
+              Email o MI ID
             </label>
             <div style={inputWrapper}>
               <span style={iconStyle}>
@@ -113,12 +113,12 @@ function Login() {
                 </svg>
               </span>
               <input
-                type="email"
+                type="text"
                 id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                placeholder="tu@email.com"
+                placeholder="tu@email.com o Mi ID"
                 style={inputField}
               />
             </div>

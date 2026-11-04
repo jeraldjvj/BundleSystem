@@ -139,7 +139,7 @@ function BundleForm({ bundle, onSave, onCancel }) {
               style={inputStyle}
             >
               <option value="">Selecciona un proyecto</option>
-              {projects.map(p => (
+              {projects.filter(p => p.status === 'active' || p.projectId === formData.project_id).map(p => (
                 <option key={p.projectId} value={p.projectId}>{p.projectName}</option>
               ))}
             </select>

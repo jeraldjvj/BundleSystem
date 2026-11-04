@@ -85,6 +85,11 @@ function BundleImport({ onImportComplete, onCancel }) {
             errors.push(`${bundle.serial_number}: Proyecto "${bundle.project_name}" no encontrado`);
             continue;
           }
+          if (project.status !== 'active') {
+            errorCount++;
+            errors.push(`${bundle.serial_number}: Proyecto "${bundle.project_name}" está completado`);
+            continue;
+          }
 
           // Lookup bundle model por nombre
           const bundleModel = bundleModels.find(bm => String(bm.bundleName).toLowerCase() === bundle.bundle_model_name.toLowerCase());
@@ -131,7 +136,7 @@ function BundleImport({ onImportComplete, onCancel }) {
         projectService.getProjects(),
         bundleModelService.getBundleModels(),
       ]);
-      const projectNames = projectsRes.data.map(p => p.projectName);
+      const projectNames = projectsRes.data.filter(p => p.status === 'active').map(p => p.projectName);
       const modelNames = modelsRes.data.map(m => m.bundleName);
 
       // Hoja principal con encabezados y filas de ejemplo

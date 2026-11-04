@@ -20,6 +20,18 @@ function BundleList({ onEdit, onCreate, onImport, onAssign, onRefresh }) {
     { key: 'projectName', label: 'Proyecto', value: b => b.projectName || String(b.projectId) },
     { key: 'bundleModelName', label: 'Modelo de Bandeo', value: b => b.bundleModelName || String(b.bundleModelId) },
     { key: 'assignee', label: 'Asignado a', value: b => b.userFullName || b.userEmail || String(b.userId) },
+    {
+      key: 'status', label: 'Estado', value: b => b.status || '',
+      render: b => (
+        <span style={{
+          display: 'inline-block', padding: '0.25rem 0.7rem', borderRadius: '999px', fontSize: '0.75rem', fontWeight: 600,
+          backgroundColor: b.status === 'delivered' ? '#e9ecef' : b.status === 'available' ? '#d4edda' : '#fff3cd',
+          color: b.status === 'delivered' ? '#6c757d' : b.status === 'available' ? '#155724' : '#856404'
+        }}>
+          {b.status || '-'}
+        </span>
+      )
+    },
     { key: 'createTime', label: 'Fecha de Creación', value: b => b.createTime ? new Date(b.createTime).toLocaleDateString() : '' },
   ];
 
@@ -260,7 +272,7 @@ function BundleList({ onEdit, onCreate, onImport, onAssign, onRefresh }) {
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
                   {columns.map(col => (
                     <td key={col.key} style={{ padding: '0.85rem 1.25rem', color: '#333', fontSize: '0.9rem' }}>
-                      {col.key === 'createTime' ? (col.value(bundle) || '-') : col.value(bundle)}
+                      {col.render ? col.render(bundle) : col.key === 'createTime' ? (col.value(bundle) || '-') : col.value(bundle)}
                     </td>
                   ))}
                   <td style={{ padding: '0.85rem 1.25rem', textAlign: 'center', whiteSpace: 'nowrap' }}>

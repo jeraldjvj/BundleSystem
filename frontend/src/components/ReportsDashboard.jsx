@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import * as echarts from 'echarts';
-import { reportService } from '../services/api';
+import { reportService, projectService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 const API_BASE = `http://${window.location.hostname}:3000`;
@@ -15,8 +15,11 @@ const useChart = (option, deps = []) => {
     chart.setOption(option);
     const onResize = () => chart.resize();
     window.addEventListener('resize', onResize);
+    const observer = new ResizeObserver(onResize);
+    observer.observe(ref.current);
     return () => {
       window.removeEventListener('resize', onResize);
+      observer.disconnect();
       chart.dispose();
     };
   }, [option, ...deps]);
@@ -29,8 +32,12 @@ const cardStyle = {
   boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
   padding: '1.25rem',
   minWidth: 0,
-  boxSizing: 'border-box'
+  boxSizing: 'border-box',
+  display: 'flex',
+  flexDirection: 'column'
 };
+
+const chartBox = (h = 320) => ({ flex: 1, minHeight: `${h}px`, width: '100%' });
 
 const kpiCard = (color) => ({
   ...cardStyle,
@@ -49,6 +56,8 @@ function ReportsDashboard() {
   const [mapReady, setMapReady] = useState(false);
   const [deliveryFilters, setDeliveryFilters] = useState({});
   const [deliveryActiveFilter, setDeliveryActiveFilter] = useState(null);
+  const [projects, setProjects] = useState([]);
+  const [selectedProject, setSelectedProject] = useState('status:active');
 
   // Registra el mapa de Bolivia en ECharts una sola vez
   useEffect(() => {
@@ -71,7 +80,13 @@ function ReportsDashboard() {
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await reportService.getSummary(user);
+        const res = await reportService.getSummary(
+          selectedProject.startsWith('status:')
+            ? { projectStatus: selectedProject.slice(7) }
+            : selectedProject
+              ? { projectId: selectedProject }
+              : {}
+        );
         setData(res.data);
       } catch (err) {
         setError('Error al cargar el reporte: ' + (err.response?.data?.error || err.message));
@@ -80,7 +95,13 @@ function ReportsDashboard() {
       }
     };
     load();
-  }, [user]);
+  }, [user, selectedProject]);
+
+  useEffect(() => {
+    projectService.getProjects()
+      .then(res => setProjects(res.data))
+      .catch(() => setProjects([]));
+  }, []);
 
   const pieOption = (title, rows, center, nameKey = 'status') => ({
     color: PALETTE,
@@ -242,9 +263,8 @@ function ReportsDashboard() {
     { label: 'Total Bandeos', value: t.bundles, color: '#5470c6' },
     { label: 'Bandeos Disponibles', value: t.bundlesAvailable, color: '#91cc75' },
     { label: 'Bandeos Entregados', value: t.deliveries, color: '#ee6666' },
-    { label: 'Total Tiendas', value: t.stores, color: '#fac858' },
+    { label: 'Tiendas con Entregas', value: t.storesDelivered, color: '#fac858' },
     { label: 'Usuarios', value: t.users, color: '#73c0de' },
-    { label: 'Proyectos', value: t.projects, color: '#9a60b4' },
   ].filter(k => {
     if (level === 'field force' && k.label === 'Usuarios') return false;
     return true;
@@ -265,24 +285,63 @@ function ReportsDashboard() {
             <div style={{ fontSize: '2rem', fontWeight: 'bold', color: k.color }}>{k.value}</div>
           </div>
         ))}
+        {/* Filtro por proyecto (no visible para Field Force; ellos siempre filtran Solo Active) */}
+        {canSeeProfiles && (
+        <div style={kpiCard('#9a60b4')}>
+          <div style={{ fontSize: '0.8rem', color: '#666', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '0.5rem' }}>Proyecto</div>
+          <select
+            value={selectedProject}
+            onChange={(e) => setSelectedProject(e.target.value)}
+            style={{ width: '100%', padding: '0.5rem 0.6rem', border: '1px solid #e0e0e0', borderRadius: '8px', fontSize: '0.9rem', backgroundColor: '#f8f9fa', color: '#333', colorScheme: 'light', outline: 'none', cursor: 'pointer' }}
+          >
+            <option value="">Todos los proyectos</option>
+            <option value="status:active">Solo Active</option>
+            <option value="status:completed">Solo Completed</option>
+            {[...projects].sort((a, b) => (b.status === 'active') - (a.status === 'active')).map(p => (
+              <option
+                key={p.projectId}
+                value={p.projectId}
+                style={{ textDecoration: p.status === 'completed' ? 'line-through' : 'none', color: p.status === 'completed' ? '#999' : '#333' }}
+              >
+                {p.projectName}
+              </option>
+            ))}
+          </select>
+          {selectedProject && (() => {
+            const status = selectedProject.startsWith('status:')
+              ? selectedProject.slice(7)
+              : projects.find(p => String(p.projectId) === String(selectedProject))?.status;
+            return status ? (
+              <span style={{
+                display: 'inline-block', marginTop: '0.5rem', padding: '0.2rem 0.65rem',
+                borderRadius: '999px', fontSize: '0.75rem', fontWeight: 600,
+                backgroundColor: status === 'active' ? '#d4edda' : '#f8d7da',
+                color: status === 'active' ? '#155724' : '#721c24'
+              }}>
+                {status === 'active' ? 'Active' : 'Completed'}
+              </span>
+            ) : null;
+          })()}
+        </div>
+        )}
       </div>
 
       {/* Gráficos */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 380px), 1fr))', gap: '1rem' }}>
         {canSeeProfiles && (
-          <div style={cardStyle}><div ref={bundlesPieRef} style={{ width: '100%', height: '320px' }} /></div>
+          <div style={cardStyle}><div ref={bundlesPieRef} style={chartBox()} /></div>
         )}
         {canSeeProfiles && (
-          <div style={cardStyle}><div ref={profilesBarRef} style={{ width: '100%', height: '320px' }} /></div>
+          <div style={cardStyle}><div ref={profilesBarRef} style={chartBox()} /></div>
         )}
         {canSeeProfiles && (
-          <div style={cardStyle}><div ref={cityMapRef} style={{ width: '100%', height: '420px' }} /></div>
+          <div style={cardStyle}><div ref={cityMapRef} style={chartBox(420)} /></div>
         )}
-        <div style={cardStyle}><div ref={storeBarRef} style={{ width: '100%', height: '320px' }} /></div>
+        <div style={cardStyle}><div ref={storeBarRef} style={chartBox()} /></div>
         {canSeeProfiles && (
-          <div style={cardStyle}><div ref={userBarRef} style={{ width: '100%', height: '320px' }} /></div>
+          <div style={cardStyle}><div ref={userBarRef} style={chartBox()} /></div>
         )}
-        <div style={cardStyle}><div ref={dayLineRef} style={{ width: '100%', height: '320px' }} /></div>
+        <div style={cardStyle}><div ref={dayLineRef} style={chartBox()} /></div>
       </div>
 
       {/* Lista de entregas */}

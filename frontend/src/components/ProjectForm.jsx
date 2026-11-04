@@ -100,6 +100,7 @@ function ProjectForm({ project, onSave, onCancel }) {
           />
         </div>
 
+        {project && (
         <div style={{ marginBottom: '1rem' }}>
           <label htmlFor="status" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
             Estado:
@@ -115,6 +116,7 @@ function ProjectForm({ project, onSave, onCancel }) {
             <option value="completed">Completed</option>
           </select>
         </div>
+        )}
 
         <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
           <button

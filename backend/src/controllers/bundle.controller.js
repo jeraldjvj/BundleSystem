@@ -1,4 +1,5 @@
 import { bundleRepository } from '../repositories/bundle.repository.js';
+import { projectRepository } from '../repositories/project.repository.js';
 import { HttpError } from '../utils/HttpError.js';
 
 export const bundleController = {
@@ -23,6 +24,11 @@ export const bundleController = {
   },
 
   async create(req, res) {
+    const project = await projectRepository.findById(req.body.project_id);
+    if (!project) throw new HttpError(404, 'Proyecto no encontrado');
+    if (project.status !== 'active') {
+      throw new HttpError(409, 'No se pueden agregar bandeos a un proyecto completado');
+    }
     const bundle = await bundleRepository.create(req.body);
     res.status(201).json(bundle);
   },

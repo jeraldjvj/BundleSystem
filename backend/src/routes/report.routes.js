@@ -28,7 +28,9 @@ router.get('/summary', asyncHandler(async (req, res) => {
     scope = { userIds: [Number(userId)] };
   }
 
-  res.json(await reportRepository.summary(scope));
+  const projectId = Number(req.query.projectId) || null;
+  const projectStatus = ['active', 'completed'].includes(req.query.projectStatus) ? req.query.projectStatus : null;
+  res.json(await reportRepository.summary(scope, projectId, projectStatus));
 }));
 
 export default router;

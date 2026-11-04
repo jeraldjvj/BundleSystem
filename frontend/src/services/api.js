@@ -121,7 +121,12 @@ export const bundleService = {
 };
 
 export const reportService = {
-  getSummary: () => api.get('/reports/summary'),
+  getSummary: ({ projectId, projectStatus } = {}) => api.get('/reports/summary', {
+    params: {
+      ...(projectId ? { projectId } : {}),
+      ...(projectStatus ? { projectStatus } : {}),
+    },
+  }),
 };
 
 export const bundleDeliveredService = {

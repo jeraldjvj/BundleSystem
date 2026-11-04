@@ -1,4 +1,6 @@
 import { bundleDeliveredRepository } from '../repositories/bundleDelivered.repository.js';
+import { bundleRepository } from '../repositories/bundle.repository.js';
+import { projectRepository } from '../repositories/project.repository.js';
 import { HttpError } from '../utils/HttpError.js';
 
 export const bundleDeliveredController = {
@@ -13,6 +15,12 @@ export const bundleDeliveredController = {
   },
 
   async create(req, res) {
+    const bundle = await bundleRepository.findById(req.body.bundle_id);
+    if (!bundle) throw new HttpError(404, 'Bandeo no encontrado');
+    const project = await projectRepository.findById(bundle.projectId);
+    if (project && project.status !== 'active') {
+      throw new HttpError(409, 'No se puede entregar un bandeo de un proyecto completado');
+    }
     const bundleDelivered = await bundleDeliveredRepository.create(req.body);
     res.status(201).json(bundleDelivered);
   },

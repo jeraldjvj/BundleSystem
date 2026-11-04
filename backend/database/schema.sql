@@ -33,8 +33,9 @@ CREATE TABLE IF NOT EXISTS `bundle_system`.`project` (
   `project_id` INT NOT NULL AUTO_INCREMENT,
   `project_name` VARCHAR(60) NOT NULL,
   `start_date` DATE NOT NULL,
+  `finish_date` DATE NULL,
   `status` VARCHAR(50) NULL DEFAULT 'active',
-  `create_time` TIMESTAMP NULL DEFAULT NULL,
+  `create_time` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`project_id`),
   UNIQUE INDEX `project_id_UNIQUE` (`project_id` ASC) VISIBLE)
 ENGINE = InnoDB

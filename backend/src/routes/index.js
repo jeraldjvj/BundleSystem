@@ -34,8 +34,8 @@ router.post('/login', async (req, res, next) => {
       `SELECT u.*, up.first_name, up.last_name, up.profile_picture
        FROM user u
        LEFT JOIN user_profile up ON u.user_id = up.user_id
-       WHERE u.email = ?`,
-      [email]
+       WHERE u.email = ? OR u.mi_id = ?`,
+      [email, email]
     );
 
     if (users.length === 0) {
