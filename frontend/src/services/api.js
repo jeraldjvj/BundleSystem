@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3000/api/v1';
+const API_URL = `http://${window.location.hostname}:3000/api/v1`;
 
 const api = axios.create({
   baseURL: API_URL,
@@ -9,22 +9,23 @@ const api = axios.create({
   },
 });
 
-// Enviar el user_id de la sesión en cada petición para validar estado en backend
+// Enviar el JWT de la sesión en cada petición para autenticar al usuario
 api.interceptors.request.use((config) => {
   try {
     const stored = JSON.parse(localStorage.getItem('user') || 'null');
-    const userId = stored?.userId ?? stored?.user_id ?? stored?.user?.userId;
-    if (userId) config.headers['x-user-id'] = userId;
+    const token = stored?.token;
+    if (token) config.headers['Authorization'] = `Bearer ${token}`;
   } catch { /* ignore */ }
   return config;
 });
 
-// Si el backend responde 403 por cuenta inactiva, cerrar sesión
+// 403 por cuenta inactiva o 401 por token expirado/inválido → cerrar sesión
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    const status = error.response?.status;
     const msg = error.response?.data?.error || '';
-    if (error.response?.status === 403 && msg.toLowerCase().includes('inactiva')) {
+    if ((status === 403 && msg.toLowerCase().includes('inactiva')) || status === 401) {
       localStorage.removeItem('user');
       window.location.href = '/';
     }
@@ -48,7 +49,7 @@ export const userService = {
 export const storeService = {
   getStores: () => api.get('/stores'),
   getStore: (code) => api.get(`/stores/${code}`),
-  getStoresByUser: (userId) => api.get(`/stores/user/${userId}`),
+  getStoresByUser: () => api.get('/stores/mine'),
   createStore: (data) => api.post('/stores', data),
   updateStore: (code, data) => api.patch(`/stores/${code}`, data),
   deleteStore: (code) => api.delete(`/stores/${code}`),
@@ -110,19 +111,17 @@ export const bundleService = {
   updateBundle: (id, data) => api.patch(`/bundles/${id}`, data),
   assignBundle: (id, data) => api.post(`/bundles/${id}/assign`, data),
   requestTransfer: (id, data) => api.post(`/bundles/${id}/transfer-request`, data),
-  getPendingTransfers: (userId) => api.get(`/bundles/transfers/pending/${userId}`),
-  getOutgoingTransfers: (userId) => api.get(`/bundles/transfers/outgoing/${userId}`),
+  getPendingTransfers: () => api.get('/bundles/transfers/pending'),
+  getOutgoingTransfers: () => api.get('/bundles/transfers/outgoing'),
   cancelTransfer: (id) => api.post(`/bundles/transfers/${id}/cancel`),
   approveTransfer: (id) => api.post(`/bundles/transfers/${id}/approve`),
   rejectTransfer: (id) => api.post(`/bundles/transfers/${id}/reject`),
-  verifySerial: (serial, userId) => api.get(`/bundles/verify-serial/${encodeURIComponent(serial)}/${userId}`),
+  verifySerial: (serial) => api.get(`/bundles/verify-serial/${encodeURIComponent(serial)}`),
   deleteBundle: (id) => api.delete(`/bundles/${id}`),
 };
 
 export const reportService = {
-  getSummary: (user) => api.get('/reports/summary', {
-    params: { userId: user.userId, levelUser: user.levelUser },
-  }),
+  getSummary: () => api.get('/reports/summary'),
 };
 
 export const bundleDeliveredService = {

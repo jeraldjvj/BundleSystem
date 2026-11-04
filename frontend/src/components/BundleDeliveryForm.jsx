@@ -391,35 +391,73 @@ function BundleDeliveryForm({ onSave, onCancel }) {
           </div>
           <div>
             <label style={labelStyle}>Fotografía de la Entrega *</label>
-            <label style={{
-              display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
-              padding: '0.6rem 1.15rem', backgroundColor: '#eef2fb', color: '#2d3f6e',
-              border: '1px solid #c7d3f0', borderRadius: '10px', cursor: 'pointer',
-              fontSize: '0.875rem', fontWeight: 600
-            }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-                <circle cx="12" cy="13" r="4"/>
-              </svg>
-              {picture ? 'Cambiar foto' : 'Tomar o subir foto'}
-              <input
-                type="file"
-                accept="image/*"
-                capture="environment"
-                onChange={handlePicture}
-                style={{ display: 'none' }}
-                required={!picture}
-              />
-            </label>
-            <p style={{ fontSize: '0.8rem', color: '#888', marginTop: '0.5rem' }}>
-              En un dispositivo móvil puedes tomar la foto directamente con la cámara, o elegir una imagen de la galería.
-            </p>
+            <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+              <label style={{
+                display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+                padding: '0.6rem 1.15rem', backgroundColor: '#eef2fb', color: '#2d3f6e',
+                border: '1px solid #c7d3f0', borderRadius: '10px', cursor: 'pointer',
+                fontSize: '0.875rem', fontWeight: 600
+              }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                  <circle cx="12" cy="13" r="4"/>
+                </svg>
+                {picture ? 'Tomar otra foto' : 'Tomar foto'}
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handlePicture}
+                  key={picturePreview}
+                  style={{ display: 'none' }}
+                />
+              </label>
+              <label style={{
+                display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+                padding: '0.6rem 1.15rem', backgroundColor: 'white', color: '#5470c6',
+                border: '1px solid #5470c6', borderRadius: '10px', cursor: 'pointer',
+                fontSize: '0.875rem', fontWeight: 600
+              }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                  <polyline points="21 15 16 10 5 21"/>
+                </svg>
+                Subir de galería
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePicture}
+                  key={picturePreview}
+                  style={{ display: 'none' }}
+                  required={!picture}
+                />
+              </label>
+            </div>
             {picturePreview && (
-              <img
-                src={picturePreview}
-                alt="Vista previa"
-                style={{ marginTop: '0.75rem', maxWidth: '220px', maxHeight: '220px', borderRadius: '8px', objectFit: 'cover', border: '1px solid #ddd' }}
-              />
+              <div style={{ position: 'relative', display: 'inline-block', marginTop: '0.75rem' }}>
+                <img
+                  src={picturePreview}
+                  alt="Vista previa"
+                  style={{ maxWidth: '220px', maxHeight: '220px', borderRadius: '8px', objectFit: 'cover', border: '1px solid #ddd', display: 'block' }}
+                />
+                <button
+                  type="button"
+                  title="Eliminar foto"
+                  onClick={() => { URL.revokeObjectURL(picturePreview); setPicture(null); setPicturePreview(''); }}
+                  style={{
+                    position: 'absolute', top: '-10px', right: '-10px',
+                    width: '26px', height: '26px', borderRadius: '50%',
+                    backgroundColor: '#dc3545', color: 'white', border: '2px solid white',
+                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.3)', padding: 0
+                  }}
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
+              </div>
             )}
           </div>
         </div>

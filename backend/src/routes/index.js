@@ -14,7 +14,9 @@ import distributorRoutes from './distributor.routes.js';
 import reportRoutes from './report.routes.js';
 import { pool } from '../config/database.js';
 import { HttpError } from '../utils/HttpError.js';
+import { authenticate } from '../middlewares/auth.js';
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 
 const router = Router();
 
@@ -83,6 +85,13 @@ router.post('/login', async (req, res, next) => {
       await pool.query('UPDATE user SET failed_attempts = 0, locked_until = NULL WHERE user_id = ?', [user.user_id]);
     }
 
+    // JWT firmado: identifica al usuario sin que el cliente pueda falsificarlo
+    const token = jwt.sign(
+      { userId: user.user_id, levelUser: user.level_user },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN || '8h' }
+    );
+
     res.json({
       userId: user.user_id,
       miId: user.mi_id,
@@ -92,6 +101,7 @@ router.post('/login', async (req, res, next) => {
       firstName: user.first_name,
       lastName: user.last_name,
       profilePicture: user.profile_picture,
+      token,
     });
   } catch (error) {
     next(error);
@@ -134,21 +144,8 @@ router.post('/migrate-passwords', async (req, res, next) => {
   }
 });
 
-// Rechaza peticiones de usuarios inactivos (sesión inválida aunque esté abierta)
-router.use(async (req, _res, next) => {
-  try {
-    const userId = req.headers['x-user-id'];
-    if (userId) {
-      const [rows] = await pool.query('SELECT status FROM user WHERE user_id = ?', [userId]);
-      if (rows.length === 0 || rows[0].status !== 'active') {
-        throw new HttpError(403, 'Cuenta inactiva. No puedes realizar cambios en el sistema.');
-      }
-    }
-    next();
-  } catch (error) {
-    next(error);
-  }
-});
+// Todas las rutas siguientes requieren un JWT válido y un usuario activo
+router.use(authenticate);
 
 router.use('/bundle-colors', bundleColorRoutes);
 router.use('/bundle-models', bundleModelRoutes);

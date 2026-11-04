@@ -3,7 +3,7 @@ import * as echarts from 'echarts';
 import { reportService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
-const API_BASE = 'http://localhost:3000';
+const API_BASE = `http://${window.location.hostname}:3000`;
 
 const PALETTE = ['#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de', '#3ba272', '#fc8452', '#9a60b4'];
 
@@ -27,7 +27,9 @@ const cardStyle = {
   backgroundColor: 'white',
   borderRadius: '16px',
   boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
-  padding: '1.25rem'
+  padding: '1.25rem',
+  minWidth: 0,
+  boxSizing: 'border-box'
 };
 
 const kpiCard = (color) => ({
@@ -266,7 +268,7 @@ function ReportsDashboard() {
       </div>
 
       {/* Gráficos */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '1rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 380px), 1fr))', gap: '1rem' }}>
         {canSeeProfiles && (
           <div style={cardStyle}><div ref={bundlesPieRef} style={{ width: '100%', height: '320px' }} /></div>
         )}

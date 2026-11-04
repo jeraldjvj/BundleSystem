@@ -79,7 +79,7 @@ function UserForm({ user, onSave, onCancel }) {
       if (user.profilePicture) {
         setPhotoPreview(user.profilePicture.startsWith('http')
           ? user.profilePicture
-          : `http://localhost:3000/uploads/${user.profilePicture}`);
+          : `http://${window.location.hostname}:3000/uploads/${user.profilePicture}`);
       }
     }
   }, [user]);

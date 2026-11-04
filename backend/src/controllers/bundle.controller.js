@@ -13,10 +13,10 @@ export const bundleController = {
   },
 
   async verifySerial(req, res) {
-    const { serial, userId } = req.params;
+    const { serial } = req.params;
     const bundle = await bundleRepository.findBySerial(serial);
     if (!bundle) throw new HttpError(404, 'Serial number not found');
-    if (Number(bundle.userId) !== Number(userId)) {
+    if (Number(bundle.userId) !== Number(req.user.userId)) {
       throw new HttpError(403, 'Este bundle no está asignado a tu usuario');
     }
     res.json(bundle);
@@ -34,7 +34,7 @@ export const bundleController = {
   },
 
   async assign(req, res) {
-    const bundle = await bundleRepository.assign(req.params.bundle_id, req.body.new_user_id, req.headers['x-user-id']);
+    const bundle = await bundleRepository.assign(req.params.bundle_id, req.body.new_user_id, req.user.userId);
     if (!bundle) throw new HttpError(404, 'Bundle not found');
     res.json(bundle);
   },
@@ -49,24 +49,24 @@ export const bundleController = {
     const result = await bundleRepository.requestTransfer(
       req.params.bundle_id,
       req.body.new_user_id,
-      req.headers['x-user-id']
+      req.user.userId
     );
     if (result.error) throw new HttpError(400, result.error);
     res.status(201).json({ message: 'Transferencia solicitada', ...result });
   },
 
   async pendingTransfers(req, res) {
-    res.json(await bundleRepository.findPendingTransfersFor(req.params.user_id));
+    res.json(await bundleRepository.findPendingTransfersFor(req.user.userId));
   },
 
   async outgoingTransfers(req, res) {
-    res.json(await bundleRepository.findOutgoingPendingTransfers(req.params.user_id));
+    res.json(await bundleRepository.findOutgoingPendingTransfers(req.user.userId));
   },
 
   async cancelTransfer(req, res) {
     const result = await bundleRepository.cancelTransfer(
       req.params.transfer_history_id,
-      req.headers['x-user-id']
+      req.user.userId
     );
     if (result.error) throw new HttpError(400, result.error);
     res.json({ message: 'Transferencia cancelada' });
@@ -76,7 +76,7 @@ export const bundleController = {
     const approve = req.path.endsWith('/approve');
     const result = await bundleRepository.resolveTransfer(
       req.params.transfer_history_id,
-      req.headers['x-user-id'],
+      req.user.userId,
       approve
     );
     if (result.error) throw new HttpError(400, result.error);

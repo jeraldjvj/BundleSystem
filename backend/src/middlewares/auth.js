@@ -1,0 +1,31 @@
+import jwt from 'jsonwebtoken';
+import { pool } from '../config/database.js';
+import { HttpError } from '../utils/HttpError.js';
+
+// Verifica el JWT del header Authorization y carga el usuario en req.user.
+// Sustituye al header x-user-id, que podía falsificarse desde el cliente.
+export const authenticate = async (req, _res, next) => {
+  try {
+    const header = req.headers.authorization || '';
+    if (!header.startsWith('Bearer ')) {
+      throw new HttpError(401, 'Token de autenticación requerido');
+    }
+
+    let payload;
+    try {
+      payload = jwt.verify(header.slice(7), process.env.JWT_SECRET);
+    } catch {
+      throw new HttpError(401, 'Sesión expirada o token inválido');
+    }
+
+    const [rows] = await pool.query('SELECT status FROM user WHERE user_id = ?', [payload.userId]);
+    if (rows.length === 0 || rows[0].status !== 'active') {
+      throw new HttpError(403, 'Cuenta inactiva. No puedes realizar cambios en el sistema.');
+    }
+
+    req.user = { userId: payload.userId, levelUser: payload.levelUser };
+    next();
+  } catch (error) {
+    next(error);
+  }
+};

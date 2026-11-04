@@ -7,7 +7,7 @@ export const storeController = {
   },
 
   async getByUserId(req, res) {
-    res.json(await storeRepository.findByUserId(req.params.user_id));
+    res.json(await storeRepository.findByUserId(req.user.userId));
   },
 
   async getById(req, res) {

@@ -6,7 +6,9 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 const router = Router();
 
 router.get('/summary', asyncHandler(async (req, res) => {
-  const { userId, levelUser } = req.query;
+  // El scope sale del JWT verificado — el cliente no puede pedir datos de otro usuario
+  const userId = req.user.userId;
+  const levelUser = req.user.levelUser;
   const level = String(levelUser || '').toLowerCase();
   let scope = null; // null = sin filtro (Office Manager / admin)
 

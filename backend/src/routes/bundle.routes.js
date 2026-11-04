@@ -12,9 +12,9 @@ import {
 const router = Router();
 
 router.get('/', asyncHandler(bundleController.getAll));
-router.get('/verify-serial/:serial/:userId', asyncHandler(bundleController.verifySerial));
-router.get('/transfers/pending/:user_id', asyncHandler(bundleController.pendingTransfers));
-router.get('/transfers/outgoing/:user_id', asyncHandler(bundleController.outgoingTransfers));
+router.get('/verify-serial/:serial', asyncHandler(bundleController.verifySerial));
+router.get('/transfers/pending', asyncHandler(bundleController.pendingTransfers));
+router.get('/transfers/outgoing', asyncHandler(bundleController.outgoingTransfers));
 router.get('/:bundle_id', validate(bundleIdSchema, 'params'), asyncHandler(bundleController.getById));
 router.post('/', validate(createBundleSchema), asyncHandler(bundleController.create));
 router.post(
