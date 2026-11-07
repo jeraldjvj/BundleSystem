@@ -84,6 +84,7 @@ export const userRepository = {
       
       // Update user table
       const userFields = UPDATABLE_FIELDS.filter((field) => data[field] !== undefined);
+      const profileFields = PROFILE_FIELDS.filter((field) => data[field] !== undefined);
       if (userFields.length) {
         // If password is being updated, hash it
         if (data.password_hash) {
@@ -91,13 +92,18 @@ export const userRepository = {
         }
         
         await connection.query(
-          `UPDATE user SET ${userFields.map((field) => `${field} = ?`).join(', ')} WHERE user_id = ?`,
+          `UPDATE user SET ${userFields.map((field) => `${field} = ?`).join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?`,
           [...userFields.map((field) => data[field]), userId],
+        );
+      } else if (profileFields.length) {
+        // Solo cambiaron datos del perfil: igual se marca updated_at en user
+        await connection.query(
+          'UPDATE user SET updated_at = CURRENT_TIMESTAMP WHERE user_id = ?',
+          [userId],
         );
       }
       
       // Update user_profile table
-      const profileFields = PROFILE_FIELDS.filter((field) => data[field] !== undefined);
       if (profileFields.length) {
         // Check if profile exists
         const [existingProfile] = await connection.query(
