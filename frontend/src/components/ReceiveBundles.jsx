@@ -14,6 +14,13 @@ function ReceiveBundles() {
   const [showBarcode, setShowBarcode] = useState(false);
   const barcodeRef = useRef(null);
   const [showHistory, setShowHistory] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 640);
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
   const [history, setHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
 
@@ -307,14 +314,15 @@ function ReceiveBundles() {
           onClick={() => setShowHistory(false)}
         >
           <div
-            style={{ backgroundColor: 'white', borderRadius: '16px', padding: '1.5rem', width: '100%', maxWidth: '560px', maxHeight: '80vh', overflowY: 'auto', boxSizing: 'border-box' }}
+            style={{ backgroundColor: 'white', borderRadius: '16px', padding: '1.5rem 2rem', width: '100%', maxWidth: '760px', maxHeight: '80vh', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexShrink: 0 }}>
               <h3 style={{ margin: 0, color: '#1a2340', fontSize: '1.1rem' }}>Histórico de Transferencias</h3>
               <button type="button" onClick={() => setShowHistory(false)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', color: '#666' }}>✕</button>
             </div>
 
+            <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', paddingRight: '0.75rem' }}>
             {historyLoading ? (
               <p style={{ textAlign: 'center', color: '#888', padding: '2rem 0' }}>Cargando…</p>
             ) : history.length === 0 ? (
@@ -331,34 +339,61 @@ function ReceiveBundles() {
                   {section.items.length === 0 ? (
                     <p style={{ color: '#888', fontSize: '0.85rem', margin: 0 }}>Sin registros</p>
                   ) : section.items.map(t => (
-                    <div key={t.transfer_history_id} style={{
-                      display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem',
-                      padding: '0.7rem 0.9rem', marginBottom: '0.5rem', backgroundColor: '#f8f9fb',
-                      borderRadius: '10px', border: '1px solid #eee', flexWrap: 'wrap'
-                    }}>
-                      <div>
-                        <div style={{ fontWeight: 700, color: '#1a2340', fontSize: '0.9rem' }}>{t.serial_number}</div>
-                        <div style={{ fontSize: '0.78rem', color: '#888' }}>
-                          {t.bundle_name || 'Bandeo'} — {section.prefix}: <b>{t[section.other] || 'Usuario'}</b>
-                        </div>
-                      </div>
-                      <div style={{ textAlign: 'right' }}>
+                    (() => {
+                      const badge = (
                         <span style={{
-                          display: 'inline-block', padding: '0.15rem 0.6rem', borderRadius: '999px', fontSize: '0.7rem', fontWeight: 700,
+                          display: 'inline-block', padding: '0.15rem 0.6rem', borderRadius: '999px', fontSize: '0.7rem', fontWeight: 700, flexShrink: 0,
                           backgroundColor: t.status === 'completed' ? '#d4edda' : t.status === 'transfering' ? '#fff3cd' : '#f8d7da',
                           color: t.status === 'completed' ? '#155724' : t.status === 'transfering' ? '#856404' : '#721c24'
                         }}>
                           {t.status}
                         </span>
-                        <div style={{ fontSize: '0.72rem', color: '#888', marginTop: '0.2rem' }}>
-                          {t.create_time ? new Date(t.create_time).toLocaleString() : ''}
+                      );
+                      const date = t.create_time ? new Date(t.create_time).toLocaleString() : '';
+                      const info = (
+                        <>
+                          <div style={{ fontWeight: 700, color: '#1a2340', fontSize: '0.9rem' }}>{t.serial_number}</div>
+                          <div style={{ fontSize: '0.78rem', color: '#888' }}>
+                            {t.bundle_name || 'Bandeo'} — {section.prefix}: <b>{t[section.other] || 'Usuario'}</b>
+                          </div>
+                        </>
+                      );
+                      const cardBase = {
+                        padding: '0.7rem 0.9rem', marginBottom: '0.5rem', backgroundColor: '#f8f9fb',
+                        borderRadius: '10px', border: '1px solid #eee'
+                      };
+
+                      // Celular: info arriba, fecha abajo-izquierda y estado abajo-derecha
+                      if (isMobile) {
+                        return (
+                          <div key={t.transfer_history_id} style={cardBase}>
+                            {info}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem', marginTop: '0.55rem' }}>
+                              <span style={{ fontSize: '0.72rem', color: '#888' }}>{date}</span>
+                              {badge}
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      // Computadora: info a la izquierda, estado y fecha a la derecha
+                      return (
+                        <div key={t.transfer_history_id} style={{
+                          ...cardBase, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap'
+                        }}>
+                          <div style={{ flex: '1 1 260px', minWidth: 0 }}>{info}</div>
+                          <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: 'auto' }}>
+                            {badge}
+                            <div style={{ fontSize: '0.72rem', color: '#888', marginTop: '0.2rem' }}>{date}</div>
+                          </div>
                         </div>
-                      </div>
-                    </div>
+                      );
+                    })()
                   ))}
                 </div>
               ))
             )}
+            </div>
           </div>
         </div>
       )}

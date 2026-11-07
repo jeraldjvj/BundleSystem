@@ -379,9 +379,9 @@ function ReportsDashboard() {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
               <thead>
                 <tr style={{ backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6' }}>
-                  <th style={{ padding: '0.75rem', textAlign: 'center', color: '#495057' }}>#</th>
+                  <th style={{ padding: '0.75rem', textAlign: 'center', color: '#495057', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>#</th>
                   {deliveryColumns.filter(col => col.key !== 'fecha' && (canSeeProfiles || (col.key !== 'usuario' && col.key !== 'ciudad'))).map(col => (
-                    <th key={col.key} style={{ padding: '0.75rem', textAlign: 'left', color: '#495057', verticalAlign: 'top' }}>
+                    <th key={col.key} style={{ padding: '0.75rem', textAlign: 'left', color: '#495057', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <span>{col.label}</span>
                         <button
@@ -414,8 +414,8 @@ function ReportsDashboard() {
                       )}
                     </th>
                   ))}
-                  <th style={{ padding: '0.75rem', textAlign: 'center', color: '#495057' }}>Foto</th>
-                  <th style={{ padding: '0.75rem', textAlign: 'left', color: '#495057', verticalAlign: 'top' }}>
+                  <th style={{ padding: '0.75rem', textAlign: 'center', color: '#495057', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>Foto</th>
+                  <th style={{ padding: '0.75rem', textAlign: 'left', color: '#495057', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <span>Fecha de Entrega</span>
                       <button
