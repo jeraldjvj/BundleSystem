@@ -55,6 +55,7 @@ CREATE TABLE IF NOT EXISTS `bundle_system`.`user` (
   `level_user` VARCHAR(45) NOT NULL DEFAULT 'field force',
   `create_time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `must_change_password` TINYINT(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`user_id`),
   UNIQUE INDEX `password_hash_UNIQUE` (`password_hash` ASC) VISIBLE,
   UNIQUE INDEX `user_id_UNIQUE` (`user_id` ASC) VISIBLE,

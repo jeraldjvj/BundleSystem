@@ -35,6 +35,7 @@ api.interceptors.response.use(
 
 export const authService = {
   login: (email, password) => api.post('/login', { email, password }),
+  changePassword: (currentPassword, newPassword) => api.post('/change-password', { currentPassword, newPassword }),
 };
 
 export const userService = {

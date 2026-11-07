@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { userService } from '../services/api';
+import { userService, authService } from '../services/api';
 
 function Navbar({ currentView, onViewChange, canAccessManagement, canAccessBundles, canAccessDelivery }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -9,6 +9,40 @@ function Navbar({ currentView, onViewChange, canAccessManagement, canAccessBundl
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [profileData, setProfileData] = useState(null);
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('darkMode') === '1');
+  const [pwdOpen, setPwdOpen] = useState(false);
+  const [pwdForm, setPwdForm] = useState({ current: '', next: '', confirm: '' });
+  const [pwdShow, setPwdShow] = useState({ current: false, next: false, confirm: false });
+  const [pwdError, setPwdError] = useState('');
+  const [pwdSuccess, setPwdSuccess] = useState('');
+  const [pwdBusy, setPwdBusy] = useState(false);
+
+  const openPwd = () => {
+    setPwdForm({ current: '', next: '', confirm: '' });
+    setPwdError('');
+    setPwdSuccess('');
+    setPwdShow({ current: false, next: false, confirm: false });
+    setPwdOpen(true);
+  };
+
+  const submitPwd = async (e) => {
+    e.preventDefault();
+    setPwdError('');
+    setPwdSuccess('');
+    if (!pwdForm.current || !pwdForm.next) return setPwdError('Completa todos los campos');
+    if (pwdForm.next.length < 6) return setPwdError('La nueva contraseña debe tener al menos 6 caracteres');
+    if (pwdForm.next !== pwdForm.confirm) return setPwdError('La confirmación no coincide con la nueva contraseña');
+    setPwdBusy(true);
+    try {
+      await authService.changePassword(pwdForm.current, pwdForm.next);
+      setPwdSuccess('Contraseña actualizada correctamente');
+      setPwdForm({ current: '', next: '', confirm: '' });
+      setTimeout(() => setPwdOpen(false), 1500);
+    } catch (err) {
+      setPwdError(err.response?.data?.error || 'No se pudo cambiar la contraseña');
+    } finally {
+      setPwdBusy(false);
+    }
+  };
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark-mode', darkMode);
@@ -337,6 +371,18 @@ function Navbar({ currentView, onViewChange, canAccessManagement, canAccessBundl
                 ['Nombre', `${(profileData?.firstName ?? user?.firstName) || ''} ${(profileData?.lastName ?? user?.lastName) || ''}`.trim()],
                 ['MI ID', profileData?.miId ?? user?.miId],
                 ['Email', profileData?.email ?? user?.email],
+                ['Contraseña', (
+                  <button
+                    type="button"
+                    onClick={openPwd}
+                    style={{
+                      background: 'none', border: 'none', padding: 0, cursor: 'pointer',
+                      color: '#5470c6', fontWeight: 700, fontSize: '0.9rem', textDecoration: 'underline'
+                    }}
+                  >
+                    Cambiar
+                  </button>
+                )],
                 ['Nivel', profileData?.levelUser ?? user?.levelUser],
                 ['Cargo', profileData?.roleTitle],
                 ['Fecha de Nacimiento', profileData?.dateOfBirth ? new Date(profileData.dateOfBirth).toLocaleDateString() : null],
@@ -365,6 +411,112 @@ function Navbar({ currentView, onViewChange, canAccessManagement, canAccessBundl
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Modal cambiar contraseña */}
+      {pwdOpen && (
+        <div
+          onClick={() => !pwdBusy && setPwdOpen(false)}
+          style={{
+            position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.55)', zIndex: 2100,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem'
+          }}
+        >
+          <form
+            onSubmit={submitPwd}
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: 'white', borderRadius: '16px', padding: '1.5rem 1.75rem',
+              maxWidth: '400px', width: '100%', boxSizing: 'border-box',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <h3 style={{ margin: 0, color: '#1a2340', fontSize: '1.1rem' }}>Cambiar Contraseña</h3>
+              <button type="button" onClick={() => setPwdOpen(false)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', color: '#666' }}>✕</button>
+            </div>
+
+            {[
+              ['current', 'Contraseña actual', 'current-password'],
+              ['next', 'Nueva contraseña', 'new-password'],
+              ['confirm', 'Confirmar nueva contraseña', 'new-password'],
+            ].map(([key, label, auto]) => (
+              <div key={key} style={{ marginBottom: '0.9rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.35rem', fontWeight: 600, color: '#444', fontSize: '0.85rem' }}>{label}</label>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type={pwdShow[key] ? 'text' : 'password'}
+                    autoComplete={auto}
+                    value={pwdForm[key]}
+                    onChange={(e) => setPwdForm(prev => ({ ...prev, [key]: e.target.value }))}
+                    style={{
+                      width: '100%', padding: '0.65rem 2.6rem 0.65rem 0.85rem', border: '1px solid #e0e0e0', borderRadius: '10px',
+                      fontSize: '0.95rem', backgroundColor: '#f8f9fa', color: '#333', colorScheme: 'light',
+                      outline: 'none', boxSizing: 'border-box'
+                    }}
+                    required
+                  />
+                  <button
+                    type="button"
+                    tabIndex={-1}
+                    title={pwdShow[key] ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                    onClick={() => setPwdShow(prev => ({ ...prev, [key]: !prev[key] }))}
+                    style={{
+                      position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)',
+                      background: 'none', border: 'none', padding: '4px', cursor: 'pointer',
+                      color: '#888', display: 'flex', alignItems: 'center'
+                    }}
+                  >
+                    {pwdShow[key] ? (
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                        <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                        <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/>
+                        <line x1="1" y1="1" x2="23" y2="23"/>
+                      </svg>
+                    ) : (
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              </div>
+            ))}
+
+            <div style={{ marginBottom: '0.4rem' }} />
+
+            {pwdError && (
+              <div style={{ padding: '0.6rem 0.9rem', borderRadius: '8px', backgroundColor: '#f8d7da', color: '#721c24', fontSize: '0.85rem', marginBottom: '0.9rem' }}>{pwdError}</div>
+            )}
+            {pwdSuccess && (
+              <div style={{ padding: '0.6rem 0.9rem', borderRadius: '8px', backgroundColor: '#d4edda', color: '#155724', fontSize: '0.85rem', marginBottom: '0.9rem' }}>{pwdSuccess}</div>
+            )}
+
+            <div style={{ display: 'flex', gap: '0.6rem' }}>
+              <button
+                type="button"
+                onClick={() => setPwdOpen(false)}
+                disabled={pwdBusy}
+                style={{ flex: 1, padding: '0.7rem', backgroundColor: 'white', color: '#555', border: '1px solid #ddd', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.9rem' }}
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={pwdBusy}
+                style={{
+                  flex: 1, padding: '0.7rem', background: 'linear-gradient(135deg, #5470c6, #2d3f6e)', color: 'white',
+                  border: 'none', borderRadius: '10px', cursor: pwdBusy ? 'wait' : 'pointer', fontWeight: 'bold', fontSize: '0.9rem',
+                  opacity: pwdBusy ? 0.7 : 1
+                }}
+              >
+                {pwdBusy ? 'Guardando…' : 'Cambiar'}
+              </button>
+            </div>
+          </form>
         </div>
       )}
 

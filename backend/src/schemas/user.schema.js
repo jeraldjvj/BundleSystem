@@ -19,4 +19,7 @@ export const createUserSchema = z.object({
   profile_picture: z.string().max(255).optional(),
 });
 
-export const updateUserSchema = createUserSchema.partial();
+export const updateUserSchema = createUserSchema.partial().extend({
+  // true cuando la contraseña fue restablecida por un administrador (temporal)
+  password_temporary: z.boolean().optional(),
+});

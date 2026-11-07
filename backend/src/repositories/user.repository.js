@@ -1,7 +1,8 @@
 import { pool } from '../config/database.js';
 import bcrypt from 'bcrypt';
 
-const COLUMNS = 'u.user_id, u.mi_id, u.email, u.password_hash, u.status, u.level_user, u.create_time, u.updated_at, up.first_name, up.last_name, up.role_title, up.date_of_birth, up.city, up.head_in_charge, up.profile_picture';
+// password_hash nunca se selecciona: no debe salir del servidor en ninguna respuesta
+const COLUMNS = 'u.user_id, u.mi_id, u.email, u.status, u.level_user, u.create_time, u.updated_at, u.must_change_password, up.first_name, up.last_name, up.role_title, up.date_of_birth, up.city, up.head_in_charge, up.profile_picture';
 const UPDATABLE_FIELDS = ['mi_id', 'email', 'password_hash', 'status', 'level_user'];
 const PROFILE_FIELDS = ['first_name', 'last_name', 'role_title', 'date_of_birth', 'city', 'head_in_charge', 'profile_picture'];
 
@@ -9,11 +10,11 @@ const toUser = (row) => ({
   userId: row.user_id,
   miId: row.mi_id,
   email: row.email,
-  passwordHash: row.password_hash,
   status: row.status,
   levelUser: row.level_user,
   createTime: row.create_time,
   updatedAt: row.updated_at,
+  mustChangePassword: Boolean(row.must_change_password),
   firstName: row.first_name,
   lastName: row.last_name,
   roleTitle: row.role_title,
@@ -91,8 +92,11 @@ export const userRepository = {
           data.password_hash = await bcrypt.hash(data.password_hash, 10);
         }
         
+        // Una contraseña restablecida por el administrador es temporal:
+        // el usuario deberá cambiarla en su próximo inicio de sesión
+        const mustChange = data.password_hash ? `, must_change_password = ${data.password_temporary ? 1 : 0}` : '';
         await connection.query(
-          `UPDATE user SET ${userFields.map((field) => `${field} = ?`).join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?`,
+          `UPDATE user SET ${userFields.map((field) => `${field} = ?`).join(', ')}${mustChange}, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?`,
           [...userFields.map((field) => data[field]), userId],
         );
       } else if (profileFields.length) {

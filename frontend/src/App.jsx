@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './components/Login';
+import ForcePasswordChange from './components/ForcePasswordChange';
 import UserForm from './components/UserForm';
 import UserList from './components/UserList';
 import StoreList from './components/StoreList';
@@ -344,6 +345,11 @@ function AppContent() {
 
   if (!user) {
     return <Login />;
+  }
+
+  // Contraseña temporal: debe crear una nueva antes de usar el sistema
+  if (user.mustChangePassword) {
+    return <ForcePasswordChange />;
   }
 
   const canAccessManagement = user.levelUser === 'Office Manager' || user.levelUser === 'admin';

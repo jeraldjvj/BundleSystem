@@ -7,6 +7,8 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  // Contraseña temporal recién usada para iniciar sesión (solo en memoria, nunca en localStorage)
+  const [tempPassword, setTempPassword] = useState('');
 
   // Check authentication on mount
   useEffect(() => {
@@ -27,6 +29,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await authService.login(email, password);
       setUser(response.data);
+      setTempPassword(response.data.mustChangePassword ? password : '');
       localStorage.setItem('user', JSON.stringify(response.data));
       return true;
     } catch (err) {
@@ -38,13 +41,24 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Marca que el usuario ya reemplazó su contraseña temporal
+  const completePasswordChange = () => {
+    setTempPassword('');
+    setUser(prev => {
+      const updated = { ...prev, mustChangePassword: false };
+      localStorage.setItem('user', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   const logout = () => {
     setUser(null);
+    setTempPassword('');
     localStorage.removeItem('user');
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading, error }}>
+    <AuthContext.Provider value={{ user, login, logout, loading, error, tempPassword, completePasswordChange }}>
       {children}
     </AuthContext.Provider>
   );

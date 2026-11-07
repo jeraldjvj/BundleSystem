@@ -18,9 +18,14 @@ export const authenticate = async (req, _res, next) => {
       throw new HttpError(401, 'Sesión expirada o token inválido');
     }
 
-    const [rows] = await pool.query('SELECT status FROM user WHERE user_id = ?', [payload.userId]);
+    const [rows] = await pool.query('SELECT status, must_change_password FROM user WHERE user_id = ?', [payload.userId]);
     if (rows.length === 0 || rows[0].status !== 'active') {
       throw new HttpError(403, 'Cuenta inactiva. No puedes realizar cambios en el sistema.');
+    }
+
+    // Con contraseña temporal solo se permite cambiarla
+    if (rows[0].must_change_password && req.path !== '/change-password') {
+      throw new HttpError(403, 'Debes cambiar tu contraseña temporal antes de continuar.');
     }
 
     req.user = { userId: payload.userId, levelUser: payload.levelUser };

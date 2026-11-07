@@ -54,15 +54,9 @@ router.post('/login', async (req, res, next) => {
       throw new HttpError(403, 'Cuenta bloqueada por demasiados intentos fallidos. Intenta nuevamente mañana.');
     }
 
-    // Verify password hash - if not hashed, try direct comparison for migration
-    let isPasswordValid = false;
-    try {
-      isPasswordValid = await bcrypt.compare(password, user.password_hash);
-    } catch (error) {
-      // If bcrypt.compare fails, it might be a plain text password (old format)
-      isPasswordValid = (password === user.password_hash);
-    }
-    
+    // Solo se aceptan contraseñas cifradas con bcrypt; un hash inválido cuenta como fallo
+    const isPasswordValid = await bcrypt.compare(password, user.password_hash).catch(() => false);
+
     if (!isPasswordValid) {
       const attempts = (user.failed_attempts || 0) + 1;
       if (attempts >= 5) {
@@ -101,43 +95,8 @@ router.post('/login', async (req, res, next) => {
       firstName: user.first_name,
       lastName: user.last_name,
       profilePicture: user.profile_picture,
+      mustChangePassword: Boolean(user.must_change_password),
       token,
-    });
-  } catch (error) {
-    next(error);
-  }
-});
-
-// Temporary endpoint to migrate plain text passwords to bcrypt hashes
-router.post('/migrate-passwords', async (req, res, next) => {
-  try {
-    const [users] = await pool.query('SELECT user_id, password_hash FROM user');
-    
-    let migratedCount = 0;
-    const errors = [];
-
-    for (const user of users) {
-      try {
-        // Check if password is already hashed (bcrypt hashes start with $2b$ or $2a$)
-        const isHashed = user.password_hash.startsWith('$2');
-        
-        if (!isHashed) {
-          const hashedPassword = await bcrypt.hash(user.password_hash, 10);
-          await pool.query(
-            'UPDATE user SET password_hash = ? WHERE user_id = ?',
-            [hashedPassword, user.user_id]
-          );
-          migratedCount++;
-        }
-      } catch (error) {
-        errors.push(`User ${user.user_id}: ${error.message}`);
-      }
-    }
-
-    res.json({
-      message: `Migrated ${migratedCount} passwords to bcrypt hashes`,
-      totalUsers: users.length,
-      errors: errors
     });
   } catch (error) {
     next(error);
@@ -146,6 +105,38 @@ router.post('/migrate-passwords', async (req, res, next) => {
 
 // Todas las rutas siguientes requieren un JWT válido y un usuario activo
 router.use(authenticate);
+
+// Cambio de contraseña del usuario en sesión (requiere la contraseña actual)
+router.post('/change-password', async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+      throw new HttpError(400, 'La contraseña actual y la nueva son requeridas');
+    }
+    if (String(newPassword).length < 6) {
+      throw new HttpError(400, 'La nueva contraseña debe tener al menos 6 caracteres');
+    }
+
+    const [rows] = await pool.query('SELECT password_hash FROM user WHERE user_id = ?', [req.user.userId]);
+    if (rows.length === 0) throw new HttpError(404, 'Usuario no encontrado');
+
+    const valid = await bcrypt.compare(currentPassword, rows[0].password_hash).catch(() => false);
+    if (!valid) throw new HttpError(400, 'La contraseña actual es incorrecta');
+
+    if (await bcrypt.compare(newPassword, rows[0].password_hash).catch(() => false)) {
+      throw new HttpError(400, 'La nueva contraseña debe ser diferente a la actual');
+    }
+
+    const hash = await bcrypt.hash(newPassword, 10);
+    await pool.query(
+      'UPDATE user SET password_hash = ?, must_change_password = 0, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?',
+      [hash, req.user.userId]
+    );
+    res.json({ message: 'Contraseña actualizada correctamente' });
+  } catch (error) {
+    next(error);
+  }
+});
 
 router.use('/bundle-colors', bundleColorRoutes);
 router.use('/bundle-models', bundleModelRoutes);

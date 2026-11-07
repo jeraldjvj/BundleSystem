@@ -47,6 +47,27 @@ function UserForm({ user, onSave, onCancel }) {
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+
+  // Contraseña fácil de 6 caracteres: minúsculas + dígitos, sin caracteres confusos (0/o, 1/l/i)
+  const generateEasyPassword = () => {
+    const letters = 'abcdefghjkmnpqrstuvwxyz';
+    const digits = '23456789';
+    const all = letters + digits;
+    const rand = (n) => crypto.getRandomValues(new Uint32Array(1))[0] % n;
+    const chars = [letters[rand(letters.length)], digits[rand(digits.length)]];
+    while (chars.length < 6) chars.push(all[rand(all.length)]);
+    for (let i = chars.length - 1; i > 0; i--) {
+      const j = rand(i + 1);
+      [chars[i], chars[j]] = [chars[j], chars[i]];
+    }
+    return chars.join('');
+  };
+
+  const confirmResetPassword = () => {
+    setFormData(prev => ({ ...prev, password_hash: generateEasyPassword() }));
+    setShowResetConfirm(false);
+  };
 
   useEffect(() => {
     const loadManagers = async () => {
@@ -118,6 +139,10 @@ function UserForm({ user, onSave, onCancel }) {
     try {
       const dataToSubmit = { ...formData };
 
+      // En edición, la única forma de poner contraseña es "Restablecer": es temporal
+      if (user && dataToSubmit.password_hash) {
+        dataToSubmit.password_temporary = true;
+      }
       if (user && !dataToSubmit.password_hash) {
         delete dataToSubmit.password_hash;
       }
@@ -234,7 +259,45 @@ function UserForm({ user, onSave, onCancel }) {
                 required maxLength={255} style={inputStyle} />
             </div>
             <div>
-              <label htmlFor="password_hash" style={labelStyle}>Contraseña{user ? ' (vacío = sin cambio)' : ''}:</label>
+              <label htmlFor="password_hash" style={labelStyle}>Contraseña:</label>
+              {user ? (
+                <>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <input
+                      type="text"
+                      id="password_hash"
+                      value={formData.password_hash}
+                      readOnly
+                      disabled
+                      placeholder={user.mustChangePassword ? 'Temporal' : 'Personal'}
+                      style={{
+                        ...inputStyle, flex: 1, minWidth: 0,
+                        backgroundColor: '#ececec', color: formData.password_hash ? '#1a2340' : '#777',
+                        fontWeight: formData.password_hash ? 700 : 'normal',
+                        letterSpacing: formData.password_hash ? '2px' : 'normal',
+                        cursor: 'not-allowed'
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowResetConfirm(true)}
+                      disabled={saving}
+                      style={{
+                        padding: '0 1rem', backgroundColor: '#eef2fb', color: '#2d3f6e',
+                        border: '1px solid #c7d3f0', borderRadius: '10px', cursor: 'pointer',
+                        fontSize: '0.85rem', fontWeight: 600, whiteSpace: 'nowrap'
+                      }}
+                    >
+                      Restablecer
+                    </button>
+                  </div>
+                  {formData.password_hash && (
+                    <p style={{ margin: '0.4rem 0 0', fontSize: '0.78rem', color: '#856404' }}>
+                      Anota esta contraseña y entrégala al usuario. Se aplicará al presionar "Actualizar".
+                    </p>
+                  )}
+                </>
+              ) : (
               <div style={{ position: 'relative' }}>
                 <input type={showPassword ? 'text' : 'password'} id="password_hash" name="password_hash" value={formData.password_hash}
                   onChange={handleChange} required={!user} maxLength={255} style={{ ...inputStyle, paddingRight: '2.75rem' }} />
@@ -261,6 +324,7 @@ function UserForm({ user, onSave, onCancel }) {
                   )}
                 </button>
               </div>
+              )}
             </div>
             <div>
               <label htmlFor="status" style={labelStyle}>Estado:</label>
@@ -377,6 +441,64 @@ function UserForm({ user, onSave, onCancel }) {
           )}
         </form>
       </div>
+
+      {/* Modal de confirmación de restablecimiento de contraseña */}
+      {showResetConfirm && (
+        <div
+          onClick={() => setShowResetConfirm(false)}
+          style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.55)', zIndex: 2000,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem'
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: 'white', borderRadius: '16px', padding: '2rem',
+              maxWidth: '380px', width: '100%', textAlign: 'center',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+            }}
+          >
+            <div style={{
+              width: '56px', height: '56px', borderRadius: '50%', margin: '0 auto 1rem',
+              backgroundColor: '#eef2fb', display: 'flex', alignItems: 'center', justifyContent: 'center'
+            }}>
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#5470c6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+            </div>
+            <h3 style={{ margin: '0 0 0.5rem', color: '#1a2340', fontSize: '1.1rem' }}>¿Restablecer contraseña?</h3>
+            <p style={{ margin: '0 0 1.5rem', color: '#666', fontSize: '0.9rem' }}>
+              Se generará una nueva contraseña de 6 caracteres para <strong>{formData.first_name} {formData.last_name}</strong>. La contraseña actual dejará de funcionar al guardar los cambios.
+            </p>
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <button
+                type="button"
+                onClick={() => setShowResetConfirm(false)}
+                style={{
+                  flex: 1, padding: '0.7rem', backgroundColor: 'white', color: '#555',
+                  border: '1px solid #ddd', borderRadius: '10px', cursor: 'pointer',
+                  fontWeight: 'bold', fontSize: '0.9rem'
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={confirmResetPassword}
+                style={{
+                  flex: 1, padding: '0.7rem', background: 'linear-gradient(135deg, #5470c6, #2d3f6e)', color: 'white',
+                  border: 'none', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.9rem'
+                }}
+              >
+                Restablecer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal de confirmación de eliminación */}
       {showDeleteConfirm && (
