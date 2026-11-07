@@ -19,10 +19,10 @@ function ReceiveBundles() {
       JsBarcode(barcodeRef.current, String(user.miId), {
         format: 'CODE128',
         lineColor: '#1a2340',
-        width: 2,
-        height: 90,
-        fontSize: 18,
-        margin: 10,
+        width: 3,
+        height: 110,
+        displayValue: false,
+        margin: 4,
       });
     }
   }, [showBarcode, user]);
@@ -258,7 +258,7 @@ function ReceiveBundles() {
               padding: '1rem', backgroundColor: '#f8f9fb', borderRadius: '12px',
               border: '1px solid #eee', display: 'flex', justifyContent: 'center'
             }}>
-              <svg ref={barcodeRef}></svg>
+              <svg ref={barcodeRef} style={{ width: '100%', maxWidth: '100%' }}></svg>
             </div>
             <p style={{ margin: '0.9rem 0 0', color: '#1a2340', fontSize: '1.05rem', fontWeight: 700, letterSpacing: '1px' }}>
               {user?.miId || 'Sin MI ID'}

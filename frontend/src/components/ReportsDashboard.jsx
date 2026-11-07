@@ -58,6 +58,19 @@ function ReportsDashboard() {
   const [deliveryActiveFilter, setDeliveryActiveFilter] = useState(null);
   const [projects, setProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState('status:active');
+  const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark-mode'));
+
+  // Re-renderiza las gráficas al cambiar el tema claro/oscuro
+  useEffect(() => {
+    const obs = new MutationObserver(() =>
+      setIsDark(document.documentElement.classList.contains('dark-mode'))
+    );
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => obs.disconnect();
+  }, []);
+
+  const chartText = isDark ? '#c9d4ea' : '#333';
+  const chartLine = isDark ? '#2a3550' : '#e0e0e0';
 
   // Registra el mapa de Bolivia en ECharts una sola vez
   useEffect(() => {
@@ -105,9 +118,9 @@ function ReportsDashboard() {
 
   const pieOption = (title, rows, center, nameKey = 'status') => ({
     color: PALETTE,
-    title: { text: title, left: 'center', textStyle: { fontSize: 15 } },
+    title: { text: title, left: 'center', textStyle: { fontSize: 15, color: chartText } },
     tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
-    legend: { bottom: 0 },
+    legend: { bottom: 0, textStyle: { color: chartText } },
     series: [{
       type: 'pie',
       radius: ['40%', '65%'],
@@ -121,34 +134,43 @@ function ReportsDashboard() {
   });
 
   const barOption = (title, rows, nameKey, color) => ({
-    title: { text: title, left: 'center', top: 0, textStyle: { fontSize: 15 } },
+    title: { text: title, left: 'center', top: 0, textStyle: { fontSize: 15, color: chartText } },
     tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
     grid: { left: '3%', right: '4%', bottom: '3%', top: 60, containLabel: true },
     xAxis: {
       type: 'category',
       data: rows.map(r => r[nameKey] || '—'),
-      axisLabel: { rotate: rows.length > 4 ? 30 : 0, fontSize: 11 }
+      axisLabel: { rotate: rows.length > 4 ? 30 : 0, fontSize: 11, color: chartText }
     },
-    yAxis: { type: 'value', minInterval: 1 },
+    yAxis: {
+      type: 'value', minInterval: 1,
+      axisLabel: { color: chartText },
+      splitLine: { lineStyle: { color: chartLine } }
+    },
     series: [{
       type: 'bar',
       data: rows.map(r => r.count),
       barMaxWidth: 48,
       itemStyle: { color: color || '#5470c6', borderRadius: [4, 4, 0, 0] },
-      label: { show: true, position: 'top' }
+      label: { show: true, position: 'top', color: chartText }
     }]
   });
 
   const lineOption = (title, rows) => ({
-    title: { text: title, left: 'center', top: 0, textStyle: { fontSize: 15 } },
+    title: { text: title, left: 'center', top: 0, textStyle: { fontSize: 15, color: chartText } },
     tooltip: { trigger: 'axis' },
     grid: { left: '3%', right: '4%', bottom: '3%', top: 60, containLabel: true },
     xAxis: {
       type: 'category',
       data: rows.map(r => r.day?.substring(0, 10)),
-      boundaryGap: false
+      boundaryGap: false,
+      axisLabel: { color: chartText }
     },
-    yAxis: { type: 'value', minInterval: 1 },
+    yAxis: {
+      type: 'value', minInterval: 1,
+      axisLabel: { color: chartText },
+      splitLine: { lineStyle: { color: chartLine } }
+    },
     series: [{
       type: 'line',
       data: rows.map(r => r.count),
@@ -200,7 +222,7 @@ function ReportsDashboard() {
   const maxDept = Math.max(1, ...deptData.map(d => d.value));
 
   const mapOption = mapReady && data && {
-    title: { text: 'Entregas por Departamento', left: 'center', top: 0, textStyle: { fontSize: 15 } },
+    title: { text: 'Entregas por Departamento', left: 'center', top: 0, textStyle: { fontSize: 15, color: chartText } },
     tooltip: { trigger: 'item', formatter: (p) => `${p.name}: ${p.value ?? 0} entrega(s)` },
     visualMap: {
       min: 0,
@@ -218,9 +240,9 @@ function ReportsDashboard() {
         nameProperty: 'nombre_dep',
         roam: false,
         top: 35,
-        label: { show: true, color: '#666', fontSize: 9 },
+        label: { show: true, color: chartText, fontSize: 9 },
         itemStyle: { areaColor: '#f4f4f4', borderColor: '#999' },
-        emphasis: { itemStyle: { areaColor: '#c8d9f0' }, label: { color: '#222' } },
+        emphasis: { itemStyle: { areaColor: '#c8d9f0' }, label: { color: isDark ? '#fff' : '#222' } },
         data: deptData
       },
       {
@@ -231,7 +253,7 @@ function ReportsDashboard() {
         symbolSize: (val) => Math.max(8, Math.min(26, val[2] * 8)),
         rippleEffect: { scale: 2.2 },
         itemStyle: { color: '#ee6666' },
-        label: { show: true, position: 'right', formatter: '{b}', fontSize: 10, color: '#333' }
+        label: { show: true, position: 'right', formatter: '{b}', fontSize: 10, color: chartText }
       }
     ]
   };

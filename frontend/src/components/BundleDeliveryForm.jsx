@@ -85,7 +85,22 @@ function BundleDeliveryForm({ onSave, onCancel }) {
   const [success, setSuccess] = useState('');
 
   const [scanTarget, setScanTarget] = useState(null); // 'serial' | 'imei'
-  const scannerRef = useRef(null);
+    const scannerRef = useRef(null);
+
+  // Algoritmo de Luhn (módulo 10): duplica dígitos en posiciones pares
+  // desde la derecha; la suma total debe ser múltiplo de 10
+  const isLuhn = (digits) => {
+    let sum = 0;
+    for (let i = 0; i < digits.length; i++) {
+      let d = Number(digits[digits.length - 1 - i]);
+      if (i % 2 === 1) {
+        d *= 2;
+        if (d > 9) d -= 9;
+      }
+      sum += d;
+    }
+    return sum % 10 === 0;
+  };
 
   useEffect(() => {
     const loadStores = async () => {
@@ -143,7 +158,25 @@ function BundleDeliveryForm({ onSave, onCancel }) {
     setVerifiedPhone(null);
     setImeiMsg(null);
     setImeiChecking(false);
-    if (imei.length < 8) return;
+    if (imei.length === 0) return;
+
+    // El IMEI debe tener exactamente 15 dígitos antes de consultar la BD
+    const digitCount = (imei.match(/\d/g) || []).length;
+    if (digitCount < 15) {
+      setImeiMsg({ ok: false, text: `Faltan digitos (hay ${digitCount} digitos)` });
+      return;
+    }
+    if (!/^\d{15}$/.test(imei)) {
+      setImeiMsg({ ok: false, text: 'El IMEI solo puede contener números' });
+      return;
+    }
+
+    // Algoritmo de Luhn (módulo 10): valida el dígito de control del IMEI
+    // antes de consultar la base de datos
+    if (!isLuhn(imei)) {
+      setImeiMsg({ ok: false, text: 'IMEI inválido: Verifica que todos los digitos sean correctos' });
+      return;
+    }
 
     let cancelled = false;
     const timer = setTimeout(async () => {
@@ -324,7 +357,9 @@ function BundleDeliveryForm({ onSave, onCancel }) {
             <input
               type="text"
               value={imeiInput}
-              onChange={(e) => setImeiInput(e.target.value)}
+              inputMode="numeric"
+              maxLength={15}
+              onChange={(e) => setImeiInput(e.target.value.replace(/\D/g, ''))}
               placeholder="Ej. 860000000000001"
               style={{ ...inputStyle, flex: 1 }}
               required

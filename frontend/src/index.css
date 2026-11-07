@@ -17,7 +17,7 @@
 
   font: 18px/145% var(--sans);
   letter-spacing: 0.18px;
-  color-scheme: light dark;
+  color-scheme: light;
   color: var(--text);
   background: var(--bg);
   font-synthesis: none;
@@ -30,25 +30,7 @@
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
-}
+/* La app usa su propio tema claro/oscuro vía .dark-mode — no seguir el tema del OS */
 
 body {
   margin: 0;
@@ -70,7 +52,6 @@ h1,
 h2 {
   font-family: var(--heading);
   font-weight: 500;
-  color: var(--text-h);
 }
 
 h1 {
@@ -108,4 +89,128 @@ code {
   line-height: 135%;
   padding: 4px 8px;
   background: var(--code-bg);
+}
+
+/* ============================================================
+   MODO OSCURO — paleta aplicada con el switch del perfil
+   bg page    #0f1420 | tarjetas  #1a2332 | inputs #151c2b
+   bordes     #2a3550 | texto     #e8ecf4 | secundario #9aa4b8
+   ============================================================ */
+html.dark-mode body {
+  background-color: #0f1420 !important;
+  color: #e8ecf4 !important;
+}
+
+/* Tarjetas y superficies blancas → superficie oscura */
+html.dark-mode [style*="background-color: white"],
+html.dark-mode [style*="background-color: rgb(255, 255, 255)"] {
+  background-color: #1a2332 !important;
+}
+
+/* Superficies claras (inputs, filas, badges grises) → oscuras */
+html.dark-mode [style*="background-color: #f8f9fa"],
+html.dark-mode [style*="background-color: #f8f9fb"],
+html.dark-mode [style*="background-color: rgb(248, 249, 250)"],
+html.dark-mode [style*="background-color: rgb(248, 249, 251)"] {
+  background-color: #151c2b !important;
+}
+html.dark-mode [style*="background-color: #eef2fb"],
+html.dark-mode [style*="background-color: rgb(238, 242, 251)"] {
+  background-color: #232e4a !important;
+}
+html.dark-mode [style*="background-color: #e9ecef"],
+html.dark-mode [style*="background-color: rgb(233, 236, 239)"] {
+  background-color: #2a3550 !important;
+}
+
+/* Texto oscuro → texto claro */
+html.dark-mode [style*="color: #333"],
+html.dark-mode [style*="color: #444"],
+html.dark-mode [style*="color: #1a2340"],
+html.dark-mode [style*="color: #495057"],
+html.dark-mode [style*="color: #212529"],
+html.dark-mode [style*="color: rgb(51, 51, 51)"],
+html.dark-mode [style*="color: rgb(26, 35, 64)"] {
+  color: #e8ecf4 !important;
+}
+html.dark-mode [style*="color: #555"],
+html.dark-mode [style*="color: #666"],
+html.dark-mode [style*="color: #888"],
+html.dark-mode [style*="color: #6c757d"],
+html.dark-mode [style*="color: rgb(102, 102, 102)"] {
+  color: #9aa4b8 !important;
+}
+
+/* Etiquetas de formularios: más realce que el texto secundario */
+html.dark-mode label {
+  color: #c9d4ea !important;
+}
+
+/* El blanco de las líneas del hamburguesa se mantiene blanco en modo oscuro */
+html.dark-mode #hamburger-btn span {
+  background-color: white !important;
+}
+
+/* Texto azul outline (#5470c6) → azul claro legible en oscuro */
+html.dark-mode [style*="color: #5470c6"],
+html.dark-mode [style*="color: rgb(84, 112, 198)"] {
+  color: #8ea6f5 !important;
+}
+
+/* Bordes azules outline → azul claro en oscuro */
+html.dark-mode [style*="border: 1px solid #5470c6"],
+html.dark-mode [style*="border: 1px solid rgb(84, 112, 198)"] {
+  border-color: #8ea6f5 !important;
+}
+
+/* Texto azul navy de botones claros (#eef2fb) → azul claro legible */
+html.dark-mode [style*="color: #2d3f6e"],
+html.dark-mode [style*="color: rgb(45, 63, 110)"] {
+  color: #c9d4ea !important;
+}
+
+/* Bordes claros → bordes oscuros */
+html.dark-mode [style*="border: 1px solid #e0e0e0"],
+html.dark-mode [style*="border: 1px solid #ddd"],
+html.dark-mode [style*="border: 1px solid #ccc"],
+html.dark-mode [style*="border: 1px solid #c7d3f0"] {
+  border-color: #2a3550 !important;
+}
+html.dark-mode [style*="border-bottom: 1px solid #f0f0f0"],
+html.dark-mode [style*="border-bottom: 1px solid #eee"],
+html.dark-mode [style*="border-right: 1px solid #ccc"] {
+  border-color: #2a3550 !important;
+}
+
+/* Tablas: encabezados claros → oscuros */
+html.dark-mode th,
+html.dark-mode td {
+  color: #e8ecf4 !important;
+}
+html.dark-mode th {
+  background-color: #151c2b !important;
+}
+html.dark-mode td {
+  border-color: #2a3550 !important;
+}
+
+/* Hover de filas oscuro */
+html.dark-mode tr:hover {
+  background-color: #1e2740 !important;
+}
+
+/* Placeholders legibles */
+html.dark-mode ::placeholder {
+  color: #6b7a99 !important;
+}
+
+/* Sombras más profundas en oscuro */
+html.dark-mode [style*="box-shadow"] {
+  box-shadow: 0 4px 20px rgba(0,0,0,0.45) !important;
+}
+
+/* Modales mantienen overlay pero el panel oscuro */
+html.dark-mode [style*="background: linear-gradient(135deg, #1a2340, #2d3f6e)"],
+html.dark-mode [style*="linear-gradient(135deg, #5470c6, #2d3f6e)"] {
+  color: #ffffff !important;
 }

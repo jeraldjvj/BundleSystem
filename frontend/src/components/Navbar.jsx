@@ -8,6 +8,12 @@ function Navbar({ currentView, onViewChange, canAccessManagement, canAccessBundl
   const [avatarError, setAvatarError] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [profileData, setProfileData] = useState(null);
+  const [darkMode, setDarkMode] = useState(() => localStorage.getItem('darkMode') === '1');
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark-mode', darkMode);
+    localStorage.setItem('darkMode', darkMode ? '1' : '0');
+  }, [darkMode]);
   const { user, logout } = useAuth();
 
   useEffect(() => {
@@ -58,6 +64,7 @@ function Navbar({ currentView, onViewChange, canAccessManagement, canAccessBundl
     <>
       {/* Hamburger button */}
       <button
+        id="hamburger-btn"
         onClick={toggleMenu}
         style={{
           position: 'fixed',
@@ -178,6 +185,50 @@ function Navbar({ currentView, onViewChange, canAccessManagement, canAccessBundl
             overflow: 'hidden',
             zIndex: 1002
           }}>
+            {/* Switch modo oscuro */}
+            <button
+              onClick={() => setDarkMode(!darkMode)}
+              style={{
+                width: '100%',
+                padding: '0.75rem 1rem',
+                backgroundColor: 'transparent',
+                color: '#1a2340',
+                border: 'none',
+                borderBottom: '1px solid #eee',
+                cursor: 'pointer',
+                textAlign: 'left',
+                fontSize: '0.875rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '0.5rem'
+              }}
+            >
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                {darkMode ? (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                  </svg>
+                ) : (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                  </svg>
+                )}
+                Modo Oscuro
+              </span>
+              <span style={{
+                width: '36px', height: '20px', borderRadius: '10px',
+                backgroundColor: darkMode ? '#5470c6' : '#ccc',
+                position: 'relative', transition: 'background-color 0.2s', flexShrink: 0
+              }}>
+                <span style={{
+                  position: 'absolute', top: '2px', left: darkMode ? '18px' : '2px',
+                  width: '16px', height: '16px', borderRadius: '50%',
+                  backgroundColor: 'white', transition: 'left 0.2s',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.3)'
+                }} />
+              </span>
+            </button>
             <button
               onClick={() => { setProfileModalOpen(true); setProfileOpen(false); }}
               style={{
