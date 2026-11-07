@@ -504,7 +504,7 @@ function BundleDeliveryForm({ onSave, onCancel }) {
             <p style={{ color: '#666' }}>Cargando stores…</p>
           ) : stores.length === 0 ? (
             <div style={{ padding: '0.75rem', backgroundColor: '#fff3cd', color: '#856404', borderRadius: '10px' }}>
-              No tienes stores asignados. Pide a un Office Manager que asigne un store a tu usuario.
+              No tienes tiendas asignadas. Pide a un Office Manager que asigne tu ruta de tiendas a tu usuario.
             </div>
           ) : (
             <>

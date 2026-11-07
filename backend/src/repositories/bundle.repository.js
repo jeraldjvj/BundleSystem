@@ -171,6 +171,24 @@ export const bundleRepository = {
     return rows;
   },
 
+  async findTransferHistory(userId) {
+    const [rows] = await pool.query(`
+      SELECT th.transfer_history_id, th.bundle_id, th.old_user_id, th.new_user_id,
+        th.manager_user_id, th.create_time, th.status,
+        b.serial_number, bm.bundle_name,
+        CONCAT(up_old.first_name, ' ', up_old.last_name) AS from_user_name,
+        CONCAT(up_new.first_name, ' ', up_new.last_name) AS to_user_name
+      FROM transfer_history th
+      LEFT JOIN bundle b ON th.bundle_id = b.bundle_id
+      LEFT JOIN bundle_model bm ON b.bundle_model_id = bm.bundle_model_id
+      LEFT JOIN user_profile up_old ON th.old_user_id = up_old.user_id
+      LEFT JOIN user_profile up_new ON th.new_user_id = up_new.user_id
+      WHERE th.old_user_id = ? OR th.new_user_id = ?
+      ORDER BY th.create_time DESC
+    `, [userId, userId]);
+    return rows;
+  },
+
   async cancelTransfer(transferHistoryId, userId) {
     const [rows] = await pool.query(
       `SELECT * FROM transfer_history WHERE transfer_history_id = ? AND status = 'transfering'`,

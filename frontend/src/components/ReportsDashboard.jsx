@@ -62,6 +62,9 @@ function ReportsDashboard() {
 
   // Re-renderiza las gráficas al cambiar el tema claro/oscuro
   useEffect(() => {
+    // El Navbar aplica la clase en su useEffect — sincronizar aquí por si
+    // este efecto corrió antes de que la clase quedara puesta
+    setIsDark(document.documentElement.classList.contains('dark-mode'));
     const obs = new MutationObserver(() =>
       setIsDark(document.documentElement.classList.contains('dark-mode'))
     );

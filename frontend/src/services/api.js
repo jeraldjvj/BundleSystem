@@ -113,6 +113,7 @@ export const bundleService = {
   requestTransfer: (id, data) => api.post(`/bundles/${id}/transfer-request`, data),
   getPendingTransfers: () => api.get('/bundles/transfers/pending'),
   getOutgoingTransfers: () => api.get('/bundles/transfers/outgoing'),
+  getTransferHistory: () => api.get('/bundles/transfers/history'),
   cancelTransfer: (id) => api.post(`/bundles/transfers/${id}/cancel`),
   approveTransfer: (id) => api.post(`/bundles/transfers/${id}/approve`),
   rejectTransfer: (id) => api.post(`/bundles/transfers/${id}/reject`),

@@ -13,6 +13,22 @@ function ReceiveBundles() {
   const [confirmAction, setConfirmAction] = useState(null); // { transfer, approve }
   const [showBarcode, setShowBarcode] = useState(false);
   const barcodeRef = useRef(null);
+  const [showHistory, setShowHistory] = useState(false);
+  const [history, setHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
+  const openHistory = async () => {
+    setShowHistory(true);
+    setHistoryLoading(true);
+    try {
+      const res = await bundleService.getTransferHistory();
+      setHistory(res.data);
+    } catch {
+      setHistory([]);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (showBarcode && user?.miId && barcodeRef.current) {
@@ -75,6 +91,22 @@ function ReceiveBundles() {
             {transfers.length} transferencia(s) pendiente(s) de aprobación
           </p>
         </div>
+        <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+        <button
+          onClick={openHistory}
+          title="Ver histórico de transferencias"
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+            padding: '0.6rem 1.15rem', backgroundColor: 'white', color: '#1a2340',
+            border: '1px solid #e0e0e0', borderRadius: '10px', cursor: 'pointer',
+            fontSize: '0.875rem', fontWeight: 600, boxShadow: '0 4px 14px rgba(0,0,0,0.06)'
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/>
+          </svg>
+          Histórico de Transferencias
+        </button>
         <button
           onClick={() => setShowBarcode(true)}
           title="Mostrar mi MI ID como código de barras"
@@ -94,6 +126,7 @@ function ReceiveBundles() {
           </svg>
           Mi código
         </button>
+        </div>
       </div>
 
       {error && <div style={{ padding: '0.85rem 1rem', marginBottom: '1.25rem', backgroundColor: '#fdecea', color: '#c0392b', borderRadius: '10px', fontSize: '0.875rem' }}>{error}</div>}
@@ -263,6 +296,69 @@ function ReceiveBundles() {
             <p style={{ margin: '0.9rem 0 0', color: '#1a2340', fontSize: '1.05rem', fontWeight: 700, letterSpacing: '1px' }}>
               {user?.miId || 'Sin MI ID'}
             </p>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Histórico de Transferencias */}
+      {showHistory && (
+        <div
+          style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, padding: '1rem' }}
+          onClick={() => setShowHistory(false)}
+        >
+          <div
+            style={{ backgroundColor: 'white', borderRadius: '16px', padding: '1.5rem', width: '100%', maxWidth: '560px', maxHeight: '80vh', overflowY: 'auto', boxSizing: 'border-box' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <h3 style={{ margin: 0, color: '#1a2340', fontSize: '1.1rem' }}>Histórico de Transferencias</h3>
+              <button type="button" onClick={() => setShowHistory(false)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', color: '#666' }}>✕</button>
+            </div>
+
+            {historyLoading ? (
+              <p style={{ textAlign: 'center', color: '#888', padding: '2rem 0' }}>Cargando…</p>
+            ) : history.length === 0 ? (
+              <p style={{ textAlign: 'center', color: '#888', padding: '2rem 0' }}>Sin transferencias registradas</p>
+            ) : (
+              [
+                { title: 'Enviadas', items: history.filter(t => Number(t.old_user_id) === Number(user?.userId)), other: 'to_user_name', prefix: 'Para' },
+                { title: 'Recibidas', items: history.filter(t => Number(t.new_user_id) === Number(user?.userId)), other: 'from_user_name', prefix: 'De' },
+              ].map(section => (
+                <div key={section.title} style={{ marginBottom: '1.25rem' }}>
+                  <h4 style={{ margin: '0 0 0.6rem', color: '#5470c6', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    {section.title} ({section.items.length})
+                  </h4>
+                  {section.items.length === 0 ? (
+                    <p style={{ color: '#888', fontSize: '0.85rem', margin: 0 }}>Sin registros</p>
+                  ) : section.items.map(t => (
+                    <div key={t.transfer_history_id} style={{
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem',
+                      padding: '0.7rem 0.9rem', marginBottom: '0.5rem', backgroundColor: '#f8f9fb',
+                      borderRadius: '10px', border: '1px solid #eee', flexWrap: 'wrap'
+                    }}>
+                      <div>
+                        <div style={{ fontWeight: 700, color: '#1a2340', fontSize: '0.9rem' }}>{t.serial_number}</div>
+                        <div style={{ fontSize: '0.78rem', color: '#888' }}>
+                          {t.bundle_name || 'Bandeo'} — {section.prefix}: <b>{t[section.other] || 'Usuario'}</b>
+                        </div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <span style={{
+                          display: 'inline-block', padding: '0.15rem 0.6rem', borderRadius: '999px', fontSize: '0.7rem', fontWeight: 700,
+                          backgroundColor: t.status === 'completed' ? '#d4edda' : t.status === 'transfering' ? '#fff3cd' : '#f8d7da',
+                          color: t.status === 'completed' ? '#155724' : t.status === 'transfering' ? '#856404' : '#721c24'
+                        }}>
+                          {t.status}
+                        </span>
+                        <div style={{ fontSize: '0.72rem', color: '#888', marginTop: '0.2rem' }}>
+                          {t.create_time ? new Date(t.create_time).toLocaleString() : ''}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ))
+            )}
           </div>
         </div>
       )}

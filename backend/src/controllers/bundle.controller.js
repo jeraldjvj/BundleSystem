@@ -69,6 +69,10 @@ export const bundleController = {
     res.json(await bundleRepository.findOutgoingPendingTransfers(req.user.userId));
   },
 
+  async transferHistory(req, res) {
+    res.json(await bundleRepository.findTransferHistory(req.user.userId));
+  },
+
   async cancelTransfer(req, res) {
     const result = await bundleRepository.cancelTransfer(
       req.params.transfer_history_id,
