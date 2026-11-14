@@ -2,8 +2,21 @@ import { userRepository } from '../repositories/user.repository.js';
 import { HttpError } from '../utils/HttpError.js';
 
 export const userController = {
-  async getAll(_req, res) {
-    res.json(await userRepository.findAll());
+  async getAll(req, res) {
+    const users = await userRepository.findAll();
+    // City Manager solo necesita identificar destinos de asignación;
+    // no recibe email, fecha de nacimiento ni otros datos personales
+    if (req.user.levelUser !== 'Office Manager' && req.user.levelUser !== 'admin') {
+      return res.json(users.map(u => ({
+        userId: u.userId,
+        miId: u.miId,
+        firstName: u.firstName,
+        lastName: u.lastName,
+        levelUser: u.levelUser,
+        status: u.status,
+      })));
+    }
+    res.json(users);
   },
 
   async getById(req, res) {
@@ -14,6 +27,18 @@ export const userController = {
     }
     const user = await userRepository.findById(req.params.user_id);
     if (!user) throw new HttpError(404, 'User not found');
+    // City Manager consultando perfiles ajenos: solo lo necesario para asignar;
+    // sin email, fecha de nacimiento ni otros datos personales
+    if (req.user.levelUser === 'City Manager' && String(req.params.user_id) !== String(req.user.userId)) {
+      return res.json({
+        userId: user.userId,
+        miId: user.miId,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        levelUser: user.levelUser,
+        status: user.status,
+      });
+    }
     res.json(user);
   },
 

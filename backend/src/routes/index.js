@@ -14,6 +14,7 @@ import distributorRoutes from './distributor.routes.js';
 import reportRoutes from './report.routes.js';
 import { pool } from '../config/database.js';
 import { HttpError } from '../utils/HttpError.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
 import { authenticate } from '../middlewares/auth.js';
 import { loginLimiter, changePasswordLimiter } from '../middlewares/rateLimiter.js';
 import { logAuthEvent } from '../utils/authLogger.js';
@@ -154,6 +155,12 @@ router.post('/change-password', changePasswordLimiter, async (req, res, next) =>
     next(error);
   }
 });
+
+// Cierra todas las sesiones del usuario: token_version + 1 invalida los JWT emitidos
+router.post('/logout', asyncHandler(async (req, res) => {
+  await pool.query('UPDATE user SET token_version = token_version + 1 WHERE user_id = ?', [req.user.userId]);
+  res.json({ message: 'Sesión cerrada' });
+}));
 
 router.use('/bundle-colors', bundleColorRoutes);
 router.use('/bundle-models', bundleModelRoutes);

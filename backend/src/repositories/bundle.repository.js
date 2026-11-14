@@ -132,12 +132,22 @@ export const bundleRepository = {
     try {
       await connection.beginTransaction();
 
-      const [rows] = await connection.query('SELECT user_id FROM bundle WHERE bundle_id = ?', [bundleId]);
+      const [rows] = await connection.query('SELECT user_id FROM bundle WHERE bundle_id = ? FOR UPDATE', [bundleId]);
       if (rows.length === 0) {
         await connection.rollback();
         return null;
       }
       const oldUserId = rows[0].user_id;
+
+      // No se puede reasignar un bandeo con una transferencia pendiente de aprobación
+      const [[pending]] = await connection.query(
+        `SELECT COUNT(*) AS c FROM transfer_history WHERE bundle_id = ? AND status = 'transfering'`,
+        [bundleId]
+      );
+      if (pending.c > 0) {
+        await connection.rollback();
+        return { error: 'Este bandeo tiene una transferencia pendiente de aprobación' };
+      }
 
       await connection.query('UPDATE bundle SET user_id = ? WHERE bundle_id = ?', [newUserId, bundleId]);
 
@@ -334,7 +344,21 @@ export const bundleRepository = {
         return { error: 'No eres el destinatario de esta transferencia' };
       }
       if (approve) {
-        await connection.query('UPDATE bundle SET user_id = ? WHERE bundle_id = ?', [transfer.new_user_id, transfer.bundle_id]);
+        // Guard: el bandeo debe seguir siendo del remitente y estar disponible.
+        // Si fue reasignado o entregado mientras la transferencia estaba pendiente, se aborta.
+        const [move] = await connection.query(
+          `UPDATE bundle SET user_id = ? WHERE bundle_id = ? AND user_id = ? AND status = 'available'`,
+          [transfer.new_user_id, transfer.bundle_id, transfer.old_user_id]
+        );
+        if (move.affectedRows === 0) {
+          // Marcarla canceled: si queda 'transfering' bloquea el bandeo para siempre
+          await connection.query(
+            `UPDATE transfer_history SET status = 'canceled' WHERE transfer_history_id = ?`,
+            [transferHistoryId]
+          );
+          await connection.commit();
+          return { error: 'El bandeo ya no está disponible para transferir (fue reasignado o entregado). La transferencia quedó cancelada.' };
+        }
         await connection.query(`UPDATE transfer_history SET status = 'completed' WHERE transfer_history_id = ?`, [transferHistoryId]);
       } else {
         await connection.query(`UPDATE transfer_history SET status = 'rejected' WHERE transfer_history_id = ?`, [transferHistoryId]);

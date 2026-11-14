@@ -20,9 +20,9 @@ export const bundleController = {
   async verifySerial(req, res) {
     const { serial } = req.params;
     const bundle = await bundleRepository.findBySerial(serial);
-    if (!bundle) throw new HttpError(404, 'Serial number not found');
-    if (Number(bundle.userId) !== Number(req.user.userId)) {
-      throw new HttpError(403, 'Este bundle no está asignado a tu usuario');
+    // Respuesta uniforme: no revelar si el serial existe pero pertenece a otro
+    if (!bundle || Number(bundle.userId) !== Number(req.user.userId)) {
+      throw new HttpError(404, 'Serial no encontrado en tu inventario');
     }
     res.json(bundle);
   },
@@ -66,6 +66,7 @@ export const bundleController = {
     }
     const bundle = await bundleRepository.assign(req.params.bundle_id, req.body.new_user_id, req.user.userId);
     if (!bundle) throw new HttpError(404, 'Bundle not found');
+    if (bundle.error) throw new HttpError(409, bundle.error);
     res.json(bundle);
   },
 

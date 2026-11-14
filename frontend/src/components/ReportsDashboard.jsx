@@ -59,6 +59,13 @@ function ReportsDashboard() {
   const [projects, setProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState('status:active');
   const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark-mode'));
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 640);
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   // Re-renderiza las gráficas al cambiar el tema claro/oscuro
   useEffect(() => {
@@ -369,8 +376,8 @@ function ReportsDashboard() {
         <div style={cardStyle}><div ref={dayLineRef} style={chartBox()} /></div>
       </div>
 
-      {/* Lista de entregas */}
-      <div style={{ ...cardStyle, marginTop: '1rem' }}>
+      {/* Lista de entregas: en celular ocupa todo el ancho, sin márgenes laterales */}
+      <div style={{ ...cardStyle, marginTop: '1rem', ...(isMobile ? { marginLeft: '-1rem', marginRight: '-1rem', borderRadius: 0, padding: '1rem 0.5rem' } : {}) }}>
         <h3 style={{ margin: '0 0 1rem', color: '#1a2340', fontSize: '1rem' }}>Entregas Registradas ({filteredDeliveries.length} de {data.deliveriesList.length})</h3>
         {data.deliveriesList.length === 0 ? (
           <p style={{ color: '#666' }}>No hay entregas registradas.</p>

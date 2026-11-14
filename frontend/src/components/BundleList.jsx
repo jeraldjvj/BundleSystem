@@ -13,6 +13,13 @@ function BundleList({ onEdit, onCreate, onImport, onAssign, onRefresh, inventory
   const scannerRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 640);
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   const columns = [
     { key: 'serialNumber', label: 'Número de Serie', value: b => b.serialNumber },
@@ -197,7 +204,7 @@ function BundleList({ onEdit, onCreate, onImport, onAssign, onRefresh, inventory
           No hay bandeos registrados
         </div>
       ) : (
-        <div style={{ overflowX: 'auto', backgroundColor: 'white', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}>
+        <div style={{ overflowX: 'auto', backgroundColor: 'white', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.06)', ...(inventory && isMobile ? { marginLeft: '-1rem', marginRight: '-1rem', borderRadius: 0 } : {}) }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: inventory ? 'fixed' : 'auto', minWidth: inventory ? '0' : '800px' }}>
             <thead>
               <tr style={{ backgroundColor: '#f8f9fa', borderBottom: '2px solid #eee' }}>

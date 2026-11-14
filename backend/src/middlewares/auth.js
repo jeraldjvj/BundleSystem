@@ -29,8 +29,8 @@ export const authenticate = async (req, _res, next) => {
       throw new HttpError(401, 'Sesión invalidada. Inicia sesión nuevamente.');
     }
 
-    // Con contraseña temporal solo se permite cambiarla
-    if (rows[0].must_change_password && req.path !== '/change-password') {
+    // Con contraseña temporal solo se permite cambiarla o cerrar sesión
+    if (rows[0].must_change_password && req.path !== '/change-password' && req.path !== '/logout') {
       throw new HttpError(403, 'Debes cambiar tu contraseña temporal antes de continuar.');
     }
 

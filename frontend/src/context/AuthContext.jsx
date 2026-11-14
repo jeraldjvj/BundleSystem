@@ -52,6 +52,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
+    // Invalida el token en el servidor (cierra todas las sesiones del usuario);
+    // si falla la red igual se limpia la sesión local
+    authService.logout().catch(() => {});
     setUser(null);
     setTempPassword('');
     localStorage.removeItem('user');

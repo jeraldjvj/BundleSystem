@@ -1,5 +1,14 @@
 import rateLimit from 'express-rate-limit';
 
+// Límite general de la API: evita abuso de endpoints pesados por IP
+export const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 600,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Demasiadas peticiones desde esta red. Espera y vuelve a intentar.' },
+});
+
 // Limita intentos de login por IP: frena fuerza bruta y password spraying
 export const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,

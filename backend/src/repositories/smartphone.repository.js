@@ -53,16 +53,21 @@ export const smartphoneRepository = {
   },
 
   async create({ smartphones_id, smartphone_model_id, tag_model, imei_1, distributor_id, status = 'available' }) {
-    let id = smartphones_id;
-    if (!id) {
+    // Sin AUTO_INCREMENT (el FK lo impide): MAX+1 con reintentos si otro
+    // insert concurrente gana la carrera
+    for (let attempt = 0; attempt < 3; attempt++) {
       const [[{ maxId }]] = await pool.query('SELECT MAX(smartphones_id) as maxId FROM smartphones_database');
-      id = (maxId || 0) + 1;
+      const id = smartphones_id || (maxId || 0) + 1;
+      try {
+        await pool.query(
+          'INSERT INTO smartphones_database (smartphones_id, smartphone_model_id, tag_model, imei_1, distributor_id, status) VALUES (?, ?, ?, ?, ?, ?)',
+          [id, smartphone_model_id, tag_model, imei_1, distributor_id, status],
+        );
+        return this.findById(id);
+      } catch (err) {
+        if (err.code !== 'ER_DUP_ENTRY' || smartphones_id || attempt === 2) throw err;
+      }
     }
-    await pool.query(
-      'INSERT INTO smartphones_database (smartphones_id, smartphone_model_id, tag_model, imei_1, distributor_id, status) VALUES (?, ?, ?, ?, ?, ?)',
-      [id, smartphone_model_id, tag_model, imei_1, distributor_id, status],
-    );
-    return this.findById(id);
   },
 
   async update(smartphonesId, data) {

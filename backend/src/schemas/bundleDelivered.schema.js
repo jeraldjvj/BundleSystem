@@ -11,7 +11,8 @@ export const createBundleDeliveredSchema = z.object({
   smartphones_id: z.coerce.number().int().positive(),
   client_full_name: z.string().min(1).max(120),
   client_phone: z.string().min(1).max(45),
-  client_picture: z.string().min(1).max(255),
+  // Solo rutas generadas por /upload-picture: evita URLs externas de rastreo
+  client_picture: z.string().regex(/^uploads\/[\w.-]+$/, 'La foto debe ser una imagen subida al servidor').max(255),
   store_code: z.string().min(1).max(45),
 });
 
