@@ -15,6 +15,7 @@ router.get('/', asyncHandler(bundleController.getAll));
 router.get('/verify-serial/:serial', asyncHandler(bundleController.verifySerial));
 router.get('/transfers/pending', asyncHandler(bundleController.pendingTransfers));
 router.get('/transfers/outgoing', asyncHandler(bundleController.outgoingTransfers));
+router.get('/transfers/history/all', asyncHandler(bundleController.allTransferHistory));
 router.get('/transfers/history', asyncHandler(bundleController.transferHistory));
 router.get('/:bundle_id', validate(bundleIdSchema, 'params'), asyncHandler(bundleController.getById));
 router.post('/', validate(createBundleSchema), asyncHandler(bundleController.create));

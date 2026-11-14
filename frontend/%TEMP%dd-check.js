@@ -18297,13 +18297,29 @@
       })
     );
     const exportToExcel = () => {
-      const visibleCols = deliveryColumns.filter((c) => canSeeProfiles || c.key !== "usuario" && c.key !== "ciudad");
-      const headers = ["N\xBA", ...visibleCols.filter((c) => c.key !== "fecha").map((c) => c.label), "Foto", "Fecha de Entrega"];
+      const exportCols = [
+        { label: "Cliente", value: (d) => d.client_full_name },
+        { label: "Telefono del Cliente", value: (d) => d.client_phone },
+        { label: "Tienda", value: (d) => d.store_name },
+        { label: "Store Code", value: (d) => d.store_code },
+        { label: "Usuario", value: (d) => d.delivered_by, onlyAdmin: true },
+        { label: "Mi ID", value: (d) => d.mi_id, onlyAdmin: true },
+        { label: "SN del Bandeo", value: (d) => d.serial_number },
+        { label: "Modelo de Bandeo", value: (d) => d.bundle_name },
+        { label: "IMEI", value: (d) => d.imei_1 },
+        { label: "Modelo Smartphone", value: (d) => d.model_name },
+        { label: "Ciudad", value: (d) => d.city, onlyAdmin: true }
+      ].filter((c) => canSeeProfiles || !c.onlyAdmin);
+      const headers = ["N\xBA", ...exportCols.map((c) => c.label), "Foto", "Fecha de Entrega"];
       const rows = filteredDeliveries.map((d, i) => [
         i + 1,
-        ...visibleCols.filter((c) => c.key !== "fecha").map((c) => c.value(d) || "\u2014"),
+        ...exportCols.map((c) => c.value(d) || "\u2014"),
         d.client_picture ? `${API_BASE}/${d.client_picture}` : "\u2014",
-        new Date(d.create_time).toLocaleString()
+        (() => {
+          const t = new Date(d.create_time);
+          const p = (n) => String(n).padStart(2, "0");
+          return `${t.getFullYear()}-${p(t.getMonth() + 1)}-${p(t.getDate())} ${p(t.getHours())}:${p(t.getMinutes())}:${p(t.getSeconds())}`;
+        })()
       ]);
       const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
       const fotoCol = headers.indexOf("Foto");

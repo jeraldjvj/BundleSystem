@@ -111,6 +111,7 @@ export const reportRepository = {
         bd.client_picture, bd.create_time, bd.store_code, bd.store_name,
         b.serial_number, bm.bundle_name,
         sp.imei_1, sm.model_name, st.city,
+        u.mi_id,
         CONCAT(up.first_name, ' ', up.last_name) AS delivered_by
       FROM bundle_delivered bd
       LEFT JOIN bundle b ON bd.bundle_id = b.bundle_id

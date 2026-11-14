@@ -73,6 +73,13 @@ export const bundleController = {
     res.json(await bundleRepository.findTransferHistory(req.user.userId));
   },
 
+  async allTransferHistory(req, res) {
+    if (req.user.levelUser !== 'Office Manager') {
+      throw new HttpError(403, 'Solo Office Manager puede ver el histórico completo de transferencias');
+    }
+    res.json(await bundleRepository.findAllTransferHistory());
+  },
+
   async cancelTransfer(req, res) {
     const result = await bundleRepository.cancelTransfer(
       req.params.transfer_history_id,

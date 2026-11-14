@@ -53,24 +53,36 @@ function DeliveryDetail() {
   );
 
   const exportToExcel = () => {
-    const visibleCols = deliveryColumns.filter(c => canSeeProfiles || (c.key !== 'usuario' && c.key !== 'ciudad'));
-    const headers = ['Nº', ...visibleCols.filter(c => c.key !== 'fecha').map(c => c.label), 'Foto', 'Fecha de Entrega'];
+    const exportCols = [
+      { label: 'Nombre de Cliente', value: d => d.client_full_name },
+      { label: 'Telefono del Cliente', value: d => d.client_phone },
+      { label: 'Nombre de Tienda', value: d => d.store_name },
+      { label: 'Codigo de Tienda', value: d => d.store_code },
+      { label: 'Nombre de Usuario', value: d => d.delivered_by, onlyAdmin: true },
+      { label: 'Mi ID', value: d => d.mi_id, onlyAdmin: true },
+      { label: 'SN del Bandeo', value: d => d.serial_number },
+      { label: 'Modelo de Bandeo', value: d => d.bundle_name },
+      { label: 'IMEI', value: d => d.imei_1 },
+      { label: 'Modelo Smartphone', value: d => d.model_name },
+      { label: 'Ciudad', value: d => d.city, onlyAdmin: true },
+    ].filter(c => canSeeProfiles || !c.onlyAdmin);
+    const headers = ['Nº', ...exportCols.map(c => c.label), 'Enlace de Foto de Entrega al Cliente', 'Fecha de Entrega'];
     const rows = filteredDeliveries.map((d, i) => [
       i + 1,
-      ...visibleCols.filter(c => c.key !== 'fecha').map(c => c.value(d) || '—'),
+      ...exportCols.map(c => c.value(d) || '—'),
       d.client_picture ? `${API_BASE}/${d.client_picture}` : '—',
-      new Date(d.create_time).toLocaleString(),
+      (() => { const t = new Date(d.create_time); const p = n => String(n).padStart(2, '0'); return `${t.getFullYear()}-${p(t.getMonth() + 1)}-${p(t.getDate())} ${p(t.getHours())}:${p(t.getMinutes())}:${p(t.getSeconds())}`; })(),
     ]);
     const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
     // Links clickeables en la columna Foto
-    const fotoCol = headers.indexOf('Foto');
+    const fotoCol = headers.indexOf('Enlace de Foto de Entrega al Cliente');
     filteredDeliveries.forEach((d, i) => {
       if (d.client_picture) {
         const cell = ws[XLSX.utils.encode_cell({ r: i + 1, c: fotoCol })];
         if (cell) cell.l = { Target: `${API_BASE}/${d.client_picture}` };
       }
     });
-    ws['!cols'] = headers.map((_, i) => ({ wch: i === fotoCol ? 40 : 22 }));
+    ws['!cols'] = headers.map((_, i) => ({ wch: i === 0 ? 5 : i === fotoCol ? 40 : 22 }));
     const headerStyle = {
       fill: { fgColor: { rgb: '2D3F6E' } },
       font: { color: { rgb: 'FFFFFF' }, bold: true, sz: 11 },
@@ -83,7 +95,10 @@ function DeliveryDetail() {
     ws['!rows'] = [{ hpt: 22 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Entregas');
-    XLSX.writeFile(wb, `detalle_entregas_${new Date().toISOString().substring(0, 10)}.xlsx`);
+    const now = new Date();
+    const p = n => String(n).padStart(2, '0');
+    const stamp = `${now.getFullYear()}-${p(now.getMonth() + 1)}-${p(now.getDate())}_${p(now.getHours())}-${p(now.getMinutes())}-${p(now.getSeconds())}`;
+    XLSX.writeFile(wb, `detalle_entregas_${stamp}.xlsx`);
   };
 
   return (

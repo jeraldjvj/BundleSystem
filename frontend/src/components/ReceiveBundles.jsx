@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import JsBarcode from 'jsbarcode';
+import * as XLSX from 'xlsx-js-style';
 import { bundleService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
@@ -87,6 +88,44 @@ function ReceiveBundles() {
     }
   };
 
+  const exportAllHistory = async () => {
+    try {
+      const res = await bundleService.getAllTransferHistory();
+      const headers = ['Nº', 'Serial', 'Modelo de Bandeo', 'Nombre de Usuario Remitente', 'Mi ID Remitente', 'Nombre de Usuario Destinatario', 'Mi ID Destinatario', 'Estado', 'Fecha'];
+      const rows = res.data.map((t, i) => [
+        i + 1,
+        t.serial_number || '—',
+        t.bundle_name || '—',
+        t.from_user_name || `Usuario #${t.old_user_id}`,
+        t.from_mi_id || '—',
+        t.to_user_name || `Usuario #${t.new_user_id}`,
+        t.to_mi_id || '—',
+        t.status || '—',
+        (() => { const d = new Date(t.create_time); const p = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`; })(),
+      ]);
+      const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+      ws['!cols'] = headers.map((_, i) => ({ wch: i === 0 ? 5 : (i === 3 || i === 5) ? 32 : 22 }));
+      const headerStyle = {
+        fill: { fgColor: { rgb: '2D3F6E' } },
+        font: { color: { rgb: 'FFFFFF' }, bold: true, sz: 11 },
+        alignment: { horizontal: 'center', vertical: 'center' }
+      };
+      headers.forEach((_, i) => {
+        const cell = ws[XLSX.utils.encode_cell({ r: 0, c: i })];
+        if (cell) cell.s = headerStyle;
+      });
+      ws['!rows'] = [{ hpt: 22 }];
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Transferencias');
+      const now = new Date();
+      const p = n => String(n).padStart(2, '0');
+      const stamp = `${now.getFullYear()}-${p(now.getMonth() + 1)}-${p(now.getDate())}_${p(now.getHours())}-${p(now.getMinutes())}-${p(now.getSeconds())}`;
+      XLSX.writeFile(wb, `historico_transferencias_${stamp}.xlsx`);
+    } catch (err) {
+      setError('Error al exportar el histórico: ' + (err.response?.data?.error || err.message));
+    }
+  };
+
   if (loading) return <div style={{ textAlign: 'center', padding: '2rem', color: '#555' }}>Cargando transferencias...</div>;
 
   return (
@@ -99,6 +138,23 @@ function ReceiveBundles() {
           </p>
         </div>
         <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+        {user?.levelUser === 'Office Manager' && (
+        <button
+          onClick={exportAllHistory}
+          title="Exportar todo el histórico de transferencias a Excel"
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+            padding: '0.6rem 1.15rem', backgroundColor: 'white', color: '#1a2340',
+            border: '1px solid #e0e0e0', borderRadius: '10px', cursor: 'pointer',
+            fontSize: '0.875rem', fontWeight: 600, boxShadow: '0 4px 14px rgba(0,0,0,0.06)'
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Exportar Histórico de Transferencia
+        </button>
+        )}
         <button
           onClick={openHistory}
           title="Ver histórico de transferencias"
