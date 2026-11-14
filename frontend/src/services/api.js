@@ -20,12 +20,15 @@ api.interceptors.request.use((config) => {
 });
 
 // 403 por cuenta inactiva o 401 por token expirado/inválido → cerrar sesión
+// (el login y el cambio de contraseña se excluyen: sus errores los maneja la propia pantalla)
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     const status = error.response?.status;
+    const url = error.config?.url || '';
+    const isAuthRequest = url.includes('/login') || url.includes('/change-password');
     const msg = error.response?.data?.error || '';
-    if ((status === 403 && msg.toLowerCase().includes('inactiva')) || status === 401) {
+    if (!isAuthRequest && ((status === 403 && msg.toLowerCase().includes('inactiva')) || status === 401)) {
       localStorage.removeItem('user');
       window.location.href = '/';
     }

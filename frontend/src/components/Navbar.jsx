@@ -80,10 +80,12 @@ function Navbar({ currentView, onViewChange, canAccessManagement, canAccessBundl
 
   const menuItems = [
     { view: 'reports', label: 'Reportes', show: true, icon: <svg {...iconProps}><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6"/><rect x="12" y="8" width="3" height="10"/><rect x="17" y="5" width="3" height="13"/></svg> },
+    { view: 'deliveryDetail', label: 'Detalle de Entrega', show: canAccessBundles, icon: <svg {...iconProps}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> },
     { view: 'users', label: 'Usuarios', show: canAccessManagement, icon: <svg {...iconProps}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> },
     { view: 'stores', label: 'Tiendas', show: canAccessManagement, icon: <svg {...iconProps}><path d="M3 9l1.5-5h15L21 9"/><path d="M4 9v11a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9"/><path d="M9 21v-7h6v7"/></svg> },
     { view: 'projects', label: 'Proyectos', show: canAccessManagement, icon: <svg {...iconProps}><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> },
     { view: 'bundleModels', label: 'Modelos de Bandeo', show: canAccessManagement, icon: <svg {...iconProps}><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg> },
+    { view: 'inventory', label: 'Inventario', show: canAccessDelivery, icon: <svg {...iconProps}><path d="M21 8l-9-5-9 5v8l9 5 9-5V8z"/><path d="M3.3 7l8.7 5 8.7-5"/><path d="M12 22V12"/><path d="M7.5 4.7l9 5.2"/></svg> },
     { view: 'bundles', label: 'Bandeos', show: canAccessBundles, icon: <svg {...iconProps}><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg> },
     { view: 'smartphoneModels', label: 'Modelos de Smartphone', show: canAccessManagement, icon: <svg {...iconProps}><rect x="6" y="2" width="12" height="20" rx="2"/><line x1="10" y1="18" x2="14" y2="18"/><line x1="9" y1="6" x2="15" y2="6"/></svg> },
     { view: 'smartphones', label: 'Smartphones', show: canAccessManagement, icon: <svg {...iconProps}><rect x="7" y="2" width="10" height="20" rx="2"/><line x1="10" y1="18" x2="14" y2="18"/></svg> },

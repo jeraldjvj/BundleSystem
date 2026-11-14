@@ -3,7 +3,7 @@ import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { bundleService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
-function BundleList({ onEdit, onCreate, onImport, onAssign, onRefresh }) {
+function BundleList({ onEdit, onCreate, onImport, onAssign, onRefresh, inventory = false }) {
   const { user } = useAuth();
   const canEditBundles = user?.levelUser === 'Office Manager' || user?.levelUser === 'admin';
   const [bundles, setBundles] = useState([]);
@@ -15,7 +15,6 @@ function BundleList({ onEdit, onCreate, onImport, onAssign, onRefresh }) {
   const [error, setError] = useState('');
 
   const columns = [
-    { key: 'bundleId', label: 'ID', value: b => String(b.bundleId) },
     { key: 'serialNumber', label: 'Número de Serie', value: b => b.serialNumber },
     { key: 'projectName', label: 'Proyecto', value: b => b.projectName || String(b.projectId) },
     { key: 'bundleModelName', label: 'Modelo de Bandeo', value: b => b.bundleModelName || String(b.bundleModelId) },
@@ -34,6 +33,11 @@ function BundleList({ onEdit, onCreate, onImport, onAssign, onRefresh }) {
     },
     { key: 'createTime', label: 'Fecha de Creación', value: b => b.createTime ? new Date(b.createTime).toLocaleDateString() : '' },
   ];
+
+  // En Inventario no se muestran "Asignado a" ni "Estado" (siempre es el propio usuario y "available")
+  const displayColumns = inventory
+    ? columns.filter(c => c.key !== 'assignee' && c.key !== 'status' && c.key !== 'createTime')
+    : columns;
 
   const filteredBundles = bundles.filter(b =>
     columns.every(c => {
@@ -113,8 +117,12 @@ function BundleList({ onEdit, onCreate, onImport, onAssign, onRefresh }) {
       const response = await bundleService.getBundles();
       let data = response.data;
 
+      // Inventario: solo los bandeos disponibles asignados al usuario en sesión
+      if (inventory) {
+        data = data.filter(b => b.userId === user.userId && b.status === 'available');
+      }
       // City Manager solo ve sus bundles y los de los usuarios a su cargo
-      if (user?.levelUser === 'City Manager') {
+      else if (user?.levelUser === 'City Manager') {
         const managerName = `${user.firstName || ''} ${user.lastName || ''}`.trim();
         data = data.filter(b => b.userId === user.userId || b.headInCharge === managerName);
       }
@@ -163,9 +171,10 @@ function BundleList({ onEdit, onCreate, onImport, onAssign, onRefresh }) {
     <div style={{ padding: '1rem', width: '100%', boxSizing: 'border-box' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <h2 style={{ margin: 0, color: '#1a2340', fontSize: '1.4rem' }}>Bandeos</h2>
+          <h2 style={{ margin: 0, color: '#1a2340', fontSize: '1.4rem' }}>{inventory ? 'Inventario' : 'Bandeos'}</h2>
           <p style={{ margin: '0.2rem 0 0', color: '#888', fontSize: '0.85rem' }}>{filteredBundles.length} de {bundles.length} bandeo(s)</p>
         </div>
+        {!inventory && (
         <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
           <button onClick={onImport} style={{ ...headerBtn, backgroundColor: '#eef2fb', color: '#2d3f6e', border: '1px solid #c7d3f0' }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -180,6 +189,7 @@ function BundleList({ onEdit, onCreate, onImport, onAssign, onRefresh }) {
             Agregar Bandeo
           </button>
         </div>
+        )}
       </div>
 
       {bundles.length === 0 ? (
@@ -188,11 +198,12 @@ function BundleList({ onEdit, onCreate, onImport, onAssign, onRefresh }) {
         </div>
       ) : (
         <div style={{ overflowX: 'auto', backgroundColor: 'white', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'auto', minWidth: '800px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: inventory ? 'fixed' : 'auto', minWidth: inventory ? '0' : '800px' }}>
             <thead>
               <tr style={{ backgroundColor: '#f8f9fa', borderBottom: '2px solid #eee' }}>
-                {columns.map(col => (
-                  <th key={col.key} style={{ padding: '0.9rem 1.25rem', textAlign: 'left', fontWeight: 'bold', color: '#495057', fontSize: '0.85rem', verticalAlign: 'top' }}>
+                <th style={{ padding: '0.9rem 0.5rem', width: inventory ? '36px' : '48px', textAlign: 'center', fontWeight: 'bold', color: '#495057', fontSize: '0.85rem', verticalAlign: 'middle' }}>Nº</th>
+                {displayColumns.map(col => (
+                  <th key={col.key} style={{ padding: inventory ? '0.7rem 0.4rem' : '0.9rem 1.25rem', textAlign: 'left', fontWeight: 'bold', color: '#495057', fontSize: inventory ? '0.78rem' : '0.85rem', verticalAlign: 'middle', whiteSpace: inventory ? 'normal' : 'nowrap' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <span>{col.label}</span>
                       <button
@@ -213,7 +224,7 @@ function BundleList({ onEdit, onCreate, onImport, onAssign, onRefresh }) {
                           <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                         </svg>
                       </button>
-                      {col.key === 'serialNumber' && (
+                      {col.key === 'serialNumber' && !inventory && (
                         <button
                           onClick={() => setShowScanner(true)}
                           style={{
@@ -262,20 +273,21 @@ function BundleList({ onEdit, onCreate, onImport, onAssign, onRefresh }) {
                     )}
                   </th>
                 ))}
-                <th style={{ padding: '0.9rem 1.25rem', textAlign: 'center', fontWeight: 'bold', color: '#495057', fontSize: '0.85rem' }}>Acciones</th>
+                {!inventory && <th style={{ padding: '0.9rem 1.25rem', textAlign: 'center', fontWeight: 'bold', color: '#495057', fontSize: '0.85rem' }}>Acciones</th>}
               </tr>
             </thead>
             <tbody>
-              {filteredBundles.map((bundle) => (
+              {filteredBundles.map((bundle, index) => (
                 <tr key={bundle.bundleId} style={{ borderBottom: '1px solid #f0f0f0' }}
                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f9fb'}
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
-                  {columns.map(col => (
-                    <td key={col.key} style={{ padding: '0.85rem 1.25rem', color: '#333', fontSize: '0.9rem' }}>
+                  <td style={{ padding: '0.85rem 0.5rem', color: '#666', fontSize: '0.9rem', textAlign: 'center' }}>{index + 1}</td>
+                  {displayColumns.map(col => (
+                    <td key={col.key} style={{ padding: inventory ? '0.7rem 0.4rem' : '0.85rem 1.25rem', color: '#333', fontSize: inventory ? '0.82rem' : '0.9rem', overflowWrap: 'break-word' }}>
                       {col.render ? col.render(bundle) : col.key === 'createTime' ? (col.value(bundle) || '-') : col.value(bundle)}
                     </td>
                   ))}
-                  <td style={{ padding: '0.85rem 1.25rem', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                  {!inventory && <td style={{ padding: '0.85rem 1.25rem', textAlign: 'center', whiteSpace: 'nowrap' }}>
                     <button
                       onClick={() => onAssign(bundle)}
                       style={{ ...actionBtn, color: '#17a2b8', borderColor: '#17a2b8' }}
@@ -316,12 +328,12 @@ function BundleList({ onEdit, onCreate, onImport, onAssign, onRefresh }) {
                       </svg>
                     </button>
                     </>)}
-                  </td>
+                  </td>}
                 </tr>
               ))}
               {filteredBundles.length === 0 && (
                 <tr>
-                  <td colSpan={columns.length + 1} style={{ padding: '2rem', textAlign: 'center', color: '#666' }}>
+                  <td colSpan={displayColumns.length + 1} style={{ padding: '2rem', textAlign: 'center', color: '#666' }}>
                     No se encontraron resultados con los filtros aplicados
                   </td>
                 </tr>

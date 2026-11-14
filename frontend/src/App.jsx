@@ -28,6 +28,7 @@ import BundleDeliveryForm from './components/BundleDeliveryForm';
 import BundleShareForm from './components/BundleShareForm';
 import ReceiveBundles from './components/ReceiveBundles';
 import ReportsDashboard from './components/ReportsDashboard';
+import DeliveryDetail from './components/DeliveryDetail';
 import Navbar from './components/Navbar';
 import './App.css';
 
@@ -537,6 +538,34 @@ function AppContent() {
           </div>
         ) : null}
 
+        {currentView === 'inventory' && canAccessDelivery ? (
+          showBundleForm ? (
+            <BundleForm
+              bundle={editingBundle}
+              onSave={handleBundleSave}
+              onCancel={handleBundleCancel}
+            />
+          ) : showBundleAssign ? (
+            <BundleAssignForm
+              bundle={assigningBundle}
+              onSave={handleBundleAssignSave}
+              onCancel={handleBundleAssignCancel}
+            />
+          ) : (
+            <BundleList
+              inventory
+              onEdit={handleEditBundle}
+              onAssign={handleAssignBundle}
+              onRefresh={bundleListRefresh}
+            />
+          )
+        ) : currentView === 'inventory' && !canAccessDelivery ? (
+          <div style={{ padding: '2rem', textAlign: 'center' }}>
+            <h2 style={{ color: '#333' }}>Acceso Denegado</h2>
+            <p style={{ color: '#666' }}>No tienes permisos para ver esta página. Solo usuarios con nivel Field Force pueden acceder.</p>
+          </div>
+        ) : null}
+
         {currentView === 'smartphones' && canAccessManagement ? (
           <>
             {showSmartphoneImport ? (
@@ -585,6 +614,15 @@ function AppContent() {
         ) : null}
 
         {currentView === 'reports' && <ReportsDashboard />}
+
+        {currentView === 'deliveryDetail' && canAccessBundles ? (
+          <DeliveryDetail />
+        ) : currentView === 'deliveryDetail' && !canAccessBundles ? (
+          <div style={{ padding: '2rem', textAlign: 'center' }}>
+            <h2 style={{ color: '#333' }}>Acceso Denegado</h2>
+            <p style={{ color: '#666' }}>No tienes permisos para ver esta página. Solo usuarios con nivel Office Manager o City Manager pueden acceder.</p>
+          </div>
+        ) : null}
 
         {currentView === 'bundleDelivery' && canAccessDelivery ? (
           <BundleDeliveryForm

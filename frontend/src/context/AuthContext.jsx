@@ -33,7 +33,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('user', JSON.stringify(response.data));
       return true;
     } catch (err) {
-      setError('Credenciales inválidas');
+      setError(err.response?.data?.error || 'No se pudo iniciar sesión');
       console.error('Login error:', err);
       return false;
     } finally {
