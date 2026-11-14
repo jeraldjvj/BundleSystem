@@ -97,7 +97,7 @@ router.post('/login', loginLimiter, async (req, res, next) => {
 
     // JWT firmado: identifica al usuario sin que el cliente pueda falsificarlo
     const token = jwt.sign(
-      { userId: user.user_id, levelUser: user.level_user },
+      { userId: user.user_id, levelUser: user.level_user, tv: user.token_version },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN || '8h' }
     );
@@ -144,8 +144,9 @@ router.post('/change-password', changePasswordLimiter, async (req, res, next) =>
     }
 
     const hash = await bcrypt.hash(newPassword, 10);
+    // token_version + 1 invalida todas las sesiones anteriores de este usuario
     await pool.query(
-      'UPDATE user SET password_hash = ?, must_change_password = 0, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?',
+      'UPDATE user SET password_hash = ?, must_change_password = 0, token_version = token_version + 1, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?',
       [hash, req.user.userId]
     );
     res.json({ message: 'Contraseña actualizada correctamente' });

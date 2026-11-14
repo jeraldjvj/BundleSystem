@@ -18,9 +18,15 @@ export const authenticate = async (req, _res, next) => {
       throw new HttpError(401, 'Sesión expirada o token inválido');
     }
 
-    const [rows] = await pool.query('SELECT status, must_change_password, level_user FROM user WHERE user_id = ?', [payload.userId]);
+    const [rows] = await pool.query('SELECT status, must_change_password, level_user, token_version FROM user WHERE user_id = ?', [payload.userId]);
     if (rows.length === 0 || rows[0].status !== 'active') {
       throw new HttpError(403, 'Cuenta inactiva. No puedes realizar cambios en el sistema.');
+    }
+
+    // Revocación: si la versión del token no coincide (la contraseña cambió),
+    // la sesión queda invalidada aunque el JWT no haya expirado
+    if (rows[0].token_version !== (payload.tv ?? -1)) {
+      throw new HttpError(401, 'Sesión invalidada. Inicia sesión nuevamente.');
     }
 
     // Con contraseña temporal solo se permite cambiarla

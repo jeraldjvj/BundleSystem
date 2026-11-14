@@ -101,7 +101,9 @@ export const userRepository = {
         
         // Una contraseña restablecida por el administrador es temporal:
         // el usuario deberá cambiarla en su próximo inicio de sesión
-        const mustChange = data.password_hash ? `, must_change_password = ${data.password_temporary ? 1 : 0}` : '';
+        const mustChange = data.password_hash
+          ? `, must_change_password = ${data.password_temporary ? 1 : 0}, token_version = token_version + 1`
+          : '';
         await connection.query(
           `UPDATE user SET ${userFields.map((field) => `${field} = ?`).join(', ')}${mustChange}, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?`,
           [...userFields.map((field) => data[field]), userId],

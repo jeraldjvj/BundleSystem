@@ -89,7 +89,15 @@ export const bundleDeliveredRepository = {
         [user_id, bundle_id, smartphones_id, client_full_name, client_phone, client_picture, create_time || new Date(), store_code, store_name],
       );
 
-      await connection.query('UPDATE smartphones_database SET status = ? WHERE smartphones_id = ?', ['delivered', smartphones_id]);
+      // Guard atómico: solo un request puede marcar el smartphone como entregado
+      const [phoneGuard] = await connection.query(
+        `UPDATE smartphones_database SET status = 'delivered' WHERE smartphones_id = ? AND status = 'available'`,
+        [smartphones_id]
+      );
+      if (phoneGuard.affectedRows === 0) {
+        await connection.rollback();
+        throw new HttpError(409, 'Este smartphone ya fue entregado');
+      }
 
       await connection.commit();
       return this.findById(result.insertId);

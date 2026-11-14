@@ -2,6 +2,7 @@ import { bundleDeliveredRepository } from '../repositories/bundleDelivered.repos
 import { bundleRepository } from '../repositories/bundle.repository.js';
 import { projectRepository } from '../repositories/project.repository.js';
 import { storeRepository } from '../repositories/store.repository.js';
+import { smartphoneRepository } from '../repositories/smartphone.repository.js';
 import { HttpError } from '../utils/HttpError.js';
 
 export const bundleDeliveredController = {
@@ -35,11 +36,22 @@ export const bundleDeliveredController = {
     if (Number(store.userId) !== Number(req.user.userId)) {
       throw new HttpError(403, 'La tienda no está asignada a tu usuario');
     }
+    // El smartphone debe existir y no haberse entregado antes
+    const phone = await smartphoneRepository.findById(req.body.smartphones_id);
+    if (!phone) throw new HttpError(404, 'Smartphone no encontrado');
+    if (phone.status !== 'available') {
+      throw new HttpError(409, 'Este smartphone ya fue entregado');
+    }
     const project = await projectRepository.findById(bundle.projectId);
     if (project && project.status !== 'active') {
       throw new HttpError(409, 'No se puede entregar un bandeo de un proyecto completado');
     }
-    const bundleDelivered = await bundleDeliveredRepository.create({ ...req.body, user_id: req.user.userId });
+    // store_name se toma de la BD, no del body — evita inconsistencias
+    const bundleDelivered = await bundleDeliveredRepository.create({
+      ...req.body,
+      user_id: req.user.userId,
+      store_name: store.storeName,
+    });
     res.status(201).json(bundleDelivered);
   },
 
