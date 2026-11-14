@@ -15,6 +15,8 @@ import reportRoutes from './report.routes.js';
 import { pool } from '../config/database.js';
 import { HttpError } from '../utils/HttpError.js';
 import { authenticate } from '../middlewares/auth.js';
+import { loginLimiter, changePasswordLimiter } from '../middlewares/rateLimiter.js';
+import { logAuthEvent } from '../utils/authLogger.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
@@ -22,7 +24,10 @@ const router = Router();
 
 router.get('/health', (_req, res) => res.json({ status: 'ok' }));
 
-router.post('/login', async (req, res, next) => {
+// Hash dummy para que usuarios inexistentes tarden lo mismo que los reales (anti-enumeración)
+const DUMMY_HASH = '$2b$10$C6UzMDM.H6dfI/f/IKcEeO7y5qO2z8Yl2e0n1o3sVf4bJ8g8F0g6G';
+
+router.post('/login', loginLimiter, async (req, res, next) => {
   try {
     const { email, password } = req.body;
     
@@ -38,24 +43,32 @@ router.post('/login', async (req, res, next) => {
       [email, email]
     );
 
-    if (users.length === 0) {
-      throw new HttpError(401, 'Invalid credentials');
-    }
-
     const user = users[0];
+    const invalid = () => {
+      logAuthEvent(req, email, 'credenciales_invalidas');
+      throw new HttpError(401, 'Credenciales inválidas');
+    };
+
+    // Solo se aceptan contraseñas cifradas con bcrypt; un hash inválido cuenta como fallo.
+    // Cuando el usuario no existe se compara contra el hash dummy para no revelarlo por el tiempo.
+    const hashToCheck = user ? user.password_hash : DUMMY_HASH;
+    const isPasswordValid = await bcrypt.compare(password, hashToCheck).catch(() => false);
+
+    if (!user) {
+      invalid();
+    }
 
     // Usuario inactivo no puede iniciar sesión
     if (user.status !== 'active') {
+      logAuthEvent(req, email, 'cuenta_inactiva');
       throw new HttpError(403, 'Cuenta inactiva. Contacta al administrador.');
     }
 
     // Bloqueo por intentos fallidos: máximo 5, se desbloquea al día siguiente
     if (user.locked_until && new Date(user.locked_until) > new Date()) {
+      logAuthEvent(req, email, 'cuenta_bloqueada');
       throw new HttpError(403, 'Cuenta bloqueada por demasiados intentos fallidos. Intenta nuevamente mañana.');
     }
-
-    // Solo se aceptan contraseñas cifradas con bcrypt; un hash inválido cuenta como fallo
-    const isPasswordValid = await bcrypt.compare(password, user.password_hash).catch(() => false);
 
     if (!isPasswordValid) {
       const attempts = (user.failed_attempts || 0) + 1;
@@ -68,9 +81,11 @@ router.post('/login', async (req, res, next) => {
           'UPDATE user SET failed_attempts = 0, locked_until = ? WHERE user_id = ?',
           [tomorrow, user.user_id]
         );
+        logAuthEvent(req, email, 'cuenta_bloqueada', `tras ${attempts} intentos`);
         throw new HttpError(403, 'Cuenta bloqueada por demasiados intentos fallidos. Intenta nuevamente mañana.');
       }
       await pool.query('UPDATE user SET failed_attempts = ? WHERE user_id = ?', [attempts, user.user_id]);
+      logAuthEvent(req, email, 'contrasena_incorrecta', `intento ${attempts}/5`);
       throw new HttpError(401, `Credenciales inválidas. Te quedan ${5 - attempts} intento(s).`);
     }
 
@@ -78,6 +93,7 @@ router.post('/login', async (req, res, next) => {
     if (user.failed_attempts > 0 || user.locked_until) {
       await pool.query('UPDATE user SET failed_attempts = 0, locked_until = NULL WHERE user_id = ?', [user.user_id]);
     }
+    logAuthEvent(req, email, 'login_ok');
 
     // JWT firmado: identifica al usuario sin que el cliente pueda falsificarlo
     const token = jwt.sign(
@@ -107,7 +123,7 @@ router.post('/login', async (req, res, next) => {
 router.use(authenticate);
 
 // Cambio de contraseña del usuario en sesión (requiere la contraseña actual)
-router.post('/change-password', async (req, res, next) => {
+router.post('/change-password', changePasswordLimiter, async (req, res, next) => {
   try {
     const { currentPassword, newPassword } = req.body;
     if (!currentPassword || !newPassword) {

@@ -3,7 +3,7 @@ import * as XLSX from 'xlsx-js-style';
 import { reportService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
-const API_BASE = `http://${window.location.hostname}:3000`;
+const API_BASE = `${window.location.protocol}//${window.location.hostname}:3000`;
 
 function DeliveryDetail() {
   const { user } = useAuth();

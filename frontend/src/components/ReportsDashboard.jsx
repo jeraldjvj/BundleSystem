@@ -3,7 +3,7 @@ import * as echarts from 'echarts';
 import { reportService, projectService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
-const API_BASE = `http://${window.location.hostname}:3000`;
+const API_BASE = `${window.location.protocol}//${window.location.hostname}:3000`;
 
 const PALETTE = ['#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de', '#3ba272', '#fc8452', '#9a60b4'];
 

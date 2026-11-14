@@ -91,11 +91,13 @@ function ReceiveBundles() {
   const exportAllHistory = async () => {
     try {
       const res = await bundleService.getAllTransferHistory();
-      const headers = ['Nº', 'Serial', 'Modelo de Bandeo', 'Nombre de Usuario Remitente', 'Mi ID Remitente', 'Nombre de Usuario Destinatario', 'Mi ID Destinatario', 'Estado', 'Fecha'];
+      const headers = ['Nº', 'Serial', 'Modelo de Bandeo', 'Quién Solicitó la Transferencia', 'Mi ID Solicitante', 'Nombre de Usuario Remitente', 'Mi ID Remitente', 'Nombre de Usuario Destinatario', 'Mi ID Destinatario', 'Estado', 'Fecha'];
       const rows = res.data.map((t, i) => [
         i + 1,
         t.serial_number || '—',
         t.bundle_name || '—',
+        t.manager_user_name || `Usuario #${t.manager_user_id}`,
+        t.manager_mi_id || '—',
         t.from_user_name || `Usuario #${t.old_user_id}`,
         t.from_mi_id || '—',
         t.to_user_name || `Usuario #${t.new_user_id}`,
@@ -104,7 +106,7 @@ function ReceiveBundles() {
         (() => { const d = new Date(t.create_time); const p = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`; })(),
       ]);
       const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-      ws['!cols'] = headers.map((_, i) => ({ wch: i === 0 ? 5 : (i === 3 || i === 5) ? 32 : 22 }));
+      ws['!cols'] = headers.map((_, i) => ({ wch: i === 0 ? 5 : (i === 3 || i === 5 || i === 7) ? 32 : 22 }));
       const headerStyle = {
         fill: { fgColor: { rgb: '2D3F6E' } },
         font: { color: { rgb: 'FFFFFF' }, bold: true, sz: 11 },

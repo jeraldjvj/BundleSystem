@@ -29,7 +29,7 @@ function UserForm({ user, onSave, onCancel }) {
     email: '',
     password_hash: '',
     status: 'active',
-    level_user: 'field force',
+    level_user: 'Field Force',
     first_name: '',
     last_name: '',
     role_title: '',
@@ -100,7 +100,7 @@ function UserForm({ user, onSave, onCancel }) {
       if (user.profilePicture) {
         setPhotoPreview(user.profilePicture.startsWith('http')
           ? user.profilePicture
-          : `http://${window.location.hostname}:3000/uploads/${user.profilePicture}`);
+          : `${window.location.protocol}//${window.location.hostname}:3000/uploads/${user.profilePicture}`);
       }
     }
   }, [user]);

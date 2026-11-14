@@ -4,7 +4,10 @@ const config = {
   env: process.env.NODE_ENV ?? 'development',
   port: Number(process.env.PORT ?? 3000),
   apiPrefix: process.env.API_PREFIX ?? '/api/v1',
-  corsOrigin: process.env.CORS_ORIGIN ?? '*',
+  // Lista separada por comas; '*' solo si se define explícitamente
+  corsOrigin: process.env.CORS_ORIGIN === '*'
+    ? '*'
+    : (process.env.CORS_ORIGIN ?? 'http://localhost:5173').split(',').map(o => o.trim()).filter(Boolean),
   db: {
     host: process.env.DB_HOST ?? 'localhost',
     port: Number(process.env.DB_PORT ?? 3306),

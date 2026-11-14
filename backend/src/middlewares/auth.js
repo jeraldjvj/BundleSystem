@@ -18,7 +18,7 @@ export const authenticate = async (req, _res, next) => {
       throw new HttpError(401, 'Sesión expirada o token inválido');
     }
 
-    const [rows] = await pool.query('SELECT status, must_change_password FROM user WHERE user_id = ?', [payload.userId]);
+    const [rows] = await pool.query('SELECT status, must_change_password, level_user FROM user WHERE user_id = ?', [payload.userId]);
     if (rows.length === 0 || rows[0].status !== 'active') {
       throw new HttpError(403, 'Cuenta inactiva. No puedes realizar cambios en el sistema.');
     }
@@ -28,7 +28,9 @@ export const authenticate = async (req, _res, next) => {
       throw new HttpError(403, 'Debes cambiar tu contraseña temporal antes de continuar.');
     }
 
-    req.user = { userId: payload.userId, levelUser: payload.levelUser };
+    // El nivel se lee de la BD en cada petición: si el rol cambia, aplica de inmediato
+    // aunque el token tenga el nivel anterior guardado
+    req.user = { userId: payload.userId, levelUser: rows[0].level_user };
     next();
   } catch (error) {
     next(error);

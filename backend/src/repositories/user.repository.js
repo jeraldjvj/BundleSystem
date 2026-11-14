@@ -48,6 +48,13 @@ export const userRepository = {
     return rows.length ? toUser(rows[0]) : null;
   },
 
+  async countActiveOfficeManagers() {
+    const [[row]] = await pool.query(
+      `SELECT COUNT(*) AS c FROM user WHERE level_user = 'Office Manager' AND status = 'active'`
+    );
+    return row.c;
+  },
+
   async create({ mi_id, email, password_hash, status = 'active', level_user = 'field force', first_name, last_name, role_title, date_of_birth, city, head_in_charge, profile_picture }) {
     const connection = await pool.getConnection();
     try {

@@ -62,7 +62,7 @@ function UserList({ onEdit, onRefresh, onCreate }) {
               const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim();
               const initials = ((user.firstName?.charAt(0) || '') + (user.lastName?.charAt(0) || '')).toUpperCase() || user.email?.charAt(0).toUpperCase() || 'U';
               const photoUrl = user.profilePicture
-                ? (user.profilePicture.startsWith('http') ? user.profilePicture : `http://${window.location.hostname}:3000/uploads/${user.profilePicture}`)
+                ? (user.profilePicture.startsWith('http') ? user.profilePicture : `${window.location.protocol}//${window.location.hostname}:3000/uploads/${user.profilePicture}`)
                 : null;
               return (
               <tr key={user.userId} style={{ borderBottom: '1px solid #f0f0f0' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f9fb'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>

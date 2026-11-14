@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { userProfileController } from '../controllers/userProfile.controller.js';
 import { validate } from '../middlewares/validate.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
+import { requireRole } from '../middlewares/requireRole.js';
 import {
   profileIdSchema,
   createUserProfileSchema,
@@ -10,15 +11,16 @@ import {
 
 const router = Router();
 
-router.get('/', asyncHandler(userProfileController.getAll));
-router.get('/:profile_id', validate(profileIdSchema, 'params'), asyncHandler(userProfileController.getById));
-router.post('/', validate(createUserProfileSchema), asyncHandler(userProfileController.create));
+router.get('/', requireRole('Office Manager', 'City Manager'), asyncHandler(userProfileController.getAll));
+router.get('/:profile_id', requireRole('Office Manager', 'City Manager'), validate(profileIdSchema, 'params'), asyncHandler(userProfileController.getById));
+router.post('/', requireRole('Office Manager'), validate(createUserProfileSchema), asyncHandler(userProfileController.create));
 router.patch(
   '/:profile_id',
+  requireRole('Office Manager'),
   validate(profileIdSchema, 'params'),
   validate(updateUserProfileSchema),
   asyncHandler(userProfileController.update),
 );
-router.delete('/:profile_id', validate(profileIdSchema, 'params'), asyncHandler(userProfileController.remove));
+router.delete('/:profile_id', requireRole('Office Manager'),  validate(profileIdSchema, 'params'), asyncHandler(userProfileController.remove));
 
 export default router;

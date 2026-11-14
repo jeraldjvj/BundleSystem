@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { storeController } from '../controllers/store.controller.js';
 import { validate } from '../middlewares/validate.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
+import { requireRole } from '../middlewares/requireRole.js';
 import {
   storeCodeSchema,
   createStoreSchema,
@@ -10,16 +11,17 @@ import {
 
 const router = Router();
 
-router.get('/', asyncHandler(storeController.getAll));
 router.get('/mine', asyncHandler(storeController.getByUserId));
-router.get('/:store_code', validate(storeCodeSchema, 'params'), asyncHandler(storeController.getById));
-router.post('/', validate(createStoreSchema), asyncHandler(storeController.create));
+router.get('/', requireRole('Office Manager'), asyncHandler(storeController.getAll));
+router.get('/:store_code', requireRole('Office Manager'), validate(storeCodeSchema, 'params'), asyncHandler(storeController.getById));
+router.post('/', requireRole('Office Manager'), validate(createStoreSchema), asyncHandler(storeController.create));
 router.patch(
   '/:store_code',
+  requireRole('Office Manager'),
   validate(storeCodeSchema, 'params'),
   validate(updateStoreSchema),
   asyncHandler(storeController.update),
 );
-router.delete('/:store_code', validate(storeCodeSchema, 'params'), asyncHandler(storeController.remove));
+router.delete('/:store_code', requireRole('Office Manager'), validate(storeCodeSchema, 'params'), asyncHandler(storeController.remove));
 
 export default router;
