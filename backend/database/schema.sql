@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS `bundle_system`.`project` (
   `start_date` DATE NOT NULL,
   `finish_date` DATE NULL,
   `status` VARCHAR(50) NULL DEFAULT 'active',
+  `limiter_per_client` INT NOT NULL DEFAULT 0,
   `create_time` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`project_id`),
   UNIQUE INDEX `project_id_UNIQUE` (`project_id` ASC) VISIBLE)
@@ -156,6 +157,7 @@ CREATE TABLE IF NOT EXISTS `bundle_system`.`bundle_delivered` (
   `bundle_id` INT NOT NULL,
   `smartphones_id` INT NOT NULL,
   `client_full_name` VARCHAR(120) NOT NULL,
+  `client_ci` VARCHAR(20) NOT NULL,
   `client_phone` VARCHAR(45) NOT NULL,
   `client_picture` VARCHAR(255) NOT NULL,
   `create_time` TIMESTAMP NOT NULL,

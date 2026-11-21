@@ -1,8 +1,8 @@
 import { pool } from '../config/database.js';
 import { HttpError } from '../utils/HttpError.js';
 
-const COLUMNS = 'bundle_delivered_id, user_id, bundle_id, smartphones_id, client_full_name, client_phone, client_picture, create_time, store_code, store_name';
-const UPDATABLE_FIELDS = ['user_id', 'bundle_id', 'smartphones_id', 'client_full_name', 'client_phone', 'client_picture', 'create_time', 'store_code', 'store_name'];
+const COLUMNS = 'bundle_delivered_id, user_id, bundle_id, smartphones_id, client_full_name, client_ci, client_phone, client_picture, create_time, store_code, store_name';
+const UPDATABLE_FIELDS = ['user_id', 'bundle_id', 'smartphones_id', 'client_full_name', 'client_ci', 'client_phone', 'client_picture', 'create_time', 'store_code', 'store_name'];
 
 const toBundleDelivered = (row) => ({
   bundleDeliveredId: row.bundle_delivered_id,
@@ -10,6 +10,7 @@ const toBundleDelivered = (row) => ({
   bundleId: row.bundle_id,
   smartphonesId: row.smartphones_id,
   clientFullName: row.client_full_name,
+  clientCi: row.client_ci,
   clientPhone: row.client_phone,
   clientPicture: row.client_picture,
   createTime: row.create_time,
@@ -68,7 +69,17 @@ export const bundleDeliveredRepository = {
     return rows.length > 0;
   },
 
-  async create({ user_id, bundle_id, smartphones_id, client_full_name, client_phone, client_picture, create_time, store_code, store_name }) {
+  async countByClientCiInProject(clientCi, projectId) {
+    const [rows] = await pool.query(`
+      SELECT COUNT(*) AS count
+      FROM bundle_delivered bd
+      JOIN bundle b ON bd.bundle_id = b.bundle_id
+      WHERE bd.client_ci = ? AND b.project_id = ?
+    `, [clientCi, projectId]);
+    return rows[0].count;
+  },
+
+  async create({ user_id, bundle_id, smartphones_id, client_full_name, client_ci, client_phone, client_picture, create_time, store_code, store_name }) {
     const connection = await pool.getConnection();
     try {
       await connection.beginTransaction();
@@ -85,8 +96,8 @@ export const bundleDeliveredRepository = {
       }
 
       const [result] = await connection.query(
-        'INSERT INTO bundle_delivered (user_id, bundle_id, smartphones_id, client_full_name, client_phone, client_picture, create_time, store_code, store_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        [user_id, bundle_id, smartphones_id, client_full_name, client_phone, client_picture, create_time || new Date(), store_code, store_name],
+        'INSERT INTO bundle_delivered (user_id, bundle_id, smartphones_id, client_full_name, client_ci, client_phone, client_picture, create_time, store_code, store_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [user_id, bundle_id, smartphones_id, client_full_name, client_ci, client_phone, client_picture, create_time || new Date(), store_code, store_name],
       );
 
       // Guard atómico: solo un request puede marcar el smartphone como entregado

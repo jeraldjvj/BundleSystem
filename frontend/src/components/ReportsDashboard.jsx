@@ -277,6 +277,7 @@ function ReportsDashboard() {
 
   const deliveryColumns = [
     { key: 'cliente', label: 'Cliente', value: d => d.client_full_name },
+    { key: 'ci', label: 'CI', value: d => d.client_ci },
     { key: 'tienda', label: 'Tienda', value: d => d.store_name },
     { key: 'usuario', label: 'Usuario', value: d => d.delivered_by },
     { key: 'sn', label: 'SN del Bandeo', value: d => d.serial_number },
@@ -461,6 +462,7 @@ function ReportsDashboard() {
                     >
                       {d.client_full_name}
                     </td>
+                    <td style={{ padding: '0.5rem', color: '#666' }}>{d.client_ci || '-'}</td>
                     <td style={{ padding: '0.5rem', color: '#666' }}>{d.store_name}</td>
                     {canSeeProfiles && <td style={{ padding: '0.5rem', color: '#666' }}>{d.delivered_by || '-'}</td>}
                     <td style={{ padding: '0.5rem', color: '#666' }}>{d.serial_number || '-'}</td>
@@ -484,7 +486,7 @@ function ReportsDashboard() {
                 ))}
                 {filteredDeliveries.length === 0 && (
                   <tr>
-                    <td colSpan="9" style={{ padding: '1.5rem', textAlign: 'center', color: '#999', fontSize: '0.9rem' }}>
+                    <td colSpan="10" style={{ padding: '1.5rem', textAlign: 'center', color: '#999', fontSize: '0.9rem' }}>
                       No se encontraron resultados para los filtros aplicados
                     </td>
                   </tr>
@@ -549,6 +551,7 @@ function ReportsDashboard() {
               <tbody>
                 {[
                   ['Cliente', detailDelivery.client_full_name],
+                  ['Número de Carnet (CI)', detailDelivery.client_ci],
                   ['Teléfono', detailDelivery.client_phone],
                   ['Serial del Bandeo', detailDelivery.serial_number],
                   ['Modelo de Bandeo', detailDelivery.bundle_name],

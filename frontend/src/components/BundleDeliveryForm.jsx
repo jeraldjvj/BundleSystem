@@ -76,13 +76,14 @@ function BundleDeliveryForm({ onSave, onCancel }) {
   const [storeSearch, setStoreSearch] = useState('');
   const [showStoreDropdown, setShowStoreDropdown] = useState(false);
 
-  const [formData, setFormData] = useState({ client_full_name: '', client_phone: '' });
+  const [formData, setFormData] = useState({ client_full_name: '', client_ci: '', client_phone: '' });
   const [picture, setPicture] = useState(null);
   const [picturePreview, setPicturePreview] = useState('');
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const [scanTarget, setScanTarget] = useState(null); // 'serial' | 'imei'
     const scannerRef = useRef(null);
@@ -277,6 +278,7 @@ function BundleDeliveryForm({ onSave, onCancel }) {
     if (!selectedStore) return setError('Selecciona un store');
     if (!picture) return setError('Sube o toma una fotografía del cliente');
     if (!formData.client_full_name.trim()) return setError('El nombre del cliente es requerido');
+    if (!/^\d{6,9}$/.test(formData.client_ci)) return setError('El número de carnet debe tener entre 6 y 9 dígitos');
     if (!/^\d{8}$/.test(formData.client_phone)) return setError('El teléfono debe tener exactamente 8 dígitos');
 
     setSubmitting(true);
@@ -287,13 +289,15 @@ function BundleDeliveryForm({ onSave, onCancel }) {
         bundle_id: verifiedBundle.bundleId,
         smartphones_id: verifiedPhone.smartphonesId,
         client_full_name: formData.client_full_name.trim(),
+        client_ci: formData.client_ci.trim(),
         client_phone: `+591${formData.client_phone.trim()}`,
         client_picture: upload.data.client_picture,
         store_code: selectedStore.storeCode,
         store_name: selectedStore.storeName,
       });
       setSuccess('Entrega registrada correctamente');
-      setTimeout(() => onSave(), 800);
+      setShowSuccessModal(true);
+      setTimeout(() => onSave(), 1500);
     } catch (err) {
       setError('Error al registrar la entrega: ' + (err.response?.data?.error || err.message));
     } finally {
@@ -390,6 +394,23 @@ function BundleDeliveryForm({ onSave, onCancel }) {
               style={inputStyle}
               required
             />
+          </div>
+          <div style={{ marginBottom: '1rem' }}>
+            <label style={labelStyle}>Número de Carnet (CI) *</label>
+            <input
+              type="text"
+              value={formData.client_ci}
+              onChange={(e) => setFormData(prev => ({ ...prev, client_ci: e.target.value.replace(/\D/g, '').slice(0, 9) }))}
+              maxLength={9}
+              inputMode="numeric"
+              pattern="[0-9]{6,9}"
+              style={inputStyle}
+              required
+              placeholder="Ej. 123456789"
+            />
+            <p style={{ margin: '0.3rem 0 0', fontSize: '0.8rem', color: '#666' }}>
+              Entre 6 y 9 dígitos numéricos
+            </p>
           </div>
           <div style={{ marginBottom: '1rem' }}>
             <label style={labelStyle}>Teléfono *</label>
@@ -645,6 +666,74 @@ function BundleDeliveryForm({ onSave, onCancel }) {
             <p style={{ fontSize: '0.875rem', color: '#666', marginTop: '0.75rem', textAlign: 'center' }}>
               Apunta la cámara al código de barras CODE_128
             </p>
+          </div>
+        </div>
+      )}
+
+      {showSuccessModal && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+            zIndex: 3000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            animation: 'fadeIn 0.2s ease-out'
+          }}
+          onClick={() => setShowSuccessModal(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: 'white',
+              borderRadius: '16px',
+              padding: '2rem',
+              maxWidth: '400px',
+              width: '90%',
+              textAlign: 'center',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+            }}
+          >
+            <div style={{
+              width: '64px',
+              height: '64px',
+              borderRadius: '50%',
+              backgroundColor: '#28a745',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 1rem'
+            }}>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            </div>
+            <h3 style={{ margin: '0 0 0.5rem', color: '#1a2340', fontSize: '1.25rem' }}>¡Entrega registrada!</h3>
+            <p style={{ margin: '0 0 1.5rem', color: '#666', fontSize: '0.95rem' }}>
+              El registro se guardó correctamente en el sistema.
+            </p>
+            <button
+              type="button"
+              onClick={() => setShowSuccessModal(false)}
+              style={{
+                padding: '0.75rem 2rem',
+                backgroundColor: '#5470c6',
+                color: 'white',
+                border: 'none',
+                borderRadius: '10px',
+                cursor: 'pointer',
+                fontSize: '1rem',
+                fontWeight: 'bold',
+                width: '100%'
+              }}
+            >
+              Aceptar
+            </button>
           </div>
         </div>
       )}

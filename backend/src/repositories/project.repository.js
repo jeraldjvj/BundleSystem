@@ -1,7 +1,7 @@
 import { pool } from '../config/database.js';
 
-const COLUMNS = 'project_id, project_name, start_date, finish_date, status, create_time';
-const UPDATABLE_FIELDS = ['project_name', 'start_date', 'finish_date', 'status'];
+const COLUMNS = 'project_id, project_name, start_date, finish_date, status, limiter_per_client, create_time';
+const UPDATABLE_FIELDS = ['project_name', 'start_date', 'finish_date', 'status', 'limiter_per_client'];
 
 const toProject = (row) => ({
   projectId: row.project_id,
@@ -9,6 +9,7 @@ const toProject = (row) => ({
   startDate: row.start_date,
   finishDate: row.finish_date,
   status: row.status,
+  limiterPerClient: row.limiter_per_client,
   createTime: row.create_time,
 });
 
@@ -23,10 +24,10 @@ export const projectRepository = {
     return rows.length ? toProject(rows[0]) : null;
   },
 
-  async create({ project_name, start_date, status = 'active' }) {
+  async create({ project_name, start_date, status = 'active', limiter_per_client = 0 }) {
     const [result] = await pool.query(
-      'INSERT INTO project (project_name, start_date, status, create_time) VALUES (?, ?, ?, ?)',
-      [project_name, start_date, status, new Date()],
+      'INSERT INTO project (project_name, start_date, status, limiter_per_client, create_time) VALUES (?, ?, ?, ?, ?)',
+      [project_name, start_date, status, limiter_per_client, new Date()],
     );
     return this.findById(result.insertId);
   },

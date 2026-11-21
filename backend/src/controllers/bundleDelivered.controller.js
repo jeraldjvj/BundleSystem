@@ -46,6 +46,13 @@ export const bundleDeliveredController = {
     if (project && project.status !== 'active') {
       throw new HttpError(409, 'No se puede entregar un bandeo de un proyecto completado');
     }
+    // Validación de límite por cliente (CI) según limiter_per_client del proyecto
+    if (project && project.limiterPerClient > 0 && req.body.client_ci) {
+      const existingCount = await bundleDeliveredRepository.countByClientCiInProject(req.body.client_ci, bundle.projectId);
+      if (existingCount >= project.limiterPerClient) {
+        throw new HttpError(409, `El cliente ya alcanzó el límite de ${project.limiterPerClient} entregas para este proyecto`);
+      }
+    }
     // store_name se toma de la BD, no del body — evita inconsistencias
     const bundleDelivered = await bundleDeliveredRepository.create({
       ...req.body,

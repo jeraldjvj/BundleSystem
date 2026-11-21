@@ -6,6 +6,7 @@ function ProjectForm({ project, onSave, onCancel }) {
     project_name: '',
     start_date: '',
     status: 'active',
+    limiter_per_client: 0,
   });
 
   const [message, setMessage] = useState('');
@@ -17,6 +18,7 @@ function ProjectForm({ project, onSave, onCancel }) {
         project_name: project.projectName,
         start_date: project.startDate ? project.startDate.split('T')[0] : '',
         status: project.status || 'active',
+        limiter_per_client: project.limiterPerClient || 0,
       });
     }
   }, [project]);
@@ -98,6 +100,24 @@ function ProjectForm({ project, onSave, onCancel }) {
             required
             style={{ width: '100%', padding: '0.7rem 0.9rem', border: '1px solid #e0e0e0', borderRadius: '10px', fontSize: '0.95rem', backgroundColor: '#f8f9fa', color: '#333', colorScheme: 'light', outline: 'none', boxSizing: 'border-box' }}
           />
+        </div>
+
+        <div style={{ marginBottom: '1rem' }}>
+          <label htmlFor="limiter_per_client" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+            Límite por Cliente (0 = sin límite):
+          </label>
+          <input
+            type="number"
+            id="limiter_per_client"
+            name="limiter_per_client"
+            value={formData.limiter_per_client}
+            onChange={handleChange}
+            min="0"
+            style={{ width: '100%', padding: '0.7rem 0.9rem', border: '1px solid #e0e0e0', borderRadius: '10px', fontSize: '0.95rem', backgroundColor: '#f8f9fa', color: '#333', colorScheme: 'light', outline: 'none', boxSizing: 'border-box' }}
+          />
+          <p style={{ margin: '0.5rem 0 0', fontSize: '0.8rem', color: '#666' }}>
+            Número máximo de entregas por cliente (CI) en este proyecto. 0 significa sin límite.
+          </p>
         </div>
 
         {project && (

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx-js-style';
-import { reportService } from '../services/api';
+import { reportService, bundleDeliveredService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 const API_BASE = `${window.location.protocol}//${window.location.hostname}:3000`;
@@ -14,9 +14,13 @@ function DeliveryDetail() {
   const [detailDelivery, setDetailDelivery] = useState(null);
   const [deliveryFilters, setDeliveryFilters] = useState({});
   const [deliveryActiveFilter, setDeliveryActiveFilter] = useState(null);
+  const [editingDelivery, setEditingDelivery] = useState(null);
+  const [deletingDelivery, setDeletingDelivery] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const level = user?.levelUser?.toLowerCase();
   const canSeeProfiles = level !== 'field force';
+  const isOfficeManager = user?.levelUser === 'Office Manager';
 
   useEffect(() => {
     const load = async () => {
@@ -37,6 +41,7 @@ function DeliveryDetail() {
 
   const deliveryColumns = [
     { key: 'cliente', label: 'Cliente', value: d => d.client_full_name },
+    { key: 'ci', label: 'CI', value: d => d.client_ci },
     { key: 'tienda', label: 'Tienda', value: d => d.store_name },
     { key: 'usuario', label: 'Usuario', value: d => d.delivered_by },
     { key: 'sn', label: 'SN del Bandeo', value: d => d.serial_number },
@@ -55,6 +60,7 @@ function DeliveryDetail() {
   const exportToExcel = () => {
     const exportCols = [
       { label: 'Nombre de Cliente', value: d => d.client_full_name },
+      { label: 'Número de Carnet (CI)', value: d => d.client_ci },
       { label: 'Telefono del Cliente', value: d => d.client_phone },
       { label: 'Nombre de Tienda', value: d => d.store_name },
       { label: 'Codigo de Tienda', value: d => d.store_code },
@@ -99,6 +105,37 @@ function DeliveryDetail() {
     const p = n => String(n).padStart(2, '0');
     const stamp = `${now.getFullYear()}-${p(now.getMonth() + 1)}-${p(now.getDate())}_${p(now.getHours())}-${p(now.getMinutes())}-${p(now.getSeconds())}`;
     XLSX.writeFile(wb, `detalle_entregas_${stamp}.xlsx`);
+  };
+
+  const handleEdit = async (e) => {
+    e.preventDefault();
+    try {
+      await bundleDeliveredService.updateDelivery(editingDelivery.bundle_delivered_id, {
+        client_full_name: editingDelivery.client_full_name,
+        client_ci: editingDelivery.client_ci,
+        client_phone: editingDelivery.client_phone,
+      });
+      setEditingDelivery(null);
+      const res = await reportService.getSummary();
+      setData(res.data);
+    } catch (err) {
+      setError('Error al actualizar la entrega: ' + (err.response?.data?.error || err.message));
+    }
+  };
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      await bundleDeliveredService.deleteDelivery(deletingDelivery.bundle_delivered_id);
+      setDeletingDelivery(null);
+      const res = await reportService.getSummary();
+      setData(res.data);
+    } catch (err) {
+      setError('Error al eliminar la entrega: ' + (err.response?.data?.error || err.message));
+      setDeletingDelivery(null);
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
@@ -183,6 +220,9 @@ function DeliveryDetail() {
                       />
                     )}
                   </th>
+                  {isOfficeManager && (
+                    <th style={{ padding: '0.9rem 1.25rem', textAlign: 'center', color: '#495057', fontWeight: 'bold', fontSize: '0.85rem', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>Acciones</th>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -200,6 +240,7 @@ function DeliveryDetail() {
                     >
                       {d.client_full_name}
                     </td>
+                    <td style={{ padding: '0.5rem', color: '#666' }}>{d.client_ci || '-'}</td>
                     <td style={{ padding: '0.5rem', color: '#666' }}>{d.store_name}</td>
                     {canSeeProfiles && <td style={{ padding: '0.5rem', color: '#666' }}>{d.delivered_by || '-'}</td>}
                     <td style={{ padding: '0.5rem', color: '#666' }}>{d.serial_number || '-'}</td>
@@ -219,11 +260,45 @@ function DeliveryDetail() {
                     <td style={{ padding: '0.5rem', color: '#333' }}>
                       {new Date(d.create_time).toLocaleString()}
                     </td>
+                    {isOfficeManager && (
+                      <td style={{ padding: '0.5rem', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                        <button
+                          onClick={() => setEditingDelivery(d)}
+                          title="Editar"
+                          style={{
+                            padding: '0.4rem', borderRadius: '8px', cursor: 'pointer',
+                            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                            marginRight: '0.4rem', border: '1px solid #007bff', backgroundColor: 'transparent', color: '#007bff'
+                          }}
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5a2.121 2.121 0 0 1 3-3L18.5 2.5z"></path>
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => setDeletingDelivery(d)}
+                          title="Eliminar"
+                          style={{
+                            padding: '0.4rem', borderRadius: '8px', cursor: 'pointer',
+                            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                            border: '1px solid #dc3545', backgroundColor: 'transparent', color: '#dc3545'
+                          }}
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            <line x1="10" y1="11" x2="10" y2="17"></line>
+                            <line x1="14" y1="11" x2="14" y2="17"></line>
+                          </svg>
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))}
                 {filteredDeliveries.length === 0 && (
                   <tr>
-                    <td colSpan="9" style={{ padding: '1.5rem', textAlign: 'center', color: '#999', fontSize: '0.9rem' }}>
+                    <td colSpan="10" style={{ padding: '1.5rem', textAlign: 'center', color: '#999', fontSize: '0.9rem' }}>
                       No se encontraron resultados para los filtros aplicados
                     </td>
                   </tr>
@@ -288,6 +363,7 @@ function DeliveryDetail() {
               <tbody>
                 {[
                   ['Cliente', detailDelivery.client_full_name],
+                  ['Número de Carnet (CI)', detailDelivery.client_ci],
                   ['Teléfono', detailDelivery.client_phone],
                   ['Serial del Bandeo', detailDelivery.serial_number],
                   ['Modelo de Bandeo', detailDelivery.bundle_name],
@@ -355,6 +431,122 @@ function DeliveryDetail() {
             >
               ✕
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de edición */}
+      {editingDelivery && (
+        <div
+          onClick={() => setEditingDelivery(null)}
+          style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 2000,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem'
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: 'white', borderRadius: '16px', padding: '2rem',
+              maxWidth: '450px', width: '100%',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+            }}
+          >
+            <h3 style={{ margin: '0 0 1rem', color: '#1a2340' }}>Editar Entrega</h3>
+            <form onSubmit={handleEdit}>
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold', fontSize: '0.9rem' }}>Nombre del Cliente:</label>
+                <input
+                  type="text"
+                  value={editingDelivery.client_full_name}
+                  onChange={(e) => setEditingDelivery(prev => ({ ...prev, client_full_name: e.target.value.toUpperCase() }))}
+                  maxLength={120}
+                  required
+                  style={{ width: '100%', padding: '0.7rem', border: '1px solid #e0e0e0', borderRadius: '10px', fontSize: '0.95rem', boxSizing: 'border-box' }}
+                />
+              </div>
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold', fontSize: '0.9rem' }}>Número de Carnet (CI):</label>
+                <input
+                  type="text"
+                  value={editingDelivery.client_ci}
+                  onChange={(e) => setEditingDelivery(prev => ({ ...prev, client_ci: e.target.value.replace(/\D/g, '').slice(0, 9) }))}
+                  maxLength={9}
+                  inputMode="numeric"
+                  required
+                  style={{ width: '100%', padding: '0.7rem', border: '1px solid #e0e0e0', borderRadius: '10px', fontSize: '0.95rem', boxSizing: 'border-box' }}
+                />
+              </div>
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold', fontSize: '0.9rem' }}>Teléfono:</label>
+                <input
+                  type="text"
+                  value={editingDelivery.client_phone}
+                  onChange={(e) => setEditingDelivery(prev => ({ ...prev, client_phone: e.target.value }))}
+                  maxLength={45}
+                  required
+                  style={{ width: '100%', padding: '0.7rem', border: '1px solid #e0e0e0', borderRadius: '10px', fontSize: '0.95rem', boxSizing: 'border-box' }}
+                />
+              </div>
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setEditingDelivery(null)}
+                  style={{ flex: 1, padding: '0.75rem', backgroundColor: 'white', color: '#555', border: '1px solid #ddd', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold' }}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  style={{ flex: 1, padding: '0.75rem', backgroundColor: '#5470c6', color: 'white', border: 'none', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold' }}
+                >
+                  Guardar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmación de eliminación */}
+      {deletingDelivery && (
+        <div
+          onClick={() => !deleting && setDeletingDelivery(null)}
+          style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 2000,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem'
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: 'white', borderRadius: '16px', padding: '2rem',
+              maxWidth: '400px', width: '100%', textAlign: 'center',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+            }}
+          >
+            <h3 style={{ margin: '0 0 1rem', color: '#dc3545' }}>¿Eliminar entrega?</h3>
+            <p style={{ margin: '0 0 1.5rem', color: '#666', fontSize: '0.9rem' }}>
+              Vas a eliminar la entrega de <strong>{deletingDelivery.client_full_name}</strong>. Esta acción no se puede deshacer.
+            </p>
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <button
+                onClick={() => setDeletingDelivery(null)}
+                disabled={deleting}
+                style={{ flex: 1, padding: '0.75rem', backgroundColor: 'white', color: '#555', border: '1px solid #ddd', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold' }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                style={{ flex: 1, padding: '0.75rem', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '10px', cursor: deleting ? 'not-allowed' : 'pointer', fontWeight: 'bold' }}
+              >
+                {deleting ? 'Eliminando...' : 'Eliminar'}
+              </button>
+            </div>
           </div>
         </div>
       )}

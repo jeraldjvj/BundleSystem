@@ -61,6 +61,7 @@ function ProjectList({ onEdit, onRefresh }) {
                 <th style={{ padding: '0.9rem 1.25rem', textAlign: 'left', fontWeight: 'bold', color: '#495057', fontSize: '0.85rem' }}>ID</th>
                 <th style={{ padding: '0.9rem 1.25rem', textAlign: 'left', fontWeight: 'bold', color: '#495057', fontSize: '0.85rem' }}>Nombre</th>
                 <th style={{ padding: '0.9rem 1.25rem', textAlign: 'left', fontWeight: 'bold', color: '#495057', fontSize: '0.85rem' }}>Fecha de Inicio</th>
+                <th style={{ padding: '0.9rem 1.25rem', textAlign: 'left', fontWeight: 'bold', color: '#495057', fontSize: '0.85rem' }}>Límite por Cliente</th>
                 <th style={{ padding: '0.9rem 1.25rem', textAlign: 'left', fontWeight: 'bold', color: '#495057', fontSize: '0.85rem' }}>Estado</th>
                 <th style={{ padding: '0.9rem 1.25rem', textAlign: 'center', fontWeight: 'bold', color: '#495057', fontSize: '0.85rem' }}>Acciones</th>
               </tr>
@@ -74,6 +75,9 @@ function ProjectList({ onEdit, onRefresh }) {
                   <td style={{ padding: '0.85rem 1.25rem', color: '#333', fontSize: '0.9rem' }}>{project.projectName}</td>
                   <td style={{ padding: '0.85rem 1.25rem', color: '#333', fontSize: '0.9rem' }}>
                     {project.startDate ? new Date(project.startDate).toLocaleDateString() : '-'}
+                  </td>
+                  <td style={{ padding: '0.85rem 1.25rem', color: '#333', fontSize: '0.9rem' }}>
+                    {project.limiterPerClient === 0 ? 'Sin límite' : project.limiterPerClient}
                   </td>
                   <td style={{ padding: '0.85rem 1.25rem' }}>
                     <span style={{

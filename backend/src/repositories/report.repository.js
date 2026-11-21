@@ -107,7 +107,7 @@ export const reportRepository = {
     `, params);
 
     const [deliveriesList] = await pool.query(`
-      SELECT bd.bundle_delivered_id, bd.user_id, bd.client_full_name, bd.client_phone,
+      SELECT bd.bundle_delivered_id, bd.user_id, bd.client_full_name, bd.client_ci, bd.client_phone,
         bd.client_picture, bd.create_time, bd.store_code, bd.store_name,
         b.serial_number, bm.bundle_name,
         sp.imei_1, sm.model_name, st.city,

@@ -10,6 +10,7 @@ export const createBundleDeliveredSchema = z.object({
   bundle_id: z.coerce.number().int().positive(),
   smartphones_id: z.coerce.number().int().positive(),
   client_full_name: z.string().min(1).max(120),
+  client_ci: z.string().regex(/^\d{6,9}$/, 'El número de carnet debe tener entre 6 y 9 dígitos'),
   client_phone: z.string().min(1).max(45),
   // Solo rutas generadas por /upload-picture: evita URLs externas de rastreo
   client_picture: z.string().regex(/^uploads\/[\w.-]+$/, 'La foto debe ser una imagen subida al servidor').max(255),

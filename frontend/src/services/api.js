@@ -139,6 +139,8 @@ export const reportService = {
 export const bundleDeliveredService = {
   getDeliveries: () => api.get('/bundle-delivered'),
   createDelivery: (data) => api.post('/bundle-delivered', data),
+  updateDelivery: (id, data) => api.patch(`/bundle-delivered/${id}`, data),
+  deleteDelivery: (id) => api.delete(`/bundle-delivered/${id}`),
   uploadPicture: (file) => {
     const fd = new FormData();
     fd.append('picture', file);
