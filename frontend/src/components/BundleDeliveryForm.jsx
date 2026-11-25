@@ -408,9 +408,6 @@ function BundleDeliveryForm({ onSave, onCancel }) {
               required
               placeholder="Ej. 123456789"
             />
-            <p style={{ margin: '0.3rem 0 0', fontSize: '0.8rem', color: '#666' }}>
-              Entre 6 y 9 dígitos numéricos
-            </p>
           </div>
           <div style={{ marginBottom: '1rem' }}>
             <label style={labelStyle}>Teléfono *</label>
