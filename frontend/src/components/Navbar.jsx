@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { userService, authService } from '../services/api';
+import { userService, authService, API_BASE } from '../services/api';
 
 function Navbar({ currentView, onViewChange, canAccessManagement, canAccessBundles, canAccessDelivery }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -179,7 +179,7 @@ function Navbar({ currentView, onViewChange, canAccessManagement, canAccessBundl
           }}>
             {user?.profilePicture && !avatarError ? (
               <img
-                src={user.profilePicture.startsWith('http') ? user.profilePicture : `${window.location.protocol}//${window.location.hostname}:3000/uploads/${user.profilePicture}`}
+                src={user.profilePicture.startsWith('http') ? user.profilePicture : `${API_BASE}/uploads/${user.profilePicture}`}
                 alt="Avatar"
                 onError={() => setAvatarError(true)}
                 style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
@@ -345,7 +345,7 @@ function Navbar({ currentView, onViewChange, canAccessManagement, canAccessBundl
               }}>
                 {user?.profilePicture && !avatarError ? (
                   <img
-                    src={user.profilePicture.startsWith('http') ? user.profilePicture : `${window.location.protocol}//${window.location.hostname}:3000/uploads/${user.profilePicture}`}
+                    src={user.profilePicture.startsWith('http') ? user.profilePicture : `${API_BASE}/uploads/${user.profilePicture}`}
                     alt="Avatar"
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                   />

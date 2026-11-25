@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx-js-style';
-import { reportService, bundleDeliveredService } from '../services/api';
+import { reportService, bundleDeliveredService, API_BASE } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-
-const API_BASE = `${window.location.protocol}//${window.location.hostname}:3000`;
 
 function DeliveryDetail() {
   const { user } = useAuth();

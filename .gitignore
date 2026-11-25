@@ -31,3 +31,7 @@ Thumbs.db
 # Uploaded client pictures
 backend/uploads/
 !backend/uploads/.gitkeep
+
+# DB dumps (contienen hashes de contraseña y datos personales)
+backend/database/dumps/
+backend/database/setup_with_users.sql

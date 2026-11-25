@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { userService, bundleDeliveredService } from '../services/api';
+import { userService, bundleDeliveredService, API_BASE } from '../services/api';
 
 const inputStyle = {
   width: '100%',
@@ -100,7 +100,7 @@ function UserForm({ user, onSave, onCancel }) {
       if (user.profilePicture) {
         setPhotoPreview(user.profilePicture.startsWith('http')
           ? user.profilePicture
-          : `${window.location.protocol}//${window.location.hostname}:3000/uploads/${user.profilePicture}`);
+          : `${API_BASE}/uploads/${user.profilePicture}`);
       }
     }
   }, [user]);

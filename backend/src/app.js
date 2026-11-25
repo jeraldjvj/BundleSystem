@@ -9,6 +9,9 @@ import { errorHandler } from './middlewares/errorHandler.js';
 
 const app = express();
 
+// Expresa cuántos proxies confiables hay delante (nginx=1, cadena más larga=N)
+if (config.trustProxy) app.set('trust proxy', Number(config.trustProxy) || config.trustProxy);
+
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.use(cors({ origin: config.corsOrigin }));
 app.use(express.json());

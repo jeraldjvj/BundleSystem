@@ -4,6 +4,9 @@ const config = {
   env: process.env.NODE_ENV ?? 'development',
   port: Number(process.env.PORT ?? 3000),
   apiPrefix: process.env.API_PREFIX ?? '/api/v1',
+  // Detrás de un proxy (nginx/Caddy) definir TRUST_PROXY=1 para que
+  // req.ip refleje al cliente real (necesario para rate limiting correcto)
+  trustProxy: process.env.TRUST_PROXY ?? '',
   // Lista separada por comas; '*' solo si se define explícitamente
   corsOrigin: process.env.CORS_ORIGIN === '*'
     ? '*'

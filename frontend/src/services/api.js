@@ -1,6 +1,11 @@
 import axios from 'axios';
 
-const API_URL = `${window.location.protocol}//${window.location.hostname}:3000/api/v1`;
+// VITE_API_URL permite apuntar a una API en otro dominio en producción.
+// Sin la variable, se usa el mismo host en el puerto 3000 (modo desarrollo / LAN).
+const API_BASE = (import.meta.env.VITE_API_URL || `${window.location.protocol}//${window.location.hostname}:3000`).replace(/\/+$/, '');
+const API_URL = `${API_BASE}/api/v1`;
+
+export { API_BASE };
 
 const api = axios.create({
   baseURL: API_URL,
