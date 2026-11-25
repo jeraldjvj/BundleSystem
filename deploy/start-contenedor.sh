@@ -20,15 +20,20 @@ if [ ! -f "/etc/nginx/nginx.conf" ]; then
   exit 1
 fi
 
+echo "==> Validando config de nginx"
+nginx -t
+
 echo "==> Iniciando nginx"
-nginx
+nginx 2>&1 &
 NGINX_PID=$!
 echo "Nginx arrancado con PID $NGINX_PID"
 
 # Verificar que nginx esté escuchando
-sleep 2
+sleep 3
 if ! nc -z localhost 80; then
   echo "ERROR: nginx no está escuchando en puerto 80"
+  echo "=== Logs de nginx ==="
+  cat /var/log/nginx/error.log 2>/dev/null || echo "No se pudo leer error.log"
   exit 1
 fi
 echo "OK: nginx escuchando en puerto 80"
