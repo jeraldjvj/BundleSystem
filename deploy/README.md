@@ -1,98 +1,130 @@
 # Deploy a producción — BundleSystem
 
-## Arquitectura en el servidor
+## Arquitectura
 
+### Opción A — Servidor dedicado (nginx + PM2)
 ```
 Internet ──HTTPS──> nginx (:443)
                      ├── /            → frontend/dist (estáticos de Vite)
                      └── /api/        → 127.0.0.1:3000 (Express + PM2)
                                           └── MySQL (DB externa o local)
 ```
+*Ver `deploy/nginx.conf` y `deploy/deploy.sh`*
 
-## 1. Preparar el servidor (una sola vez)
+### Opción B — Contenedor único (Dockploy / Nixpacks)
+```
+Internet ──HTTPS──> Dockploy reverse proxy
+                     └── Contenedor
+                           ├── nginx (:8080) → frontend/dist + proxy /api
+                           └── backend (:3000) → Express
+                                          └── MySQL (externa, ej. Railway/PlanetScale)
+```
+*Configurado en `nixpacks.toml` y `deploy/nginx-contenedor.conf`*
+
+---
+
+## Deploy en Dockploy (Contenedor único)
+
+### 1. Variables de entorno en Dockploy
+
+Configura estas en el panel de Dockploy:
 
 ```bash
-# Node.js 20+
-# MySQL client (para importar la BD)
-# nginx
-# PM2
-npm i -g pm2
+NODE_ENV=production
+PORT=3000
+TRUST_PROXY=1
 
-# Clonar el repo
-cd /var/www
-git clone <URL-DEL-REPO> bundlesystem
-cd bundlesystem
+# Base de datos (MySQL externa, no en el contenedor)
+DB_HOST=<host-de-tu-DB>
+DB_PORT=3306
+DB_USER=<usuario>
+DB_PASSWORD=<contraseña>
+DB_NAME=bundle_system
+
+# Seguridad
+JWT_SECRET=<genera uno nuevo de 96 caracteres hex>
+CORS_ORIGIN=https://bandeos.xiaomibolivia.tech
 ```
 
-## 2. Base de datos
+Generar JWT_SECRET:
+```bash
+node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
+```
+
+### 2. Base de datos
 
 ```bash
-# Crear la base (si no existe)
-mysql -h <DB_HOST> -u <DB_USER> -p -e "CREATE DATABASE IF NOT EXISTS bundle_system CHARACTER SET utf8mb4;"
-
 # Importar estructura + usuarios/perfiles
 mysql -h <DB_HOST> -u <DB_USER> -p bundle_system \
   < backend/database/setup_with_users.sql
 ```
 
-## 3. Variables de entorno
+### 3. Push y deploy
 
 ```bash
-# Backend
+git push
+# Dockploy detectará nixpacks.toml y hará el build automáticamente
+```
+
+El build hace:
+1. Instala backend + frontend
+2. Build del frontend (`npm run build`)
+3. Copia config de nginx
+4. Arranca nginx (:8080) + backend (:3000) en paralelo
+
+### 4. Dominio y HTTPS
+
+En Dockploy, configura el dominio `bandeos.xiaomibolivia.tech`. El HTTPS lo maneja Dockploy automáticamente.
+
+---
+
+## Deploy en servidor dedicado (VPS)
+
+Si prefieres un VPS propio con nginx + PM2, sigue la guía en `deploy/deploy.sh`.
+
+### 1. Preparar el servidor
+```bash
+npm i -g pm2
+cd /var/www
+git clone <URL> bundlesystem
+cd bundlesystem
+```
+
+### 2. Base de datos
+```bash
+mysql -h <DB_HOST> -u <DB_USER> -p bundle_system \
+  < backend/database/setup_with_users.sql
+```
+
+### 3. Variables de entorno
+```bash
 cp backend/.env.production.example backend/.env
-nano backend/.env   # EDITAR: DB_*, JWT_SECRET (generar uno nuevo), CORS_ORIGIN
-
-# Frontend
+nano backend/.env   # EDITAR
 cp frontend/.env.production.example frontend/.env.production
-nano frontend/.env.production   # EDITAR: VITE_API_URL
+nano frontend/.env.production   # EDITAR
 ```
 
-Generar JWT_SECRET nuevo:
-```bash
-node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
-```
-
-## 4. nginx
-
+### 4. nginx
 ```bash
 sudo cp deploy/nginx.conf /etc/nginx/sites-available/bundlesystem
-sudo nano /etc/nginx/sites-available/bundlesystem   # EDITAR: tudominio.com, rutas
+sudo nano /etc/nginx/sites-available/bundlesystem   # EDITAR: tu dominio
 sudo ln -s /etc/nginx/sites-available/bundlesystem /etc/nginx/sites-enabled/
 sudo nginx -t && sudo systemctl reload nginx
-
-# HTTPS con certificado gratuito
-sudo apt install certbot python3-certbot-nginx
-sudo certbot --nginx -d tudominio.com
+sudo certbot --nginx -d bandeos.xiaomibolivia.tech
 ```
 
-Ajustar `root` en nginx.conf a la ruta real de `frontend/dist`.
-
-## 5. Deploys siguientes
-
+### 5. Deploys siguientes
 ```bash
 bash deploy/deploy.sh
 ```
 
-El script hace: `git pull` → `npm ci` backend → build frontend → reload PM2 → health check.
-
-## 6. Operación
-
-```bash
-pm2 status                  # estado del API
-pm2 logs bundlesystem-api    # logs
-pm2 restart bundlesystem-api # reinicio manual
-
-# Backup de uploads (fotos de entregas/perfiles)
-# backup de la BD:
-mysqldump -h <DB_HOST> -u <DB_USER> -p bundle_system > backup_$(date +%F).sql
-```
+---
 
 ## Checklist final
 
-- [ ] `backend/.env` con `NODE_ENV=production`, `TRUST_PROXY=1`, `CORS_ORIGIN` del dominio real
-- [ ] `JWT_SECRET` nuevo y largo (no el de desarrollo)
-- [ ] `frontend/.env.production` con `VITE_API_URL` correcto
 - [ ] `setup_with_users.sql` importado en la BD de producción
-- [ ] HTTPS activo (certbot)
-- [ ] `uploads/` con permisos de escritura para el usuario de PM2
-- [ ] Backups automáticos de BD y `uploads/` configurados
+- [ ] `JWT_SECRET` nuevo y largo (no el de desarrollo)
+- [ ] `CORS_ORIGIN` con el dominio real
+- [ ] Si es Dockploy: variables configuradas en el panel
+- [ ] Si es VPS: HTTPS activo (certbot)
+- [ ] Backups automáticos de BD configurados
