@@ -45,36 +45,37 @@ function Login() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'linear-gradient(135deg, #1a2340 0%, #2d3f6e 50%, #5470c6 100%)'
+      background: 'linear-gradient(135deg, #1a2340 0%, #2d3f6e 50%, #5470c6 100%)',
+      padding: '1rem'
     }}>
       <div style={{
         width: '100%',
         maxWidth: '400px',
         backgroundColor: 'white',
         borderRadius: '16px',
-        padding: '1.5rem 1.25rem',
+        padding: '2.5rem 2rem',
         boxShadow: '0 20px 60px rgba(0,0,0,0.35)'
       }}>
         {/* Logo / título */}
-        <div style={{ textAlign: 'center', marginBottom: '1.25rem' }}>
+        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <div style={{
-            width: '48px',
-            height: '48px',
-            margin: '0 auto 0.75rem',
-            borderRadius: '12px',
+            width: '64px',
+            height: '64px',
+            margin: '0 auto 1rem',
+            borderRadius: '16px',
             background: 'linear-gradient(135deg, #5470c6, #2d3f6e)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 6px 16px rgba(84,112,198,0.3)'
+            boxShadow: '0 8px 20px rgba(84,112,198,0.4)'
           }}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="7" width="18" height="13" rx="2"/>
               <path d="M8 7V5a4 4 0 0 1 8 0v2"/>
             </svg>
           </div>
-          <h2 style={{ margin: '0 0 0.15rem', color: '#1a2340', fontSize: '1.25rem' }}>BundleSystem</h2>
-          <p style={{ margin: 0, color: '#888', fontSize: '0.8rem' }}>Inicia sesión</p>
+          <h2 style={{ margin: '0 0 0.25rem', color: '#1a2340', fontSize: '1.5rem' }}>BundleSystem</h2>
+          <p style={{ margin: 0, color: '#888', fontSize: '0.9rem' }}>Inicia sesión para continuar</p>
         </div>
 
         {error && (
@@ -100,8 +101,8 @@ function Login() {
         )}
 
         <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: '0.85rem' }}>
-            <label htmlFor="email" style={{ display: 'block', marginBottom: '0.3rem', fontWeight: 600, color: '#444', fontSize: '0.8rem' }}>
+          <div style={{ marginBottom: '1.1rem' }}>
+            <label htmlFor="email" style={{ display: 'block', marginBottom: '0.4rem', fontWeight: 600, color: '#444', fontSize: '0.875rem' }}>
               Email o MI ID
             </label>
             <div style={inputWrapper}>
@@ -123,8 +124,8 @@ function Login() {
             </div>
           </div>
 
-          <div style={{ marginBottom: '1rem' }}>
-            <label htmlFor="password" style={{ display: 'block', marginBottom: '0.3rem', fontWeight: 600, color: '#444', fontSize: '0.8rem' }}>
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label htmlFor="password" style={{ display: 'block', marginBottom: '0.4rem', fontWeight: 600, color: '#444', fontSize: '0.875rem' }}>
               Contraseña
             </label>
             <div style={inputWrapper}>
@@ -173,13 +174,13 @@ function Login() {
             disabled={loading}
             style={{
               width: '100%',
-              padding: '0.7rem',
+              padding: '0.85rem',
               background: loading ? '#6c757d' : 'linear-gradient(135deg, #5470c6, #2d3f6e)',
               color: 'white',
               border: 'none',
               borderRadius: '10px',
               cursor: loading ? 'not-allowed' : 'pointer',
-              fontSize: '0.95rem',
+              fontSize: '1rem',
               fontWeight: 'bold',
               boxShadow: loading ? 'none' : '0 6px 18px rgba(84,112,198,0.35)',
               transition: 'transform 0.15s, box-shadow 0.15s'
@@ -191,7 +192,7 @@ function Login() {
           </button>
         </form>
 
-        <p style={{ marginTop: '1rem', textAlign: 'center', fontSize: '0.75rem', color: '#aaa' }}>
+        <p style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.8rem', color: '#aaa' }}>
           Usa el email y contraseña de un usuario registrado
         </p>
       </div>
