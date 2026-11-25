@@ -2,10 +2,10 @@ import multer from 'multer';
 import path from 'node:path';
 import fs from 'node:fs';
 import crypto from 'node:crypto';
-import { fileURLToPath } from 'node:url';
 import { HttpError } from '../utils/HttpError.js';
 
-const uploadsDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../uploads');
+// Ruta absoluta fija para uploads (coincide con el volumen montado en Docker)
+const uploadsDir = '/app/backend/uploads';
 fs.mkdirSync(uploadsDir, { recursive: true });
 
 const ALLOWED_MIME = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
