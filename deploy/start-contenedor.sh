@@ -14,8 +14,11 @@ if [ ! -d "/app/frontend/dist" ]; then
   exit 1
 fi
 
-echo "==> Copiando config de nginx"
-cp /app/deploy/nginx-contenedor.conf /etc/nginx/nginx.conf
+# Verificar que nginx esté configurado
+if [ ! -f "/etc/nginx/nginx.conf" ]; then
+  echo "ERROR: /etc/nginx/nginx.conf no existe. El Dockerfile debería haberlo copiado."
+  exit 1
+fi
 
 echo "==> Iniciando nginx"
 nginx
@@ -24,11 +27,11 @@ echo "Nginx arrancado con PID $NGINX_PID"
 
 # Verificar que nginx esté escuchando
 sleep 2
-if ! nc -z localhost 3000; then
-  echo "ERROR: nginx no está escuchando en puerto 3000"
+if ! nc -z localhost 80; then
+  echo "ERROR: nginx no está escuchando en puerto 80"
   exit 1
 fi
-echo "OK: nginx escuchando en puerto 3000"
+echo "OK: nginx escuchando en puerto 80"
 
 # Si DB_HOST no está configurado, solo nginx
 if [ -z "${DB_HOST:-}" ]; then
