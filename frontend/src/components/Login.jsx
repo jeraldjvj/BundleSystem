@@ -45,8 +45,7 @@ function Login() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'linear-gradient(135deg, #1a2340 0%, #2d3f6e 50%, #5470c6 100%)',
-      padding: '1rem'
+      background: 'linear-gradient(135deg, #1a2340 0%, #2d3f6e 50%, #5470c6 100%)'
     }}>
       <div style={{
         width: '100%',
