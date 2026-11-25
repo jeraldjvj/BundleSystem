@@ -1,4 +1,5 @@
 # Configuración para Nixpacks / Dockploy — backend + frontend en un contenedor
+# Usa la detección automática de Node.js + nginx personalizado
 
 [phases.setup]
 # Instalar nginx en el contenedor
