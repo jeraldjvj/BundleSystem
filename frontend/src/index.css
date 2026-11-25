@@ -42,7 +42,7 @@ body {
   margin: 0;
   text-align: left;
   border: none;
-  min-height: 80vh;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
