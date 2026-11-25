@@ -19,13 +19,14 @@ RUN cd /app/frontend && npm ci
 COPY backend ./backend/
 COPY frontend ./frontend/
 COPY deploy/nginx-contenedor.conf /etc/nginx/nginx.conf
+COPY deploy/start-contenedor.sh /app/start.sh
 
 # Build del frontend
 RUN cd /app/frontend && npm run build
 
-# Crear script de inicio
-RUN echo '#!/bin/sh\nnginx\ncd /app/backend && node src/server.js' > /app/start.sh && chmod +x /app/start.sh
+# Dar permisos al script
+RUN chmod +x /app/start.sh
 
-EXPOSE 3000
+EXPOSE 80
 
 CMD ["/app/start.sh"]
