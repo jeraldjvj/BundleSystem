@@ -15,7 +15,7 @@ if (config.trustProxy) app.set('trust proxy', Number(config.trustProxy) || confi
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.use(cors({ origin: config.corsOrigin }));
 app.use(express.json());
-app.use('/uploads', express.static('uploads'));
+app.use('/uploads', express.static('/app/backend/uploads'));
 
 app.use(config.apiPrefix, apiLimiter, routes);
 
