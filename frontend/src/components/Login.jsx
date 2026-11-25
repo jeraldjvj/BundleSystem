@@ -41,7 +41,7 @@ function Login() {
 
   return (
     <div style={{
-      minHeight: '100vh',
+      minHeight: '50vh',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
