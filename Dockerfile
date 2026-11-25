@@ -1,32 +1,18 @@
 FROM node:20-alpine
 
-# Instalar nginx
-RUN apk add --no-cache nginx
-
 WORKDIR /app
 
-# Copiar archivos del proyecto
-COPY package*.json ./
+# Copiar solo backend
 COPY backend/package*.json ./backend/
-COPY frontend/package*.json ./frontend/
 
-# Instalar dependencias
-RUN npm ci
+# Instalar dependencias del backend
 RUN cd /app/backend && npm ci --omit=dev
-RUN cd /app/frontend && npm ci
 
-# Copiar código fuente
+# Copiar código del backend
 COPY backend ./backend/
-COPY frontend ./frontend/
-COPY deploy/nginx-contenedor.conf /etc/nginx/nginx.conf
-COPY deploy/start-contenedor.sh /app/start.sh
 
-# Build del frontend
-RUN cd /app/frontend && npm run build
+# Exponer puerto del backend
+EXPOSE 3000
 
-# Dar permisos al script
-RUN chmod +x /app/start.sh
-
-EXPOSE 80
-
-CMD ["/app/start.sh"]
+# Iniciar backend
+CMD ["node", "/app/backend/src/server.js"]
