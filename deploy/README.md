@@ -19,6 +19,7 @@ Internet ──HTTPS──> Dockplay reverse proxy
 - Base: `node:20-alpine`
 - Puerto: `3000`
 - Comando: `node /app/backend/src/server.js`
+- **Volumen persistente**: `/app/backend/uploads` (para fotos de entregas/perfiles)
 
 **Variables de entorno:**
 ```bash
@@ -37,6 +38,10 @@ DB_NAME=bundle_system
 JWT_SECRET=<genera uno nuevo de 96 caracteres hex>
 CORS_ORIGIN=https://bandeos.xiaomibolivia.tech
 ```
+
+**Configuración de volumen en Dockplay:**
+- Mount path: `/app/backend/uploads`
+- Esto hace que las fotos subidas persistan entre deploys
 
 Generar JWT_SECRET:
 ```bash
