@@ -364,22 +364,9 @@ function UserForm({ user, onSave, onCancel }) {
               </div>
               <div>
                 <label htmlFor="date_of_birth" style={labelStyle}>Fecha de Nacimiento:</label>
-                <div style={{ position: 'relative' }}>
-                  <input type="date" id="date_of_birth" name="date_of_birth" value={formData.date_of_birth}
-                    onChange={handleChange} required
-                    style={{ ...inputStyle, paddingRight: '2.4rem', colorScheme: 'light' }} />
-                  <span
-                    onClick={() => document.getElementById('date_of_birth')?.showPicker?.()}
-                    style={{ position: 'absolute', right: '0.8rem', top: '50%', transform: 'translateY(-50%)', color: '#5470c6', cursor: 'pointer', display: 'flex' }}
-                  >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="3" y="4" width="18" height="18" rx="2"/>
-                      <line x1="16" y1="2" x2="16" y2="6"/>
-                      <line x1="8" y1="2" x2="8" y2="6"/>
-                      <line x1="3" y1="10" x2="21" y2="10"/>
-                    </svg>
-                  </span>
-                </div>
+                <input type="date" id="date_of_birth" name="date_of_birth" value={formData.date_of_birth}
+                  onChange={handleChange} required
+                  style={{ ...inputStyle, colorScheme: 'light' }} />
               </div>
               <div>
                 <label htmlFor="city" style={labelStyle}>Ciudad:</label>

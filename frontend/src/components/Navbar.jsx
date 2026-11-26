@@ -387,7 +387,7 @@ function Navbar({ currentView, onViewChange, canAccessManagement, canAccessBundl
                 )],
                 ['Nivel', profileData?.levelUser ?? user?.levelUser],
                 ['Cargo', profileData?.roleTitle],
-                ['Fecha de Nacimiento', profileData?.dateOfBirth ? new Date(profileData.dateOfBirth).toLocaleDateString() : null],
+                ['Fecha de Nacimiento', profileData?.dateOfBirth ? new Date(profileData.dateOfBirth + 'T00:00:00').toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) : null],
                 ['Ciudad', profileData?.city],
                 ['Jefe a Cargo', profileData?.headInCharge],
                 ['Estado', profileData?.status ?? user?.status],
