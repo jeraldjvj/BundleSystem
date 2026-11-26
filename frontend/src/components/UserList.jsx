@@ -3,12 +3,31 @@ import { userService, API_BASE } from '../services/api';
 
 function UserList({ onEdit, onRefresh, onCreate }) {
   const [users, setUsers] = useState([]);
+  const [filters, setFilters] = useState({});
+  const [activeFilter, setActiveFilter] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
     loadUsers();
   }, [onRefresh]);
+
+  const columns = [
+    { key: 'fullName', label: 'Nombre Completo', value: u => `${u.firstName || ''} ${u.lastName || ''}`.trim() },
+    { key: 'miId', label: 'MI ID', value: u => u.miId || '' },
+    { key: 'email', label: 'Email', value: u => u.email || '' },
+    { key: 'levelUser', label: 'Nivel', value: u => u.levelUser || '' },
+    { key: 'city', label: 'Ciudad', value: u => u.city || '' },
+    { key: 'status', label: 'Estado', value: u => u.status || '' },
+  ];
+
+  const filteredUsers = users.filter(u =>
+    columns.every(c => {
+      const f = (filters[c.key] || '').toLowerCase();
+      if (!f) return true;
+      return String(c.value(u) ?? '').toLowerCase().includes(f);
+    })
+  );
 
   const loadUsers = async () => {
     try {
@@ -30,7 +49,7 @@ function UserList({ onEdit, onRefresh, onCreate }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', marginTop: '10px', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <h2 style={{ margin: 0, color: '#1a2340', fontSize: '1.4rem' }}>Gestión de Usuarios</h2>
-          <p style={{ margin: '0.2rem 0 0', color: '#888', fontSize: '0.85rem' }}>{users.length} usuario(s) registrados</p>
+          <p style={{ margin: '0.2rem 0 0', color: '#888', fontSize: '0.85rem' }}>{filteredUsers.length} de {users.length} usuario(s)</p>
         </div>
         <button onClick={onCreate} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.6rem 1.15rem', background: 'linear-gradient(135deg, #5470c6, #2d3f6e)', color: 'white', border: 'none', borderRadius: '10px', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 600, boxShadow: '0 4px 14px rgba(84,112,198,0.3)' }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -47,18 +66,60 @@ function UserList({ onEdit, onRefresh, onCreate }) {
           <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'auto', minWidth: '800px' }}>
           <thead>
             <tr style={{ backgroundColor: '#f8f9fa', borderBottom: '2px solid #eee' }}>
-              <th style={{ padding: '0.85rem 1.25rem', textAlign: 'center', fontWeight: 'bold', color: '#495057' }}>Foto de Perfil</th>
-              <th style={{ padding: '0.85rem 1.25rem', textAlign: 'left', fontWeight: 'bold', color: '#495057' }}>Nombre Completo</th>
-              <th style={{ padding: '0.85rem 1.25rem', textAlign: 'left', fontWeight: 'bold', color: '#495057' }}>MI ID</th>
-              <th style={{ padding: '0.85rem 1.25rem', textAlign: 'left', fontWeight: 'bold', color: '#495057' }}>Email</th>
-              <th style={{ padding: '0.85rem 1.25rem', textAlign: 'left', fontWeight: 'bold', color: '#495057' }}>Nivel</th>
-              <th style={{ padding: '0.85rem 1.25rem', textAlign: 'left', fontWeight: 'bold', color: '#495057' }}>Ciudad</th>
-              <th style={{ padding: '0.85rem 1.25rem', textAlign: 'left', fontWeight: 'bold', color: '#495057' }}>Estado</th>
-              <th style={{ padding: '0.85rem 1.25rem', textAlign: 'center', fontWeight: 'bold', color: '#495057' }}>Acciones</th>
+              <th style={{ padding: '0.9rem 1.25rem', textAlign: 'center', fontWeight: 'bold', color: '#495057', fontSize: '0.85rem', verticalAlign: 'middle' }}>Foto de Perfil</th>
+              {columns.map(col => (
+                <th key={col.key} style={{ padding: '0.9rem 1.25rem', textAlign: 'left', fontWeight: 'bold', color: '#495057', fontSize: '0.85rem', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span>{col.label}</span>
+                    <button
+                      onClick={() => setActiveFilter(activeFilter === col.key ? null : col.key)}
+                      style={{
+                        padding: '0.25rem',
+                        backgroundColor: 'transparent',
+                        border: 'none',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        color: filters[col.key] ? '#007bff' : '#6c757d'
+                      }}
+                      title={`Buscar en ${col.label}`}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                      </svg>
+                    </button>
+                  </div>
+                  {activeFilter === col.key && (
+                    <input
+                      type="text"
+                      autoFocus
+                      placeholder={`Buscar ${col.label}...`}
+                      value={filters[col.key] || ''}
+                      onChange={(e) => setFilters(prev => ({ ...prev, [col.key]: e.target.value }))}
+                      style={{
+                        width: '100%',
+                        marginTop: '0.5rem',
+                        padding: '0.35rem 0.6rem',
+                        border: '1px solid #e0e0e0',
+                        borderRadius: '6px',
+                        fontSize: '0.8rem',
+                        fontWeight: 'normal',
+                        boxSizing: 'border-box',
+                        backgroundColor: '#f8f9fa',
+                        color: '#333',
+                        colorScheme: 'light',
+                        outline: 'none'
+                      }}
+                    />
+                  )}
+                </th>
+              ))}
+              <th style={{ padding: '0.9rem 1.25rem', textAlign: 'center', fontWeight: 'bold', color: '#495057', fontSize: '0.85rem' }}>Acciones</th>
             </tr>
           </thead>
           <tbody>
-            {users.map((user) => {
+            {filteredUsers.map((user) => {
               const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim();
               const initials = ((user.firstName?.charAt(0) || '') + (user.lastName?.charAt(0) || '')).toUpperCase() || user.email?.charAt(0).toUpperCase() || 'U';
               const photoUrl = user.profilePicture
@@ -84,21 +145,22 @@ function UserList({ onEdit, onRefresh, onCreate }) {
                     </div>
                   )}
                 </td>
-                <td style={{ padding: '0.85rem 1.25rem', color: '#333' }}>{fullName || '-'}</td>
-                <td style={{ padding: '0.85rem 1.25rem', color: '#333' }}>{user.miId}</td>
-                <td style={{ padding: '0.85rem 1.25rem', color: '#333' }}>{user.email}</td>
-                <td style={{ padding: '0.85rem 1.25rem', color: '#333' }}>{user.levelUser}</td>
-                <td style={{ padding: '0.85rem 1.25rem', color: '#333' }}>{user.city || '-'}</td>
-                <td style={{ padding: '0.85rem 1.25rem' }}>
-                  <span style={{
-                    padding: '0.25rem 0.75rem', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold',
-                    backgroundColor: user.status === 'active' ? '#d4edda' : '#f8d7da',
-                    color: user.status === 'active' ? '#155724' : '#721c24',
-                    border: `1px solid ${user.status === 'active' ? '#c3e6cb' : '#f5c6cb'}`
-                  }}>
-                    {user.status === 'active' ? 'Active' : 'Inactive'}
-                  </span>
-                </td>
+                {columns.map(col => (
+                  <td key={col.key} style={{ padding: '0.85rem 1.25rem', color: '#333' }}>
+                    {col.key === 'status' ? (
+                      <span style={{
+                        padding: '0.25rem 0.75rem', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold',
+                        backgroundColor: user.status === 'active' ? '#d4edda' : '#f8d7da',
+                        color: user.status === 'active' ? '#155724' : '#721c24',
+                        border: `1px solid ${user.status === 'active' ? '#c3e6cb' : '#f5c6cb'}`
+                      }}>
+                        {user.status === 'active' ? 'Active' : 'Inactive'}
+                      </span>
+                    ) : (
+                      col.value(user) || '-'
+                    )}
+                  </td>
+                ))}
                 <td style={{ padding: '0.85rem 1.25rem', textAlign: 'center' }}>
                   <button
                     onClick={() => onEdit(user)}
@@ -118,6 +180,13 @@ function UserList({ onEdit, onRefresh, onCreate }) {
               </tr>
               );
             })}
+            {filteredUsers.length === 0 && (
+              <tr>
+                <td colSpan={columns.length + 2} style={{ padding: '2rem', textAlign: 'center', color: '#666' }}>
+                  No se encontraron resultados con los filtros aplicados
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
         </div>
