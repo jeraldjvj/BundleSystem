@@ -88,6 +88,9 @@ function StoreImport({ onImportComplete, onCancel }) {
 
           await storeService.createStore(storeData);
           successCount++;
+
+          // Pequeño delay para evitar rate limit (429)
+          await new Promise(resolve => setTimeout(resolve, 100));
         } catch (err) {
           errorCount++;
           errors.push(`${store.store_code}: ${err.response?.data?.message || err.response?.data?.error || err.message}`);
