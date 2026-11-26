@@ -396,7 +396,7 @@ function Navbar({ currentView, onViewChange, canAccessManagement, canAccessBundl
                 ['Ciudad', profileData?.city],
                 ['Jefe a Cargo', profileData?.headInCharge],
                 ['Estado', profileData?.status ?? user?.status],
-                ['Miembro desde', profileData?.createTime ? new Date(profileData.createTime).toLocaleDateString() : null],
+                ['Miembro desde', profileData?.createTime ? new Date(profileData.createTime).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) : null],
               ].filter(([, v]) => v).map(([label, value]) => (
                 <div key={label} style={{
                   display: 'flex', justifyContent: 'space-between', gap: '1rem',
