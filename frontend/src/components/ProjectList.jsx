@@ -74,7 +74,7 @@ function ProjectList({ onEdit, onRefresh }) {
                   <td style={{ padding: '0.85rem 1.25rem', color: '#1a2340', fontWeight: 600, fontSize: '0.9rem' }}>{project.projectId}</td>
                   <td style={{ padding: '0.85rem 1.25rem', color: '#333', fontSize: '0.9rem' }}>{project.projectName}</td>
                   <td style={{ padding: '0.85rem 1.25rem', color: '#333', fontSize: '0.9rem' }}>
-                    {project.startDate ? new Date(project.startDate).toLocaleDateString() : '-'}
+                    {project.startDate ? new Date(project.startDate).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-'}
                   </td>
                   <td style={{ padding: '0.85rem 1.25rem', color: '#333', fontSize: '0.9rem' }}>
                     {project.limiterPerClient === 0 ? 'Sin límite' : project.limiterPerClient}

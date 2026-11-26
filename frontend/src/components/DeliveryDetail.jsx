@@ -45,7 +45,7 @@ function DeliveryDetail() {
     { key: 'sn', label: 'SN del Bandeo', value: d => d.serial_number },
     { key: 'imei', label: 'IMEI', value: d => d.imei_1 },
     { key: 'ciudad', label: 'Ciudad', value: d => d.city },
-    { key: 'fecha', label: 'Fecha de Entrega', value: d => new Date(d.create_time).toISOString().substring(0, 10) },
+    { key: 'fecha', label: 'Fecha de Entrega', value: d => new Date(d.create_time).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) },
   ];
   const filteredDeliveries = data.deliveriesList.filter(d =>
     deliveryColumns.every(c => {
@@ -256,7 +256,7 @@ function DeliveryDetail() {
                       ) : '—'}
                     </td>
                     <td style={{ padding: '0.5rem', color: '#333' }}>
-                      {new Date(d.create_time).toLocaleString()}
+                      {new Date(d.create_time).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}
                     </td>
                     {isOfficeManager && (
                       <td style={{ padding: '0.5rem', textAlign: 'center', whiteSpace: 'nowrap' }}>
@@ -369,7 +369,7 @@ function DeliveryDetail() {
                   ['Modelo Smartphone', detailDelivery.model_name],
                   ['Store', `${detailDelivery.store_name} (${detailDelivery.store_code})`],
                   ['Entregado por', detailDelivery.delivered_by || `Usuario #${detailDelivery.user_id}`],
-                  ['Fecha de Entrega', new Date(detailDelivery.create_time).toLocaleString()],
+                  ['Fecha de Entrega', new Date(detailDelivery.create_time).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })],
                 ].map(([label, value]) => (
                   <tr key={label} style={{ borderBottom: '1px solid #eee' }}>
                     <td style={{ padding: '0.5rem', fontWeight: 'bold', color: '#495057', width: '45%' }}>{label}</td>

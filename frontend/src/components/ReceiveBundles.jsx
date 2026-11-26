@@ -214,7 +214,7 @@ function ReceiveBundles() {
                 <div style={{ fontWeight: 700, color: '#1a2340', fontSize: '1rem' }}>{t.serial_number}</div>
                 <div style={{ color: '#666', marginTop: '0.15rem' }}>{t.bundle_name || 'Bandeo'}</div>
                 <div style={{ color: '#888', fontSize: '0.8rem', marginTop: '0.3rem' }}>
-                  De: <strong>{t.from_user_name || `Usuario ${t.old_user_id}`}</strong> — {new Date(t.create_time).toLocaleString()}
+                  De: <strong>{t.from_user_name || `Usuario ${t.old_user_id}`}</strong> — {new Date(t.create_time).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -407,7 +407,7 @@ function ReceiveBundles() {
                           {t.status}
                         </span>
                       );
-                      const date = t.create_time ? new Date(t.create_time).toLocaleString() : '';
+                      const date = t.create_time ? new Date(t.create_time).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '';
                       const info = (
                         <>
                           <div style={{ fontWeight: 700, color: '#1a2340', fontSize: '0.9rem' }}>{t.serial_number}</div>

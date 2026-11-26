@@ -302,7 +302,7 @@ function BundleShareForm() {
                 <div style={{ fontWeight: 700, color: '#1a2340' }}>{t.serial_number}</div>
                 <div style={{ color: '#666' }}>{t.bundle_name || 'Bandeo'}</div>
                 <div style={{ color: '#888', fontSize: '0.8rem' }}>
-                  Para: <strong>{t.to_user_name || `Usuario ${t.new_user_id}`}</strong> — {new Date(t.create_time).toLocaleString()}
+                  Para: <strong>{t.to_user_name || `Usuario ${t.new_user_id}`}</strong> — {new Date(t.create_time).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}
                 </div>
               </div>
               <button

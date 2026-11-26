@@ -38,7 +38,7 @@ function BundleList({ onEdit, onCreate, onImport, onAssign, onRefresh, inventory
         </span>
       )
     },
-    { key: 'createTime', label: 'Fecha de Creación', value: b => b.createTime ? new Date(b.createTime).toLocaleDateString() : '' },
+    { key: 'createTime', label: 'Fecha de Creación', value: b => b.createTime ? new Date(b.createTime).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '' },
   ];
 
   // En Inventario no se muestran "Asignado a" ni "Estado" (siempre es el propio usuario y "available")
