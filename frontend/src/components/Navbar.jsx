@@ -387,7 +387,12 @@ function Navbar({ currentView, onViewChange, canAccessManagement, canAccessBundl
                 )],
                 ['Nivel', profileData?.levelUser ?? user?.levelUser],
                 ['Cargo', profileData?.roleTitle],
-                ['Fecha de Nacimiento', profileData?.dateOfBirth ? new Date(profileData.dateOfBirth + 'T00:00:00').toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) : null],
+                ['Fecha de Nacimiento', (() => {
+                  if (!profileData?.dateOfBirth) return null;
+                  const dateStr = profileData.dateOfBirth.split('T')[0];
+                  const date = new Date(dateStr + 'T00:00:00');
+                  return isNaN(date.getTime()) ? '-' : date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                })()],
                 ['Ciudad', profileData?.city],
                 ['Jefe a Cargo', profileData?.headInCharge],
                 ['Estado', profileData?.status ?? user?.status],
