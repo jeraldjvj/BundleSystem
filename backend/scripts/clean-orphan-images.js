@@ -27,7 +27,7 @@ const run = async () => {
   console.log('Buscando imágenes referenciadas en la base de datos...');
 
   const [deliveries] = await pool.query('SELECT client_picture FROM bundle_delivered');
-  const [users] = await pool.query('SELECT profile_picture FROM `user` WHERE profile_picture IS NOT NULL');
+  const [users] = await pool.query('SELECT profile_picture FROM user_profile WHERE profile_picture IS NOT NULL');
 
   const referenced = new Set();
   for (const row of deliveries) {
