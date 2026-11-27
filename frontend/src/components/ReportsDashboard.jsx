@@ -141,14 +141,14 @@ function ReportsDashboard() {
     }]
   });
 
-  const barOption = (title, rows, nameKey, color) => ({
+  const barOption = (title, rows, nameKey, color, labelFormatter) => ({
     title: { text: title, left: 'center', top: 0, textStyle: { fontSize: 15, color: chartText } },
     tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
     grid: { left: '3%', right: '4%', bottom: '3%', top: 60, containLabel: true },
     xAxis: {
       type: 'category',
       data: rows.map(r => r[nameKey] || '—'),
-      axisLabel: { rotate: rows.length > 4 ? 30 : 0, fontSize: 11, color: chartText }
+      axisLabel: { rotate: rows.length > 4 ? 30 : 0, fontSize: 11, color: chartText, ...(labelFormatter ? { formatter: labelFormatter } : {}) }
     },
     yAxis: {
       type: 'value', minInterval: 1,
@@ -194,7 +194,12 @@ function ReportsDashboard() {
   const canSeeProfiles = level !== 'field force';
   const bundlesPieRef = useChart(canSeeProfiles && data && pieOption('Bandeos Disponibles por Usuario', data.bundlesAvailableByUser, ['50%', '55%'], 'name'));
   const storeBarRef = useChart(data && barOption('Entregas por Tienda', data.deliveriesByStore, 'store_name', '#91cc75'));
-  const userBarRef = useChart(canSeeProfiles && data && barOption('Entregas por Usuario', data.deliveriesByUser, 'name', '#73c0de'));
+  // Solo primer nombre + primer apellido en las etiquetas del eje X
+  const shortNameFormatter = (value) => {
+    const parts = String(value).trim().split(/\s+/);
+    return parts.length >= 2 ? `${parts[0]} ${parts[1]}` : value;
+  };
+  const userBarRef = useChart(canSeeProfiles && data && barOption('Entregas por Usuario', data.deliveriesByUser, 'name', '#73c0de', shortNameFormatter));
   const dayLineRef = useChart(data && lineOption('Entregas por Día', data.deliveriesByDay));
   // Ciudad del store → departamento de Bolivia + coordenadas para el scatter
   const DEPT_MAP = {
