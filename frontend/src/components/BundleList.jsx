@@ -9,6 +9,8 @@ function BundleList({ onEdit, onCreate, onImport, onAssign, onRefresh, inventory
   const [bundles, setBundles] = useState([]);
   const [filters, setFilters] = useState({});
   const [activeFilter, setActiveFilter] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 100;
   const [showScanner, setShowScanner] = useState(false);
   const scannerRef = useRef(null);
   const [loading, setLoading] = useState(true);
@@ -52,6 +54,15 @@ function BundleList({ onEdit, onCreate, onImport, onAssign, onRefresh, inventory
       if (!f) return true;
       return String(c.value(b) ?? '').toLowerCase().includes(f);
     })
+  );
+
+  // Al cambiar los filtros volver a la primera página
+  useEffect(() => { setCurrentPage(1); }, [filters]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredBundles.length / pageSize));
+  const paginatedBundles = filteredBundles.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
   );
 
   useEffect(() => {
@@ -284,11 +295,11 @@ function BundleList({ onEdit, onCreate, onImport, onAssign, onRefresh, inventory
               </tr>
             </thead>
             <tbody>
-              {filteredBundles.map((bundle, index) => (
+              {paginatedBundles.map((bundle, index) => (
                 <tr key={bundle.bundleId} style={{ borderBottom: '1px solid #f0f0f0' }}
                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f9fb'}
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
-                  <td style={{ padding: '0.85rem 0.5rem', color: '#666', fontSize: '0.9rem', textAlign: 'center' }}>{index + 1}</td>
+                  <td style={{ padding: '0.85rem 0.5rem', color: '#666', fontSize: '0.9rem', textAlign: 'center' }}>{(currentPage - 1) * pageSize + index + 1}</td>
                   {displayColumns.map(col => (
                     <td key={col.key} style={{ padding: inventory ? '0.7rem 0.4rem' : '0.85rem 1.25rem', color: '#333', fontSize: inventory ? '0.82rem' : '0.9rem', overflowWrap: 'break-word' }}>
                       {col.render ? col.render(bundle) : col.key === 'createTime' ? (col.value(bundle) || '-') : col.value(bundle)}
@@ -347,6 +358,48 @@ function BundleList({ onEdit, onCreate, onImport, onAssign, onRefresh, inventory
               )}
             </tbody>
           </table>
+          {totalPages > 1 && (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', padding: '1rem', borderTop: '1px solid #f0f0f0' }}>
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                style={{
+                  padding: '0.45rem 0.8rem', border: '1px solid #ddd', borderRadius: '8px',
+                  backgroundColor: currentPage === 1 ? '#f5f5f5' : 'white',
+                  color: currentPage === 1 ? '#aaa' : '#2d3f6e',
+                  cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                  display: 'inline-flex', alignItems: 'center', fontWeight: 'bold'
+                }}
+                title="Página anterior"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+              </button>
+              <span style={{ color: '#555', fontSize: '0.9rem' }}>
+                Página <strong>{currentPage}</strong> de <strong>{totalPages}</strong>
+                <span style={{ color: '#999', marginLeft: '0.5rem' }}>
+                  ({(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, filteredBundles.length)} de {filteredBundles.length})
+                </span>
+              </span>
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                style={{
+                  padding: '0.45rem 0.8rem', border: '1px solid #ddd', borderRadius: '8px',
+                  backgroundColor: currentPage === totalPages ? '#f5f5f5' : 'white',
+                  color: currentPage === totalPages ? '#aaa' : '#2d3f6e',
+                  cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                  display: 'inline-flex', alignItems: 'center', fontWeight: 'bold'
+                }}
+                title="Página siguiente"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+              </button>
+            </div>
+          )}
         </div>
       )}
 
