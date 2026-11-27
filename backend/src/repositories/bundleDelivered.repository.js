@@ -133,7 +133,44 @@ export const bundleDeliveredRepository = {
   },
 
   async remove(bundleDeliveredId) {
-    const [result] = await pool.query('DELETE FROM bundle_delivered WHERE bundle_delivered_id = ?', [bundleDeliveredId]);
-    return result.affectedRows > 0;
+    const connection = await pool.getConnection();
+    try {
+      await connection.beginTransaction();
+
+      // Leer la entrega para saber qué bandeo y smartphone liberar
+      const [rows] = await connection.query(
+        'SELECT bundle_id, smartphones_id FROM bundle_delivered WHERE bundle_delivered_id = ? FOR UPDATE',
+        [bundleDeliveredId]
+      );
+      if (rows.length === 0) {
+        await connection.rollback();
+        return false;
+      }
+      const { bundle_id, smartphones_id } = rows[0];
+
+      // Eliminar el registro de la entrega
+      await connection.query('DELETE FROM bundle_delivered WHERE bundle_delivered_id = ?', [bundleDeliveredId]);
+
+      // Devolver el bandeo a available: el user_id nunca cambió, así que
+      // reaparece en el inventario del field force que lo tenía asignado
+      await connection.query(
+        `UPDATE bundle SET status = 'available' WHERE bundle_id = ? AND status = 'delivered'`,
+        [bundle_id]
+      );
+
+      // Devolver el smartphone a available
+      await connection.query(
+        `UPDATE smartphones_database SET status = 'available' WHERE smartphones_id = ? AND status = 'delivered'`,
+        [smartphones_id]
+      );
+
+      await connection.commit();
+      return true;
+    } catch (error) {
+      await connection.rollback();
+      throw error;
+    } finally {
+      connection.release();
+    }
   },
 };

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { userService, bundleDeliveredService, API_BASE } from '../services/api';
+import { compressImage } from '../utils/imageCompression';
 
 const inputStyle = {
   width: '100%',
@@ -110,11 +111,12 @@ function UserForm({ user, onSave, onCancel }) {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handlePhotoChange = (e) => {
+  const handlePhotoChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setPhotoFile(file);
-    setPhotoPreview(URL.createObjectURL(file));
+    const compressed = await compressImage(file);
+    setPhotoFile(compressed);
+    setPhotoPreview(URL.createObjectURL(compressed));
   };
 
   const initials = ((formData.first_name?.charAt(0) || '') + (formData.last_name?.charAt(0) || '')).toUpperCase() || 'U';

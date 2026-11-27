@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { bundleService, smartphoneService, storeService, bundleDeliveredService } from '../services/api';
+import { compressImage } from '../utils/imageCompression';
 import { useAuth } from '../context/AuthContext';
 
 const barcodeIcon = (
@@ -261,11 +262,12 @@ function BundleDeliveryForm({ onSave, onCancel }) {
     };
   }, [scanTarget]);
 
-  const handlePicture = (e) => {
+  const handlePicture = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setPicture(file);
-    setPicturePreview(URL.createObjectURL(file));
+    const compressed = await compressImage(file);
+    setPicture(compressed);
+    setPicturePreview(URL.createObjectURL(compressed));
   };
 
   const handleSubmit = async (e) => {
