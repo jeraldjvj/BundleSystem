@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import * as echarts from 'echarts';
 import { reportService, projectService, API_BASE } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -58,6 +58,25 @@ function ReportsDashboard() {
   const [selectedProject, setSelectedProject] = useState('status:active');
   const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark-mode'));
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 640);
+  const [colCount, setColCount] = useState(1);
+  const gridObserverRef = useRef(null);
+
+  // Callback ref: el grid no existe durante la carga (return temprano),
+  // así que hay que enganchar el ResizeObserver cuando el nodo aparezca
+  const setGridRef = useCallback((node) => {
+    if (gridObserverRef.current) {
+      gridObserverRef.current.disconnect();
+      gridObserverRef.current = null;
+    }
+    if (node) {
+      const update = () => {
+        setColCount(Math.max(1, Math.floor((node.clientWidth + 16) / (380 + 16))));
+      };
+      update();
+      gridObserverRef.current = new ResizeObserver(update);
+      gridObserverRef.current.observe(node);
+    }
+  }, []);
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 640);
@@ -363,22 +382,39 @@ function ReportsDashboard() {
       </div>
 
       {/* Gráficos */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 380px), 1fr))', gap: '1rem' }}>
-        {canSeeProfiles && (
-          <div style={cardStyle}><div ref={bundlesPieRef} style={chartBox()} /></div>
-        )}
-        {canSeeProfiles && (
-          <div style={cardStyle}><div ref={profilesBarRef} style={chartBox()} /></div>
-        )}
-        {canSeeProfiles && (
-          <div style={cardStyle}><div ref={cityMapRef} style={chartBox(420)} /></div>
-        )}
-        <div style={cardStyle}><div ref={storeBarRef} style={chartBox()} /></div>
-        {canSeeProfiles && (
-          <div style={cardStyle}><div ref={userBarRef} style={chartBox()} /></div>
-        )}
-        <div style={cardStyle}><div ref={dayLineRef} style={chartBox()} /></div>
-      </div>
+      {(() => {
+        const chartCards = [];
+        if (canSeeProfiles) {
+          chartCards.push({ key: 'bundlesPie', ref: bundlesPieRef });
+          chartCards.push({ key: 'profilesBar', ref: profilesBarRef });
+          chartCards.push({ key: 'cityMap', ref: cityMapRef, height: 420 });
+        }
+        chartCards.push({ key: 'storeBar', ref: storeBarRef });
+        if (canSeeProfiles) chartCards.push({ key: 'userBar', ref: userBarRef });
+        chartCards.push({ key: 'dayLine', ref: dayLineRef });
+
+        // Las gráficas de la última fila se expanden para llenar los espacios vacíos
+        const total = chartCards.length;
+        const lastRowCount = total % colCount || colCount;
+        const spanFor = (index) => {
+          if (lastRowCount === colCount) return 1;
+          if (index < total - lastRowCount) return 1;
+          const base = Math.floor(colCount / lastRowCount);
+          const extra = colCount % lastRowCount;
+          const posInLastRow = index - (total - lastRowCount);
+          return base + (posInLastRow < extra ? 1 : 0);
+        };
+
+        return (
+          <div ref={setGridRef} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 380px), 1fr))', gap: '1rem' }}>
+            {chartCards.map((card, i) => (
+              <div key={card.key} style={{ ...cardStyle, gridColumn: `span ${spanFor(i)}` }}>
+                <div ref={card.ref} style={chartBox(card.height)} />
+              </div>
+            ))}
+          </div>
+        );
+      })()}
 
       {/* Lista de entregas: en celular ocupa todo el ancho, sin márgenes laterales */}
       <div style={{ ...cardStyle, marginTop: '1rem', ...(isMobile ? { marginLeft: '-1rem', marginRight: '-1rem', borderRadius: 0, padding: '1rem 0.5rem' } : {}) }}>
