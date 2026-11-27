@@ -663,7 +663,7 @@ function BundleDeliveryForm({ onSave, onCancel }) {
             </div>
             <div id="delivery-barcode-scanner" style={{ width: '100%', overflow: 'hidden', borderRadius: '10px' }}></div>
             <p style={{ fontSize: '0.875rem', color: '#666', marginTop: '0.75rem', textAlign: 'center' }}>
-              Apunta la cámara al código de barras CODE_128
+              Apunta la cámara al código de barras
             </p>
           </div>
         </div>
