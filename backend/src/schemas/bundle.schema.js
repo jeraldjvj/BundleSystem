@@ -18,5 +18,5 @@ export const assignBundleSchema = z.object({
 });
 
 export const bulkCreateBundleSchema = z.object({
-  bundles: z.array(createBundleSchema).min(1).max(1000),
+  bundles: z.array(createBundleSchema).min(1).max(10000),
 });
