@@ -1,6 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { bundleService, projectService, bundleModelService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+
+const barcodeIcon = (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round">
+    <line x1="4" y1="5" x2="4" y2="19" strokeWidth="3"/>
+    <line x1="8.5" y1="5" x2="8.5" y2="19" strokeWidth="1.5"/>
+    <line x1="12" y1="5" x2="12" y2="19" strokeWidth="2.5"/>
+    <line x1="16" y1="5" x2="16" y2="19" strokeWidth="1.5"/>
+    <line x1="19.5" y1="5" x2="19.5" y2="19" strokeWidth="3"/>
+  </svg>
+);
 
 function BundleForm({ bundle, onSave, onCancel }) {
   const { user } = useAuth();
@@ -14,6 +25,61 @@ function BundleForm({ bundle, onSave, onCancel }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [scanning, setScanning] = useState(false);
+  const scannerRef = useRef(null);
+
+  // Escáner de código de barras por cámara
+  useEffect(() => {
+    if (!scanning) return;
+
+    const scanner = new Html5Qrcode('bundle-form-barcode-scanner', {
+      useBarCodeDetectorIfSupported: true,
+      formatsToSupport: [
+        Html5QrcodeSupportedFormats.CODE_128,
+        Html5QrcodeSupportedFormats.CODE_39,
+        Html5QrcodeSupportedFormats.EAN_13,
+        Html5QrcodeSupportedFormats.EAN_8,
+        Html5QrcodeSupportedFormats.ITF,
+        Html5QrcodeSupportedFormats.QR_CODE
+      ]
+    });
+    scannerRef.current = scanner;
+    let cancelled = false;
+
+    const startPromise = scanner.start(
+      { facingMode: 'environment' },
+      {
+        fps: 10,
+        qrbox: (w, h) => ({ width: Math.floor(w * 0.9), height: Math.floor(h * 0.4) }),
+        aspectRatio: 1.7778,
+        videoConstraints: {
+          facingMode: 'environment',
+          width: { ideal: 1920 },
+          height: { ideal: 1080 }
+        }
+      },
+      (decodedText) => {
+        setFormData(prev => ({ ...prev, serial_number: decodedText }));
+        setScanning(false);
+      },
+      () => {}
+    );
+
+    startPromise.catch(err => {
+      if (!cancelled) {
+        setError('No se pudo acceder a la cámara: ' + err);
+        setScanning(false);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+      startPromise
+        .catch(() => {})
+        .then(() => scanner.stop().then(() => scanner.clear()))
+        .catch(() => {});
+    };
+  }, [scanning]);
 
   useEffect(() => {
     loadRelatedData();
@@ -116,16 +182,37 @@ function BundleForm({ bundle, onSave, onCancel }) {
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '1.1rem' }}>
             <label htmlFor="serial_number" style={labelStyle}>Número de Serie:</label>
-            <input
-              type="text"
-              id="serial_number"
-              name="serial_number"
-              value={formData.serial_number}
-              onChange={handleChange}
-              required
-              placeholder="Ej: 71619/CEAGDF6P403967"
-              style={inputStyle}
-            />
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <input
+                type="text"
+                id="serial_number"
+                name="serial_number"
+                value={formData.serial_number}
+                onChange={handleChange}
+                required
+                placeholder="Ej: 71619/CEAGDF6P403967"
+                style={{ ...inputStyle, flex: 1 }}
+              />
+              <button
+                type="button"
+                onClick={() => setScanning(true)}
+                title="Escanear código de barras"
+                style={{
+                  padding: '0.5rem 0.75rem',
+                  backgroundColor: '#343a40',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '10px',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0
+                }}
+              >
+                {barcodeIcon}
+              </button>
+            </div>
           </div>
 
           <div style={{ marginBottom: '1.1rem' }}>
@@ -190,6 +277,40 @@ function BundleForm({ bundle, onSave, onCancel }) {
           </div>
         </form>
       </div>
+
+      {scanning && (
+        <div
+          onClick={() => setScanning(false)}
+          style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.7)', zIndex: 2000,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem'
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: 'white', borderRadius: '8px', padding: '1.5rem',
+              maxWidth: '420px', width: '90%'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h3 style={{ margin: 0 }}>Escanear Número de Serie</h3>
+              <button
+                type="button"
+                onClick={() => setScanning(false)}
+                style={{ background: 'none', border: 'none', fontSize: '1.25rem', cursor: 'pointer', color: '#666' }}
+              >
+                ✕
+              </button>
+            </div>
+            <div id="bundle-form-barcode-scanner" style={{ width: '100%', overflow: 'hidden', borderRadius: '10px' }}></div>
+            <p style={{ fontSize: '0.875rem', color: '#666', marginTop: '0.75rem', textAlign: 'center' }}>
+              Apunta la cámara al código de barras
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
