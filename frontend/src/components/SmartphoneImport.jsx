@@ -116,7 +116,10 @@ function SmartphoneImport({ onImportComplete, onCancel }) {
         onImportComplete();
       }, 1500);
     } catch (err) {
-      setError('Error al importar smartphones: ' + (err.response?.data?.message || err.message));
+      console.error('Error details:', err.response?.data);
+      const errorMsg = err.response?.data?.error || err.response?.data?.message || err.message;
+      const details = err.response?.data?.details ? '\n\nDetalles: ' + JSON.stringify(err.response.data.details) : '';
+      setError('Error al importar smartphones: ' + errorMsg + details);
     } finally {
       setLoading(false);
     }
