@@ -165,7 +165,7 @@ function BundleDeliveryForm({ onSave, onCancel }) {
     // El IMEI debe tener exactamente 15 dígitos antes de consultar la BD
     const digitCount = (imei.match(/\d/g) || []).length;
     if (digitCount < 15) {
-      setImeiMsg({ ok: false, text: `Faltan digitos (hay ${digitCount} digitos)` });
+      setImeiMsg({ ok: false, text: `Faltan ${15 - digitCount} dígitos` });
       return;
     }
     if (!/^\d{15}$/.test(imei)) {
