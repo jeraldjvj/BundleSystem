@@ -9,6 +9,8 @@ function StoreList({ onEdit, onCreate, onImport, onBatchImport, onAssign }) {
   const [error, setError] = useState('');
   const [deletingStore, setDeletingStore] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 100;
 
   const columns = [
     { key: 'storeCode', label: 'Código', value: s => s.storeCode },
@@ -23,6 +25,15 @@ function StoreList({ onEdit, onCreate, onImport, onBatchImport, onAssign }) {
       if (!f) return true;
       return String(c.value(s) ?? '').toLowerCase().includes(f);
     })
+  );
+
+  // Al cambiar los filtros volver a la primera página
+  useEffect(() => { setCurrentPage(1); }, [filters]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredStores.length / pageSize));
+  const paginatedStores = filteredStores.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
   );
 
   useEffect(() => {
@@ -139,7 +150,7 @@ function StoreList({ onEdit, onCreate, onImport, onBatchImport, onAssign }) {
             </tr>
           </thead>
           <tbody>
-            {filteredStores.map((store) => (
+            {paginatedStores.map((store) => (
               <tr key={store.storeCode} style={{ borderBottom: '1px solid #f0f0f0' }}
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f9fb'}
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
@@ -198,6 +209,48 @@ function StoreList({ onEdit, onCreate, onImport, onBatchImport, onAssign }) {
               )}
           </tbody>
         </table>
+          {totalPages > 1 && (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', padding: '1rem', borderTop: '1px solid #f0f0f0' }}>
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                style={{
+                  padding: '0.45rem 0.8rem', border: '1px solid #ddd', borderRadius: '8px',
+                  backgroundColor: currentPage === 1 ? '#f5f5f5' : 'white',
+                  color: currentPage === 1 ? '#aaa' : '#2d3f6e',
+                  cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                  display: 'inline-flex', alignItems: 'center', fontWeight: 'bold'
+                }}
+                title="Página anterior"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+              </button>
+              <span style={{ color: '#555', fontSize: '0.9rem' }}>
+                Página <strong>{currentPage}</strong> de <strong>{totalPages}</strong>
+                <span style={{ color: '#999', marginLeft: '0.5rem' }}>
+                  ({(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, filteredStores.length)} de {filteredStores.length})
+                </span>
+              </span>
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                style={{
+                  padding: '0.45rem 0.8rem', border: '1px solid #ddd', borderRadius: '8px',
+                  backgroundColor: currentPage === totalPages ? '#f5f5f5' : 'white',
+                  color: currentPage === totalPages ? '#aaa' : '#2d3f6e',
+                  cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                  display: 'inline-flex', alignItems: 'center', fontWeight: 'bold'
+                }}
+                title="Página siguiente"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+              </button>
+            </div>
+          )}
         </div>
       )}
 
