@@ -1,4 +1,5 @@
 import { pool } from '../config/database.js';
+import { HttpError } from '../utils/HttpError.js';
 
 const COLUMNS = 'bundle_id, project_id, user_id, serial_number, bundle_model_id, create_time, status';
 // user_id y status solo cambian por asignación/transferencia/entrega,
@@ -168,8 +169,35 @@ export const bundleRepository = {
   },
 
   async remove(bundleId) {
-    const [result] = await pool.query('DELETE FROM bundle WHERE bundle_id = ?', [bundleId]);
-    return result.affectedRows > 0;
+    const connection = await pool.getConnection();
+    try {
+      await connection.beginTransaction();
+
+      // Las entregas son registros de negocio: no se borran en cascada.
+      // Si el bandeo tiene entregas, se bloquea la eliminación.
+      const [deliveries] = await connection.query(
+        'SELECT COUNT(*) AS count FROM bundle_delivered WHERE bundle_id = ?',
+        [bundleId]
+      );
+      if (deliveries[0].count > 0) {
+        await connection.rollback();
+        throw new HttpError(409, 'No se puede eliminar: el bandeo tiene entregas registradas');
+      }
+
+      // El historial de transferencias solo concierne al bandeo mismo:
+      // se elimina junto con él (la FK no permite dejarlo huérfano)
+      await connection.query('DELETE FROM transfer_history WHERE bundle_id = ?', [bundleId]);
+
+      const [result] = await connection.query('DELETE FROM bundle WHERE bundle_id = ?', [bundleId]);
+
+      await connection.commit();
+      return result.affectedRows > 0;
+    } catch (error) {
+      await connection.rollback();
+      throw error;
+    } finally {
+      connection.release();
+    }
   },
 
   async requestTransfer(bundleId, newUserId, managerUserId) {

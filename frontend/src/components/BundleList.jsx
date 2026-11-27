@@ -163,7 +163,7 @@ function BundleList({ onEdit, onCreate, onImport, onAssign, onRefresh, inventory
       setDeletingBundle(null);
       loadBundles();
     } catch (err) {
-      setError('Error al eliminar bandeo: ' + err.message);
+      setError('Error al eliminar bandeo: ' + (err.response?.data?.error || err.message));
       setDeletingBundle(null);
     } finally {
       setDeleting(false);
