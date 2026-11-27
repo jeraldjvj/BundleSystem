@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { bundleService, userService } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 function BundleAssignForm({ bundle, onSave, onCancel }) {
+  const { user } = useAuth();
   const [newUserId, setNewUserId] = useState('');
   const [userSearch, setUserSearch] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
@@ -18,7 +20,19 @@ function BundleAssignForm({ bundle, onSave, onCancel }) {
     try {
       const response = await userService.getUsers();
       // Excluir al usuario actualmente asignado
-      setUsers(response.data.filter(u => u.userId !== bundle.userId));
+      let list = response.data.filter(u => u.userId !== bundle.userId);
+
+      // City Manager solo ve: los field force de su propio equipo
+      // (head_in_charge = su nombre) + todos los city/office managers
+      if (user?.levelUser === 'City Manager') {
+        const managerFullName = `${user.firstName || ''} ${user.lastName || ''}`.trim().toLowerCase();
+        list = list.filter(u => {
+          if (u.levelUser === 'City Manager' || u.levelUser === 'Office Manager') return true;
+          return (u.headInCharge || '').trim().toLowerCase() === managerFullName;
+        });
+      }
+
+      setUsers(list);
     } catch (err) {
       setError('Error al cargar usuarios: ' + err.message);
     }
