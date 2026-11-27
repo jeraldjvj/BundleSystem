@@ -32,4 +32,9 @@ export const storeController = {
     if (!deleted) throw new HttpError(404, 'Store not found');
     res.status(204).send();
   },
+
+  async bulkCreate(req, res) {
+    const result = await storeRepository.bulkCreate(req.body.stores);
+    res.status(201).json(result);
+  },
 };

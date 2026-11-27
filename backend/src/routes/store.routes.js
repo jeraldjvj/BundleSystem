@@ -7,6 +7,7 @@ import {
   storeCodeSchema,
   createStoreSchema,
   updateStoreSchema,
+  bulkCreateStoreSchema,
 } from '../schemas/store.schema.js';
 
 const router = Router();
@@ -15,6 +16,7 @@ router.get('/mine', asyncHandler(storeController.getByUserId));
 router.get('/', requireRole('Office Manager'), asyncHandler(storeController.getAll));
 router.get('/:store_code', requireRole('Office Manager'), validate(storeCodeSchema, 'params'), asyncHandler(storeController.getById));
 router.post('/', requireRole('Office Manager'), validate(createStoreSchema), asyncHandler(storeController.create));
+router.post('/bulk', requireRole('Office Manager'), validate(bulkCreateStoreSchema), asyncHandler(storeController.bulkCreate));
 router.patch(
   '/:store_code',
   requireRole('Office Manager'),

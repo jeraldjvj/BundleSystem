@@ -124,4 +124,9 @@ export const bundleController = {
     if (result.error) throw new HttpError(400, result.error);
     res.json({ message: approve ? 'Transferencia aprobada' : 'Transferencia rechazada' });
   },
+
+  async bulkCreate(req, res) {
+    const result = await bundleRepository.bulkCreate(req.body.bundles);
+    res.status(201).json(result);
+  },
 };

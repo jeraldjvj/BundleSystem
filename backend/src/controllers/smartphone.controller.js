@@ -34,4 +34,9 @@ export const smartphoneController = {
     if (!deleted) throw new HttpError(404, 'Smartphone not found');
     res.status(204).send();
   },
+
+  async bulkCreate(req, res) {
+    const result = await smartphoneRepository.bulkCreate(req.body.smartphones);
+    res.status(201).json(result);
+  },
 };

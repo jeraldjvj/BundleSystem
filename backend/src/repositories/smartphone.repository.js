@@ -86,4 +86,58 @@ export const smartphoneRepository = {
     const [result] = await pool.query('DELETE FROM smartphones_database WHERE smartphones_id = ?', [smartphonesId]);
     return result.affectedRows > 0;
   },
+
+  async bulkCreate(smartphones) {
+    const connection = await pool.getConnection();
+    try {
+      await connection.beginTransaction();
+
+      // Verificar IMEIs duplicados existentes
+      const imeis = smartphones.map(s => s.imei_1);
+      const [existingImeis] = await connection.query(
+        'SELECT imei_1 FROM smartphones_database WHERE imei_1 IN (?)',
+        [imeis]
+      );
+      const existingSet = new Set(existingImeis.map(row => row.imei_1));
+
+      // Filtrar solo los que no existen
+      const toInsert = smartphones.filter(s => !existingSet.has(s.imei_1));
+
+      if (toInsert.length === 0) {
+        await connection.rollback();
+        return { created: 0, skipped: smartphones.length, duplicates: smartphones.length };
+      }
+
+      // Obtener el próximo ID
+      const [[{ maxId }]] = await connection.query('SELECT MAX(smartphones_id) as maxId FROM smartphones_database');
+      let nextId = (maxId || 0) + 1;
+
+      // Insertar en lote
+      const values = toInsert.map(s => [
+        nextId++,
+        s.smartphone_model_id,
+        s.tag_model,
+        s.imei_1,
+        s.distributor_id,
+        s.status || 'available'
+      ]);
+
+      await connection.query(
+        'INSERT INTO smartphones_database (smartphones_id, smartphone_model_id, tag_model, imei_1, distributor_id, status) VALUES ?',
+        [values]
+      );
+
+      await connection.commit();
+      return {
+        created: toInsert.length,
+        skipped: 0,
+        duplicates: smartphones.length - toInsert.length
+      };
+    } catch (err) {
+      await connection.rollback();
+      throw err;
+    } finally {
+      connection.release();
+    }
+  },
 };

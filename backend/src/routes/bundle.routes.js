@@ -9,6 +9,7 @@ import {
   createBundleSchema,
   updateBundleSchema,
   assignBundleSchema,
+  bulkCreateBundleSchema,
 } from '../schemas/bundle.schema.js';
 
 const router = Router();
@@ -21,6 +22,7 @@ router.get('/transfers/history/all', asyncHandler(bundleController.allTransferHi
 router.get('/transfers/history', asyncHandler(bundleController.transferHistory));
 router.get('/:bundle_id', validate(bundleIdSchema, 'params'), asyncHandler(bundleController.getById));
 router.post('/', requireRole('Office Manager'), validate(createBundleSchema), asyncHandler(bundleController.create));
+router.post('/bulk', requireRole('Office Manager'), validate(bulkCreateBundleSchema), asyncHandler(bundleController.bulkCreate));
 router.post(
   '/:bundle_id/assign',
   validate(bundleIdSchema, 'params'),

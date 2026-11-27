@@ -14,3 +14,7 @@ export const createSmartphoneSchema = z.object({
 });
 
 export const updateSmartphoneSchema = createSmartphoneSchema.partial();
+
+export const bulkCreateSmartphoneSchema = z.object({
+  smartphones: z.array(createSmartphoneSchema).min(1).max(1000),
+});

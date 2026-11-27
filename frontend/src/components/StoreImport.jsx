@@ -65,49 +65,48 @@ function StoreImport({ onImportComplete, onCancel }) {
       const usersResponse = await userService.getUsers();
       const users = usersResponse.data;
 
-      let successCount = 0;
-      let errorCount = 0;
+      const stores = [];
       const errors = [];
 
       for (const store of previewData) {
-        try {
-          const user = users.find(u => String(u.miId) === String(store.mi_id));
+        const user = users.find(u => String(u.miId) === String(store.mi_id));
 
-          if (!user) {
-            errorCount++;
-            errors.push(`${store.store_code}: MI ID ${store.mi_id} no encontrado`);
-            continue;
-          }
-
-          const storeData = {
-            store_code: store.store_code,
-            user_id: user.userId,
-            store_name: store.store_name,
-            city: store.city,
-          };
-
-          await storeService.createStore(storeData);
-          successCount++;
-
-          // Pequeño delay para evitar rate limit (429)
-          await new Promise(resolve => setTimeout(resolve, 100));
-        } catch (err) {
-          errorCount++;
-          errors.push(`${store.store_code}: ${err.response?.data?.message || err.response?.data?.error || err.message}`);
+        if (!user) {
+          errors.push(`${store.store_code}: MI ID ${store.mi_id} no encontrado`);
+          continue;
         }
+
+        stores.push({
+          store_code: store.store_code,
+          user_id: user.userId,
+          store_name: store.store_name,
+          city: store.city,
+        });
       }
 
-      if (errorCount > 0) {
-        setError(`Importación parcial: ${successCount} exitosas, ${errorCount} fallidas.\n${errors.join('\n')}`);
-        if (successCount > 0) setTimeout(() => onImportComplete(), 3000);
-      } else {
-        setSuccess(`Se importaron ${successCount} tiendas exitosamente!`);
-        setTimeout(() => {
-          onImportComplete();
-        }, 1500);
+      if (stores.length === 0) {
+        setError(`No se pudo importar ninguna tienda:\n${errors.join('\n')}`);
+        setLoading(false);
+        return;
       }
+
+      const response = await storeService.bulkCreateStores({ stores });
+      const { created, duplicates } = response.data;
+
+      let message = `Se importaron ${created} tiendas exitosamente!`;
+      if (duplicates > 0) {
+        message += ` (${duplicates} Códigos ya existían y fueron omitidos)`;
+      }
+      if (errors.length > 0) {
+        message += `\n\nErrores de validación:\n${errors.join('\n')}`;
+      }
+
+      setSuccess(message);
+      setTimeout(() => {
+        onImportComplete();
+      }, 1500);
     } catch (err) {
-      setError('Error al importar tiendas: ' + err.message);
+      setError('Error al importar tiendas: ' + (err.response?.data?.message || err.message));
     } finally {
       setLoading(false);
     }

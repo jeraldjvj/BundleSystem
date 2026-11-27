@@ -69,53 +69,54 @@ function SmartphoneImport({ onImportComplete, onCancel }) {
       const models = modelsResponse.data;
       const distributors = distributorsResponse.data;
 
-      let successCount = 0;
-      let errorCount = 0;
+      const smartphones = [];
       const errors = [];
 
       for (const smartphone of previewData) {
-        try {
-          const model = models.find(m => String(m.productId) === smartphone.product_id);
-          if (!model) {
-            errorCount++;
-            errors.push(`${smartphone.imei_1}: Product ID "${smartphone.product_id}" no encontrado`);
-            continue;
-          }
-
-          const distributor = distributors.find(d => String(d.distributorName).toLowerCase() === smartphone.distributor_name.toLowerCase());
-          if (!distributor) {
-            errorCount++;
-            errors.push(`${smartphone.imei_1}: Distribuidor "${smartphone.distributor_name}" no encontrado`);
-            continue;
-          }
-
-          const smartphoneData = {
-            smartphone_model_id: model.smartphoneModelId,
-            tag_model: smartphone.imei_1.slice(0, 8),
-            imei_1: smartphone.imei_1,
-            distributor_id: distributor.distributorId,
-            status: 'available',
-          };
-
-          await smartphoneService.createSmartphone(smartphoneData);
-          successCount++;
-        } catch (err) {
-          errorCount++;
-          errors.push(`${smartphone.imei_1}: ${err.response?.data?.error || err.message}`);
+        const model = models.find(m => String(m.productId) === smartphone.product_id);
+        if (!model) {
+          errors.push(`${smartphone.imei_1}: Product ID "${smartphone.product_id}" no encontrado`);
+          continue;
         }
+
+        const distributor = distributors.find(d => String(d.distributorName).toLowerCase() === smartphone.distributor_name.toLowerCase());
+        if (!distributor) {
+          errors.push(`${smartphone.imei_1}: Distribuidor "${smartphone.distributor_name}" no encontrado`);
+          continue;
+        }
+
+        smartphones.push({
+          smartphone_model_id: model.smartphoneModelId,
+          tag_model: smartphone.imei_1.slice(0, 8),
+          imei_1: smartphone.imei_1,
+          distributor_id: distributor.distributorId,
+          status: 'available',
+        });
       }
 
-      if (errorCount > 0) {
-        setError(`Importación parcial: ${successCount} exitosas, ${errorCount} fallidas.\n${errors.join('\n')}`);
-        if (successCount > 0) setTimeout(() => onImportComplete(), 3000);
-      } else {
-        setSuccess(`Se importaron ${successCount} smartphones exitosamente!`);
-        setTimeout(() => {
-          onImportComplete();
-        }, 1500);
+      if (smartphones.length === 0) {
+        setError(`No se pudo importar ningún smartphone:\n${errors.join('\n')}`);
+        setLoading(false);
+        return;
       }
+
+      const response = await smartphoneService.bulkCreateSmartphones({ smartphones });
+      const { created, duplicates } = response.data;
+
+      let message = `Se importaron ${created} smartphones exitosamente!`;
+      if (duplicates > 0) {
+        message += ` (${duplicates} IMEIs ya existían y fueron omitidos)`;
+      }
+      if (errors.length > 0) {
+        message += `\n\nErrores de validación:\n${errors.join('\n')}`;
+      }
+
+      setSuccess(message);
+      setTimeout(() => {
+        onImportComplete();
+      }, 1500);
     } catch (err) {
-      setError('Error al importar smartphones: ' + err.message);
+      setError('Error al importar smartphones: ' + (err.response?.data?.message || err.message));
     } finally {
       setLoading(false);
     }

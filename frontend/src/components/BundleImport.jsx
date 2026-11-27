@@ -64,6 +64,13 @@ function BundleImport({ onImportComplete, onCancel }) {
     setSuccess('');
 
     try {
+      const user = JSON.parse(localStorage.getItem('user') || 'null');
+      if (!user) {
+        setError('Usuario no autenticado');
+        setLoading(false);
+        return;
+      }
+
       // Cargar datos para los lookups
       const [projectsResponse, bundleModelsResponse] = await Promise.all([
         projectService.getProjects(),
@@ -72,57 +79,56 @@ function BundleImport({ onImportComplete, onCancel }) {
       const projects = projectsResponse.data;
       const bundleModels = bundleModelsResponse.data;
 
-      let successCount = 0;
-      let errorCount = 0;
+      const bundles = [];
       const errors = [];
 
       for (const bundle of previewData) {
-        try {
-          // Lookup project por nombre
-          const project = projects.find(p => String(p.projectName).toLowerCase() === bundle.project_name.toLowerCase());
-          if (!project) {
-            errorCount++;
-            errors.push(`${bundle.serial_number}: Proyecto "${bundle.project_name}" no encontrado`);
-            continue;
-          }
-          if (project.status !== 'active') {
-            errorCount++;
-            errors.push(`${bundle.serial_number}: Proyecto "${bundle.project_name}" está completado`);
-            continue;
-          }
-
-          // Lookup bundle model por nombre
-          const bundleModel = bundleModels.find(bm => String(bm.bundleName).toLowerCase() === bundle.bundle_model_name.toLowerCase());
-          if (!bundleModel) {
-            errorCount++;
-            errors.push(`${bundle.serial_number}: Modelo de bandeo "${bundle.bundle_model_name}" no encontrado`);
-            continue;
-          }
-
-          const bundleData = {
-            serial_number: bundle.serial_number,
-            project_id: project.projectId,
-            user_id: user.userId, // Usuario de la sesión activa
-            bundle_model_id: bundleModel.bundleModelId,
-            create_time: new Date().toISOString(),
-          };
-
-          await bundleService.createBundle(bundleData);
-          successCount++;
-        } catch (err) {
-          errorCount++;
-          errors.push(`${bundle.serial_number}: ${err.response?.data?.error || err.message}`);
+        const project = projects.find(p => String(p.projectName).toLowerCase() === bundle.project_name.toLowerCase());
+        if (!project) {
+          errors.push(`${bundle.serial_number}: Proyecto "${bundle.project_name}" no encontrado`);
+          continue;
         }
+        if (project.status !== 'active') {
+          errors.push(`${bundle.serial_number}: Proyecto "${bundle.project_name}" está completado`);
+          continue;
+        }
+
+        const bundleModel = bundleModels.find(bm => String(bm.bundleName).toLowerCase() === bundle.bundle_model_name.toLowerCase());
+        if (!bundleModel) {
+          errors.push(`${bundle.serial_number}: Modelo de bandeo "${bundle.bundle_model_name}" no encontrado`);
+          continue;
+        }
+
+        bundles.push({
+          serial_number: bundle.serial_number,
+          project_id: project.projectId,
+          user_id: user.userId,
+          bundle_model_id: bundleModel.bundleModelId,
+          create_time: new Date().toISOString(),
+        });
       }
 
-      if (errorCount > 0) {
-        setError(`Importación parcial: ${successCount} exitosas, ${errorCount} fallidas. Errores: ${errors.join(', ')}`);
-      } else {
-        setSuccess(`Se importaron ${successCount} bandeos exitosamente!`);
-        setTimeout(() => {
-          onImportComplete();
-        }, 1500);
+      if (bundles.length === 0) {
+        setError(`No se pudo importar ningún bandeo:\n${errors.join('\n')}`);
+        setLoading(false);
+        return;
       }
+
+      const response = await bundleService.bulkCreateBundles({ bundles });
+      const { created, duplicates } = response.data;
+
+      let message = `Se importaron ${created} bandeos exitosamente!`;
+      if (duplicates > 0) {
+        message += ` (${duplicates} Serial Numbers ya existían y fueron omitidos)`;
+      }
+      if (errors.length > 0) {
+        message += `\n\nErrores de validación:\n${errors.join('\n')}`;
+      }
+
+      setSuccess(message);
+      setTimeout(() => {
+        onImportComplete();
+      }, 1500);
     } catch (err) {
       setError('Error al importar bandeos: ' + err.message);
     } finally {

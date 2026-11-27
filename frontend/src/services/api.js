@@ -61,6 +61,7 @@ export const storeService = {
   getStore: (code) => api.get(`/stores/${code}`),
   getStoresByUser: () => api.get('/stores/mine'),
   createStore: (data) => api.post('/stores', data),
+  bulkCreateStores: (data) => api.post('/stores/bulk', data),
   updateStore: (code, data) => api.patch(`/stores/${code}`, data),
   deleteStore: (code) => api.delete(`/stores/${code}`),
 };
@@ -110,6 +111,7 @@ export const smartphoneService = {
   getSmartphone: (id) => api.get(`/smartphones/${id}`),
   getByImei: (imei) => api.get(`/smartphones/imei/${encodeURIComponent(imei)}`),
   createSmartphone: (data) => api.post('/smartphones', data),
+  bulkCreateSmartphones: (data) => api.post('/smartphones/bulk', data),
   updateSmartphone: (id, data) => api.patch(`/smartphones/${id}`, data),
   deleteSmartphone: (id) => api.delete(`/smartphones/${id}`),
 };
@@ -118,6 +120,7 @@ export const bundleService = {
   getBundles: () => api.get('/bundles'),
   getBundle: (id) => api.get(`/bundles/${id}`),
   createBundle: (data) => api.post('/bundles', data),
+  bulkCreateBundles: (data) => api.post('/bundles/bulk', data),
   updateBundle: (id, data) => api.patch(`/bundles/${id}`, data),
   assignBundle: (id, data) => api.post(`/bundles/${id}/assign`, data),
   requestTransfer: (id, data) => api.post(`/bundles/${id}/transfer-request`, data),

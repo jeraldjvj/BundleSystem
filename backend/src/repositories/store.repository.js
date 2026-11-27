@@ -61,4 +61,52 @@ export const storeRepository = {
     const [result] = await pool.query('DELETE FROM stores WHERE store_code = ?', [storeCode]);
     return result.affectedRows > 0;
   },
+
+  async bulkCreate(stores) {
+    const connection = await pool.getConnection();
+    try {
+      await connection.beginTransaction();
+
+      // Verificar store_codes duplicados existentes
+      const storeCodes = stores.map(s => s.store_code);
+      const [existingCodes] = await connection.query(
+        'SELECT store_code FROM stores WHERE store_code IN (?)',
+        [storeCodes]
+      );
+      const existingSet = new Set(existingCodes.map(row => row.store_code));
+
+      // Filtrar solo los que no existen
+      const toInsert = stores.filter(s => !existingSet.has(s.store_code));
+
+      if (toInsert.length === 0) {
+        await connection.rollback();
+        return { created: 0, skipped: 0, duplicates: stores.length };
+      }
+
+      // Insertar en lote
+      const values = toInsert.map(s => [
+        s.store_code,
+        s.user_id,
+        s.store_name,
+        s.city
+      ]);
+
+      await connection.query(
+        'INSERT INTO stores (store_code, user_id, store_name, city) VALUES ?',
+        [values]
+      );
+
+      await connection.commit();
+      return {
+        created: toInsert.length,
+        skipped: 0,
+        duplicates: stores.length - toInsert.length
+      };
+    } catch (err) {
+      await connection.rollback();
+      throw err;
+    } finally {
+      connection.release();
+    }
+  },
 };

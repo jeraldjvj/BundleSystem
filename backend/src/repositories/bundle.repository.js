@@ -372,4 +372,53 @@ export const bundleRepository = {
       connection.release();
     }
   },
+
+  async bulkCreate(bundles) {
+    const connection = await pool.getConnection();
+    try {
+      await connection.beginTransaction();
+
+      // Verificar Serial Numbers duplicados existentes
+      const serialNumbers = bundles.map(b => b.serial_number);
+      const [existingSerials] = await connection.query(
+        'SELECT serial_number FROM bundle WHERE serial_number IN (?)',
+        [serialNumbers]
+      );
+      const existingSet = new Set(existingSerials.map(row => row.serial_number));
+
+      // Filtrar solo los que no existen
+      const toInsert = bundles.filter(b => !existingSet.has(b.serial_number));
+
+      if (toInsert.length === 0) {
+        await connection.rollback();
+        return { created: 0, skipped: 0, duplicates: bundles.length };
+      }
+
+      // Insertar en lote
+      const values = toInsert.map(b => [
+        b.project_id,
+        b.user_id,
+        b.serial_number,
+        b.bundle_model_id,
+        b.create_time || new Date()
+      ]);
+
+      await connection.query(
+        'INSERT INTO bundle (project_id, user_id, serial_number, bundle_model_id, create_time) VALUES ?',
+        [values]
+      );
+
+      await connection.commit();
+      return {
+        created: toInsert.length,
+        skipped: 0,
+        duplicates: bundles.length - toInsert.length
+      };
+    } catch (err) {
+      await connection.rollback();
+      throw err;
+    } finally {
+      connection.release();
+    }
+  },
 };

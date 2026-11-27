@@ -8,6 +8,7 @@ import {
   smartphoneIdSchema,
   createSmartphoneSchema,
   updateSmartphoneSchema,
+  bulkCreateSmartphoneSchema,
 } from '../schemas/smartphone.schema.js';
 
 const router = Router();
@@ -16,6 +17,7 @@ router.get('/', requireRole('Office Manager', 'City Manager'), asyncHandler(smar
 router.get('/imei/:imei', lookupLimiter, asyncHandler(smartphoneController.getByImei));
 router.get('/:smartphones_id', validate(smartphoneIdSchema, 'params'), asyncHandler(smartphoneController.getById));
 router.post('/', requireRole('Office Manager'), validate(createSmartphoneSchema), asyncHandler(smartphoneController.create));
+router.post('/bulk', requireRole('Office Manager'), validate(bulkCreateSmartphoneSchema), asyncHandler(smartphoneController.bulkCreate));
 router.patch(
   '/:smartphones_id',
   requireRole('Office Manager'),

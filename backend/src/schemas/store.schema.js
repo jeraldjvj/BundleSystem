@@ -13,3 +13,7 @@ export const createStoreSchema = z.object({
 });
 
 export const updateStoreSchema = createStoreSchema.partial();
+
+export const bulkCreateStoreSchema = z.object({
+  stores: z.array(createStoreSchema).min(1).max(1000),
+});
