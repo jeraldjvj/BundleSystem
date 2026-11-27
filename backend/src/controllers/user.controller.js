@@ -14,6 +14,7 @@ export const userController = {
         lastName: u.lastName,
         levelUser: u.levelUser,
         status: u.status,
+        headInCharge: u.headInCharge,
       })));
     }
     res.json(users);

@@ -25,10 +25,17 @@ function BundleAssignForm({ bundle, onSave, onCancel }) {
       // City Manager solo ve: los field force de su propio equipo
       // (head_in_charge = su nombre) + todos los city/office managers
       if (user?.levelUser === 'City Manager') {
-        const managerFullName = `${user.firstName || ''} ${user.lastName || ''}`.trim().toLowerCase();
+        // Usar el registro fresco de la BD (la sesión puede tener datos desactualizados)
+        const managerRecord = response.data.find(u => u.userId === user.userId);
+        const normalize = (s) => (s || '').trim().toLowerCase().replace(/\s+/g, ' ');
+        const managerFullName = normalize(`${managerRecord?.firstName || user.firstName || ''} ${managerRecord?.lastName || user.lastName || ''}`);
+        const managerEmail = normalize(managerRecord?.email || user.email);
+
         list = list.filter(u => {
           if (u.levelUser === 'City Manager' || u.levelUser === 'Office Manager') return true;
-          return (u.headInCharge || '').trim().toLowerCase() === managerFullName;
+          const head = normalize(u.headInCharge);
+          // head_in_charge guarda el nombre completo del encargado (o su email como fallback)
+          return head !== '' && (head === managerFullName || head === managerEmail);
         });
       }
 
