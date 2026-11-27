@@ -7,6 +7,25 @@ function SmartphoneModelList({ onEdit, onRefresh, onCreate }) {
   const [error, setError] = useState('');
   const [deletingModel, setDeletingModel] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [filters, setFilters] = useState({});
+  const [activeFilter, setActiveFilter] = useState(null);
+
+  const columns = [
+    { key: 'productId', label: 'Product ID', value: m => m.productId || '' },
+    { key: 'modelName', label: 'Modelo', value: m => m.modelName || '' },
+    { key: 'skuName', label: 'SKU', value: m => m.skuName || '' },
+    { key: 'ram', label: 'RAM', value: m => m.ram || '' },
+    { key: 'rom', label: 'ROM', value: m => m.rom || '' },
+    { key: 'colorEng', label: 'Color', value: m => m.colorEng || '' },
+  ];
+
+  const filteredModels = smartphoneModels.filter(m =>
+    columns.every(c => {
+      const f = (filters[c.key] || '').toLowerCase();
+      if (!f) return true;
+      return String(c.value(m) ?? '').toLowerCase().includes(f);
+    })
+  );
 
   useEffect(() => {
     loadSmartphoneModels();
@@ -55,7 +74,7 @@ function SmartphoneModelList({ onEdit, onRefresh, onCreate }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', marginTop: '10px', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <h2 style={{ margin: 0, color: '#1a2340', fontSize: '1.4rem' }}>Gestión de Modelos de Smartphone</h2>
-          <p style={{ margin: '0.2rem 0 0', color: '#888', fontSize: '0.85rem' }}>{smartphoneModels.length} modelo(s) registrados</p>
+          <p style={{ margin: '0.2rem 0 0', color: '#888', fontSize: '0.85rem' }}>{filteredModels.length} de {smartphoneModels.length} modelo(s) registrados</p>
         </div>
         <button onClick={onCreate} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.6rem 1.15rem', background: 'linear-gradient(135deg, #5470c6, #2d3f6e)', color: 'white', border: 'none', borderRadius: '10px', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 600, boxShadow: '0 4px 14px rgba(84,112,198,0.3)' }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -73,17 +92,66 @@ function SmartphoneModelList({ onEdit, onRefresh, onCreate }) {
             <thead>
               <tr style={{ backgroundColor: '#f8f9fa', borderBottom: '2px solid #eee' }}>
                 <th style={thStyle}>ID</th>
-                <th style={thStyle}>Product ID</th>
-                <th style={thStyle}>Modelo</th>
-                <th style={thStyle}>SKU</th>
-                <th style={thStyle}>RAM</th>
-                <th style={thStyle}>ROM</th>
-                <th style={thStyle}>Color</th>
+                {columns.map(col => (
+                  <th key={col.key} style={{ ...thStyle, verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span>{col.label}</span>
+                      <button
+                        onClick={() => setActiveFilter(activeFilter === col.key ? null : col.key)}
+                        style={{
+                          padding: '0.25rem',
+                          backgroundColor: 'transparent',
+                          border: 'none',
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          color: filters[col.key] ? '#007bff' : '#6c757d'
+                        }}
+                        title={`Buscar en ${col.label}`}
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="11" cy="11" r="8"></circle>
+                          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                      </button>
+                    </div>
+                    {activeFilter === col.key && (
+                      <input
+                        type="text"
+                        autoFocus
+                        placeholder={`Buscar ${col.label}...`}
+                        value={filters[col.key] || ''}
+                        onChange={(e) => setFilters(prev => ({ ...prev, [col.key]: e.target.value }))}
+                        style={{
+                          width: '100%',
+                          marginTop: '0.5rem',
+                          padding: '0.35rem 0.6rem',
+                          border: '1px solid #e0e0e0',
+                          borderRadius: '6px',
+                          fontSize: '0.8rem',
+                          fontWeight: 'normal',
+                          boxSizing: 'border-box',
+                          backgroundColor: '#f8f9fa',
+                          color: '#333',
+                          colorScheme: 'light',
+                          outline: 'none'
+                        }}
+                      />
+                    )}
+                  </th>
+                ))}
                 <th style={{ ...thStyle, textAlign: 'center' }}>Acciones</th>
               </tr>
             </thead>
             <tbody>
-              {smartphoneModels.map((model) => (
+              {filteredModels.length === 0 && (
+                <tr>
+                  <td colSpan={8} style={{ padding: '2rem', textAlign: 'center', color: '#888' }}>
+                    No se encontraron resultados con los filtros aplicados
+                  </td>
+                </tr>
+              )}
+              {filteredModels.map((model) => (
                 <tr key={model.smartphoneModelId} style={{ borderBottom: '1px solid #f0f0f0' }}
                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f9fb'}
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
