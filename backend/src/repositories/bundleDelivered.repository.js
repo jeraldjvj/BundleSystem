@@ -1,5 +1,9 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import { pool } from '../config/database.js';
 import { HttpError } from '../utils/HttpError.js';
+
+const UPLOADS_DIR = '/app/backend/uploads';
 
 const COLUMNS = 'bundle_delivered_id, user_id, bundle_id, smartphones_id, client_full_name, client_ci, client_phone, client_picture, create_time, store_code, store_name';
 const UPDATABLE_FIELDS = ['user_id', 'bundle_id', 'smartphones_id', 'client_full_name', 'client_ci', 'client_phone', 'client_picture', 'create_time', 'store_code', 'store_name'];
@@ -139,14 +143,14 @@ export const bundleDeliveredRepository = {
 
       // Leer la entrega para saber qué bandeo y smartphone liberar
       const [rows] = await connection.query(
-        'SELECT bundle_id, smartphones_id FROM bundle_delivered WHERE bundle_delivered_id = ? FOR UPDATE',
+        'SELECT bundle_id, smartphones_id, client_picture FROM bundle_delivered WHERE bundle_delivered_id = ? FOR UPDATE',
         [bundleDeliveredId]
       );
       if (rows.length === 0) {
         await connection.rollback();
         return false;
       }
-      const { bundle_id, smartphones_id } = rows[0];
+      const { bundle_id, smartphones_id, client_picture } = rows[0];
 
       // Eliminar el registro de la entrega
       await connection.query('DELETE FROM bundle_delivered WHERE bundle_delivered_id = ?', [bundleDeliveredId]);
@@ -165,6 +169,17 @@ export const bundleDeliveredRepository = {
       );
 
       await connection.commit();
+
+      // Eliminar el archivo de imagen del disco (después del commit, para no
+      // borrarla si la transacción falla). Si falla el borrado, la entrega ya
+      // quedó eliminada y el script clean-orphan-images la limpiará después.
+      if (client_picture) {
+        try {
+          fs.unlinkSync(path.join(UPLOADS_DIR, path.basename(client_picture)));
+        } catch {
+          // El archivo puede no existir; no es crítico
+        }
+      }
       return true;
     } catch (error) {
       await connection.rollback();
