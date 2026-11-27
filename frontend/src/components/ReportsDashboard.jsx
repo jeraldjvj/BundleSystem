@@ -305,13 +305,26 @@ function ReportsDashboard() {
     { key: 'sn', label: 'SN del Bandeo', value: d => d.serial_number },
     { key: 'imei', label: 'IMEI', value: d => d.imei_1 },
     { key: 'ciudad', label: 'Ciudad', value: d => d.city },
-    { key: 'fecha', label: 'Fecha de Entrega', value: d => new Date(d.create_time).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) },
+    {
+      key: 'fecha', label: 'Fecha de Entrega',
+      value: d => new Date(d.create_time).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+      // El input type="date" produce YYYY-MM-DD, así que el filtro compara en ese formato
+      // usando la fecha local (la misma que se muestra en la tabla)
+      filterValue: d => {
+        const date = new Date(d.create_time);
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+      }
+    },
   ];
   const filteredDeliveries = data.deliveriesList.filter(d =>
     deliveryColumns.every(c => {
       const f = (deliveryFilters[c.key] || '').toLowerCase();
       if (!f) return true;
-      return String(c.value(d) ?? '').toLowerCase().includes(f);
+      const val = c.filterValue ? c.filterValue(d) : c.value(d);
+      return String(val ?? '').toLowerCase().includes(f);
     })
   );
   const kpis = [
